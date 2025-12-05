@@ -210,7 +210,7 @@ export const Component = () => {
   const form = useForm<FormData>({
     defaultValues: {
       backup_path: '',
-      name: 'Restored Account',
+      name: t('walletRestore.defaultAccountName'),
       network: 'Regtest' as BitcoinNetwork,
       password: '',
       ...NETWORK_DEFAULTS['Regtest'],

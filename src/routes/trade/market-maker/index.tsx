@@ -2853,13 +2853,13 @@ export const Component = () => {
                   <div className="flex items-center space-x-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500"></div>
                     <h2 className="text-sm font-bold bg-gradient-to-r from-white via-cyan-100 to-blue-100 bg-clip-text text-transparent">
-                      Live Trading
+                      {t('tradeMarketMaker.header.liveTrading')}
                     </h2>
                   </div>
 
                   {/* Integrated Maker Status */}
                   <div className="flex items-center space-x-2 text-xs">
-                    <span className="text-slate-400">via</span>
+                    <span className="text-slate-400">{t('tradeMarketMaker.header.via')}</span>
                     <div className="flex items-center space-x-1.5">
                       <div
                         className={`w-1.5 h-1.5 rounded-full ${
@@ -2881,7 +2881,7 @@ export const Component = () => {
                       >
                         {makerConnectionUrl
                           ? new URL(makerConnectionUrl).hostname
-                          : 'No Maker'}
+                          : t('tradeMarketMaker.header.noMaker')}
                       </span>
                       {wsConnected && (
                         <span
@@ -2891,7 +2891,7 @@ export const Component = () => {
                               : 'bg-amber-500/20 text-amber-300'
                           }`}
                         >
-                          {hasTradablePairs ? 'Ready' : 'No Pairs'}
+                          {hasTradablePairs ? t('tradeMarketMaker.header.ready') : t('tradeMarketMaker.header.noPairs')}
                         </span>
                       )}
                     </div>
@@ -2908,7 +2908,7 @@ export const Component = () => {
                       onClick={handleReconnectToMaker}
                       type="button"
                     >
-                      Reconnect
+                      {t('tradeMarketMaker.header.reconnect')}
                     </button>
                   )}
                 </div>
@@ -2932,12 +2932,10 @@ export const Component = () => {
                       </div>
                       <div className="flex-1">
                         <p className="text-blue-300 text-sm font-medium">
-                          Trading with onchain balance
+                          {t('tradeMarketMaker.banners.tradingOnchain')}
                         </p>
                         <p className="text-blue-200/80 text-xs mt-1">
-                          You don't have any trading channels yet. When you buy
-                          an asset, a new channel will be created automatically
-                          using your onchain BTC balance.
+                          {t('tradeMarketMaker.banners.noChannelsYet')}
                         </p>
                       </div>
                     </div>
@@ -2962,6 +2960,10 @@ export const Component = () => {
                       unconfirmedAssets.length > 1
                         ? 'channels are'
                         : 'channel is'
+                    const confirmText =
+                      unconfirmedAssets.length > 1
+                        ? 'both channels are'
+                        : 'the channel is'
 
                     return (
                       <div className="mb-3 p-3 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-xl backdrop-blur-sm">
@@ -2974,18 +2976,23 @@ export const Component = () => {
                           <div className="flex-1">
                             <p className="text-yellow-300 text-sm font-medium">
                               {unconfirmedAssets.length > 1
-                                ? 'Channels'
-                                : 'Channel'}{' '}
-                              Not Ready: {assetText}
+                                ? t('tradeMarketMaker.banners.channelsNotReady', {
+                                    assets: assetText,
+                                  })
+                                : t('tradeMarketMaker.banners.channelNotReady', {
+                                    asset: assetText,
+                                  })}
                             </p>
                             <p className="text-yellow-200/80 text-xs mt-1">
-                              Your {assetText} {channelText} awaiting blockchain
-                              confirmation. You can view the trading pair, but
-                              swapping will be disabled until{' '}
                               {unconfirmedAssets.length > 1
-                                ? 'both channels are'
-                                : 'the channel is'}{' '}
-                              confirmed. This usually takes a few minutes.
+                                ? t('tradeMarketMaker.banners.channelsAwaiting', {
+                                    assets: assetText,
+                                    channelText,
+                                    confirmText,
+                                  })
+                                : t('tradeMarketMaker.banners.channelAwaiting', {
+                                    asset: assetText,
+                                  })}
                             </p>
                           </div>
                         </div>
@@ -3014,6 +3021,11 @@ export const Component = () => {
                       )
 
                     if (unconfirmedTickers.length > 0) {
+                      const assetText =
+                        unconfirmedTickers.length > 1
+                          ? `${unconfirmedTickers.length} channels (${unconfirmedTickers.slice(0, 3).join(', ')}${unconfirmedTickers.length > 3 ? ', ...' : ''})`
+                          : unconfirmedTickers[0]
+
                       return (
                         <div className="mb-3 p-3 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/30 rounded-xl backdrop-blur-sm">
                           <div className="flex items-start gap-2">
@@ -3024,13 +3036,21 @@ export const Component = () => {
                             </div>
                             <div className="flex-1">
                               <p className="text-blue-300 text-sm font-medium">
-                                Additional Channels Pending
+                                {t(
+                                  'tradeMarketMaker.banners.additionalChannelsPending'
+                                )}
                               </p>
                               <p className="text-blue-200/80 text-xs mt-1">
-                                {unconfirmedTickers.length === 1
-                                  ? `${unconfirmedTickers[0]} channel`
-                                  : `${unconfirmedTickers.length} channels (${unconfirmedTickers.slice(0, 3).join(', ')}${unconfirmedTickers.length > 3 ? ', ...' : ''})`}{' '}
-                                pending confirmation.
+                                {t(
+                                  'tradeMarketMaker.banners.channelPendingConfirmation',
+                                  {
+                                    count: unconfirmedTickers.length,
+                                    asset: unconfirmedTickers[0],
+                                    assets: unconfirmedTickers
+                                      .slice(0, 3)
+                                      .join(', '),
+                                  }
+                                )}
                               </p>
                             </div>
                           </div>
@@ -3055,8 +3075,8 @@ export const Component = () => {
                         availableAmount={`${formatAmount(maxFromAmount, form.getValues().fromAsset)} ${displayAsset(form.getValues().fromAsset)}`}
                         availableAmountLabel={
                           isUsingOnchainBalance
-                            ? 'Onchain Available:'
-                            : 'Available:'
+                            ? t('tradeMarketMaker.form.onchainAvailable')
+                            : t('tradeMarketMaker.form.available')
                         }
                         disabled={
                           !hasChannels ||
@@ -3135,11 +3155,13 @@ export const Component = () => {
                         assetOptions={toAssetOptions}
                         availableAmount={
                           missingChannelAsset
-                            ? 'Channel needed'
+                            ? t('tradeMarketMaker.form.channelNeeded')
                             : `${formatAmount(maxToAmount, form.getValues().toAsset)} ${displayAsset(form.getValues().toAsset)}`
                         }
                         availableAmountLabel={
-                          missingChannelAsset ? 'Status:' : 'Can receive up to:'
+                          missingChannelAsset
+                            ? t('tradeMarketMaker.form.status')
+                            : t('tradeMarketMaker.form.canReceiveUpTo')
                         }
                         disabled={
                           !hasChannels || !hasTradablePairs || isSwapInProgress
@@ -3183,17 +3205,19 @@ export const Component = () => {
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="text-blue-300 font-semibold text-sm mb-1">
-                              {missingChannelAsset.asset} Channel Required
+                              {t('tradeMarketMaker.channelWarning.title', {
+                                asset: missingChannelAsset.asset,
+                              })}
                             </h4>
                             <p className="text-blue-200/90 text-sm leading-relaxed">
-                              To{' '}
                               {missingChannelAsset.isFromAsset
-                                ? 'send'
-                                : 'receive'}{' '}
-                              {missingChannelAsset.asset}, you need to create a
-                              Lightning channel for this asset.
-                              {!missingChannelAsset.isFromAsset &&
-                                ' The asset will be purchased at the current rate and deposited into your new channel.'}
+                                ? t('tradeMarketMaker.channelWarning.sendMessage', {
+                                    asset: missingChannelAsset.asset,
+                                  })
+                                : t(
+                                    'tradeMarketMaker.channelWarning.receiveMessage',
+                                    { asset: missingChannelAsset.asset }
+                                  )}
                             </p>
                           </div>
                         </div>
@@ -3216,8 +3240,8 @@ export const Component = () => {
                               {errorMessage.includes(
                                 'You can only receive up to'
                               )
-                                ? 'Maximum Limit Exceeded'
-                                : 'Trading Error'}
+                                ? t('tradeMarketMaker.error.maxLimitExceeded')
+                                : t('tradeMarketMaker.error.title')}
                             </h4>
                             <p className="text-red-400/90 text-sm leading-relaxed">
                               {errorMessage}
@@ -3274,14 +3298,14 @@ export const Component = () => {
                     <div
                       className={`w-2 h-2 rounded-full mr-2 shadow-lg bg-gradient-to-r ${hasValidQuote ? 'from-emerald-400 to-green-500' : 'from-amber-400 to-orange-500'}`}
                     ></div>
-                    Exchange Rate & Quote
+                    {t('tradeMarketMaker.swap.exchangeRateQuote')}
                   </h3>
                   <button
                     className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600/30 via-blue-600/25 to-purple-600/30 text-cyan-400 hover:from-cyan-600/40 hover:to-purple-600/40 transition-all border border-cyan-500/50 hover:border-purple-400/70 text-xs font-medium shadow-lg backdrop-blur-sm"
                     onClick={() => debouncedQuoteRequest(requestQuote)}
                     type="button"
                   >
-                    ↻ Refresh
+                    {t('tradeMarketMaker.swap.refresh')}
                   </button>
                 </div>
 
@@ -3465,7 +3489,9 @@ export const Component = () => {
         ? watchedFromAsset
         : watchedToAsset
       setErrorMessage(
-        `Channel for ${unconfirmedAsset} is awaiting confirmation. Please wait for it to be ready.`
+        t('tradeMarketMaker.error.channelAwaitingPlural', {
+          asset: unconfirmedAsset,
+        })
       )
     } else {
       // Clear the error if it was about unconfirmed channels and now both are confirmed
@@ -3481,19 +3507,20 @@ export const Component = () => {
     toAssetUnconfirmed,
     watchedFromAsset,
     watchedToAsset,
+    t,
   ])
 
   // Dynamic loading message based on phase
   const getLoadingMessage = () => {
     switch (loadingPhase) {
       case 'validating-balance':
-        return 'Checking wallet balance and requirements...'
+        return t('tradeMarketMaker.loading.checkingBalance')
       case 'validating-channels':
-        return 'Verifying channel availability and liquidity...'
+        return t('tradeMarketMaker.loading.verifyingChannels')
       case 'connecting-maker':
-        return 'Connecting to market maker and fetching trading pairs...'
+        return t('tradeMarketMaker.loading.connectingMaker')
       default:
-        return 'Initializing trading infrastructure...'
+        return t('tradeMarketMaker.loading.initializingInfrastructure')
     }
   }
 
@@ -3508,22 +3535,21 @@ export const Component = () => {
                 <Wallet className="w-8 h-8 text-red-500" />
               </div>
               <h2 className="text-2xl font-bold text-white">
-                Insufficient Bitcoin Balance
+                {t('tradeMarketMaker.noChannels.insufficientBalance')}
               </h2>
               <p className="text-slate-400 text-center text-base max-w-md">
-                You need bitcoin to open a trading channel. Please deposit some
-                BTC to get started with trading.
+                {t('tradeMarketMaker.noChannels.insufficientBalanceMessage')}
               </p>
 
               <div className="flex gap-4 pt-4">
                 <button
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl 
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl
                            font-medium transition-colors flex items-center gap-2 text-base
                            shadow-lg hover:shadow-blue-500/25 hover:scale-105"
                   onClick={handleDepositAction}
                 >
                   <Wallet className="w-5 h-5" />
-                  Deposit Bitcoin
+                  {t('tradeMarketMaker.noChannels.depositBitcoin')}
                 </button>
               </div>
             </div>
@@ -3538,31 +3564,30 @@ export const Component = () => {
                 <Link className="w-8 h-8 text-blue-500" />
               </div>
               <h2 className="text-2xl font-bold text-white">
-                No Channels Available
+                {t('tradeMarketMaker.noChannels.noChannelsAvailable')}
               </h2>
               <p className="text-slate-400 text-center text-base max-w-md">
-                To start trading, you need to create a channel with some assets
-                or buy one from a Lightning Service Provider.
+                {t('tradeMarketMaker.noChannels.noChannelsMessage')}
               </p>
 
               <div className="flex gap-4 pt-4">
                 <button
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl 
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl
                            font-medium transition-colors flex items-center gap-2 text-base
                            shadow-lg hover:shadow-blue-500/25 hover:scale-105"
                   onClick={handleCreateChannelAction}
                 >
                   <Plus className="w-5 h-5" />
-                  Create Channel
+                  {t('tradeMarketMaker.noChannels.createChannel')}
                 </button>
                 <button
-                  className="px-6 py-3 border border-blue-500/50 text-blue-500 rounded-xl 
+                  className="px-6 py-3 border border-blue-500/50 text-blue-500 rounded-xl
                            hover:bg-blue-500/10 transition-colors flex items-center gap-2 text-base
                            shadow-lg hover:shadow-blue-500/25 hover:scale-105"
                   onClick={handleBuyChannelAction}
                 >
                   <ShoppingCart className="w-5 h-5" />
-                  Buy from LSP
+                  {t('tradeMarketMaker.noChannels.buyFromLSP')}
                 </button>
               </div>
             </div>
@@ -3594,8 +3619,8 @@ export const Component = () => {
                 <div className="text-center space-y-4 max-w-lg">
                   <p className="text-white font-bold text-xl bg-gradient-to-r from-white via-cyan-100 to-blue-100 bg-clip-text text-transparent">
                     {loadingPhase === 'connecting-maker'
-                      ? 'Connecting to Market Maker'
-                      : 'Initializing Trading Interface'}
+                      ? t('tradeMarketMaker.loading.connectingToMaker')
+                      : t('tradeMarketMaker.loading.initializingInterface')}
                   </p>
                   <p className="text-slate-300 text-base leading-relaxed">
                     {getLoadingMessage()}

@@ -426,7 +426,7 @@ export const Component: React.FC = () => {
             <div className="text-center py-8 text-slate-400 bg-slate-800/30 rounded-lg border border-slate-700">
               {searchTerm || typeFilter !== 'all' || assetFilter !== 'all' ? (
                 <>
-                  <p>No withdrawals found matching your filters.</p>
+                  <p>{t('components.walletHistory.withdrawals.noWithdrawalsFiltered')}</p>
                   <Button
                     className="mt-4"
                     onClick={() => {
@@ -437,11 +437,11 @@ export const Component: React.FC = () => {
                     size="sm"
                     variant="outline"
                   >
-                    Clear Filters
+                    {t('withdrawals.clearFilters')}
                   </Button>
                 </>
               ) : (
-                <p>No withdrawals found.</p>
+                <p>{t('components.walletHistory.withdrawals.noWithdrawals')}</p>
               )}
             </div>
           }

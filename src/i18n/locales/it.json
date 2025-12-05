@@ -43,6 +43,9 @@
     "loadingData": "Caricamento dati...",
     "openChannel": "Apri Canale",
     "buyChannel": "Acquista Canale",
+    "createNewChannel": "Crea Nuovo Canale",
+    "buyAChannel": "Acquista un Canale",
+    "manageChannels": "Gestisci Canali",
     "refreshing": "Aggiornamento...",
     "refresh": "Aggiorna",
     "totalBalance": "Saldo Totale",
@@ -107,6 +110,7 @@
     "additionalMakerUrls": "URL Maker Aggiuntivi",
     "addMakerUrl": "Aggiungi URL Maker",
     "addUrl": "Aggiungi URL",
+    "makerUrlPlaceholder": "Inserisci URL Maker",
     "default": "Predefinito",
     "setAsDefault": "Imposta come predefinito",
     "currentDefault": "Predefinito corrente",
@@ -154,7 +158,30 @@
     "loadingLogs": "Caricamento log...",
     "loadingSettings": "Caricamento Impostazioni",
     "pleaseWait": "Attendere mentre carichiamo le impostazioni...",
-    "version": "Versione"
+    "version": "Versione",
+    "securityBackup": "Sicurezza e Backup",
+    "viewRecoveryPhrase": "Visualizza Frase di Recupero",
+    "accessSeedPhrase": "Accedi alla tua frase seed cifrata",
+    "backupWallet": "Backup Portafoglio",
+    "exportBackup": "Esporta backup cifrato del portafoglio",
+    "nodeStatus": "Stato Nodo",
+    "nodeRunning": "Nodo in Esecuzione",
+    "nodeOffline": "Nodo Offline",
+    "connectionType": "Tipo di Connessione",
+    "logout": "Esci",
+    "confirmLogout": "Conferma Disconnessione",
+    "logoutMessage": "Sei sicuro di voler uscire? Questo bloccherà il tuo nodo.",
+    "previous": "Precedente",
+    "next": "Avanti",
+    "confirmShutdown": "Conferma Spegnimento",
+    "confirmShutdownMessage": "Sei sicuro di voler spegnere il nodo? Questa azione non può essere annullata.",
+    "cancel": "Annulla",
+    "restartNode": "Riavviare il Nodo?",
+    "restartNodeMessage": "Le impostazioni del nodo sono cambiate. Vuoi riavviare il nodo ora per applicare le modifiche?",
+    "restartNow": "Riavvia Ora",
+    "later": "Più Tardi",
+    "shuttingDownTitle": "Spegnimento Nodo",
+    "shuttingDownMessage": "Attendere mentre il nodo viene spento..."
   },
   "modals": {
     "logoutTitle": "Conferma Disconnessione",
@@ -277,7 +304,15 @@
     "restoreWalletDescription": "Ripristina un portafoglio utilizzando il tuo backup crittografato esistente.",
     "connectRemoteTitle": "Connetti a Nodo Remoto",
     "connectRemoteSubtitle": "Connettiti a un nodo RGB Lightning esistente ospitato da te o da un provider",
-    "continueSetup": "Continua alla Configurazione della Connessione"
+    "continueSetup": "Continua alla Configurazione della Connessione",
+    "localNodeWarningTitle": "Eseguire un Nodo Locale",
+    "localNodeWarningMessage": "I nodi locali richiedono disponibilità 24/7 per prestazioni ottimali. Per la maggior parte degli utenti, consigliamo di utilizzare un nodo remoto.",
+    "learnMore": "Scopri di più",
+    "remoteNodePrerequisitesTitle": "Prerequisiti",
+    "remoteNodePrerequisitesMessage": "Avrai bisogno di un'istanza rgb-lightning-node in esecuzione per connetterti. Segui la nostra guida di configurazione per iniziare.",
+    "viewSetupGuide": "Visualizza Guida di Configurazione",
+    "getStarted": "Inizia",
+    "recommended": "Consigliato"
   },
   "createChannel": {
     "checkingBalance": "Controllo del saldo...",
@@ -626,7 +661,8 @@
     "nodeStopped": "Nodo arrestato",
     "unlockCancelled": "Processo di sblocco annullato",
     "failedCheckStatus": "Impossibile verificare lo stato del nodo: {{error}}",
-    "failedGetNodeInfo": "Impossibile ottenere le informazioni del nodo dopo lo sblocco"
+    "failedGetNodeInfo": "Impossibile ottenere le informazioni del nodo dopo lo sblocco",
+    "unknownError": "Si è verificato un errore sconosciuto"
   },
   "trade": {
     "noChannels": {
@@ -770,7 +806,8 @@
     "failedToStartNode": "Impossibile avviare o operare con il nodo: {{error}}",
     "unexpectedError": "Si è verificato un errore imprevisto: {{error}}",
     "continue": "Continua",
-    "close": "Chiudi"
+    "close": "Chiudi",
+    "defaultAccountName": "Account Ripristinato"
   },
   "deposits": {
     "title": "Cronologia Depositi",
@@ -1197,45 +1234,150 @@
   },
   "orderChannel": {
     "step1": {
+      "title": "Acquista un Nuovo Canale dal LSP",
+      "subtitle": "Collegati a un Lightning Service Provider per iniziare",
+      "howItWorks": "Come Funziona l'Apertura del Canale",
+      "step1Title": "Avvii una richiesta di canale",
+      "step1Description": "Specifica la capacità del canale e la distribuzione iniziale del saldo",
+      "step2Title": "LSP elabora la tua richiesta",
+      "step2Description": "Il Lightning Service Provider convalida e accetta il tuo ordine",
+      "step3Title": "Effettui il pagamento",
+      "step3Description": "Completa il pagamento via Lightning o on-chain per finanziare il canale",
+      "step4Title": "Il canale si apre automaticamente",
+      "step4Description": "Una volta confermato il pagamento, l'LSP apre il canale con il tuo nodo",
+      "lspServerUrl": "URL del Server LSP",
+      "lspUrlPlaceholder": "Inserisci l'URL del server LSP",
+      "selectKaleidoLsp": "Usa LSP Kaleidoswap",
+      "checkingConnection": "Verifica Connessione LSP...",
+      "alreadyConnectedMessage": "Già Connesso a questo LSP",
+      "connectButton": "Connetti al LSP",
+      "cancelButton": "Annulla",
+      "continueButton": "Continua",
+      "modalTitle": "Connettersi al LSP?",
+      "modalMessage": "Questo si connetterà al Lightning Service Provider e recupererà i parametri del canale.",
       "checkPeerFailed": "Impossibile verificare lo stato della connessione al peer",
       "lspFetchSuccess": "Informazioni LSP recuperate con successo",
-      "lspUrlMissing": "Impossibile ottenere l’URL di connessione LSP",
+      "lspUrlMissing": "Impossibile ottenere l'URL di connessione LSP",
       "lspFetchFailed": "Impossibile recuperare le informazioni LSP",
-      "timeout": "Richiesta scaduta. Il server LSP non risponde. Controlla l’URL e riprova.",
-      "networkError": "Errore di rete. Controlla la connessione e l’URL dell’LSP.",
-      "waitForConnectionUrl": "Attendere il recupero dell’URL di connessione LSP",
+      "timeout": "Richiesta scaduta. Il server LSP non risponde. Controlla l'URL e riprova.",
+      "networkError": "Errore di rete. Controlla la connessione e l'URL dell'LSP.",
+      "waitForConnectionUrl": "Attendere il recupero dell'URL di connessione LSP",
       "alreadyConnected": "Continua con LSP?",
-      "alreadyConnectedToast": "Già connesso all’LSP",
-      "connectedSuccess": "Connessione all’LSP riuscita",
+      "alreadyConnectedToast": "Già connesso all'LSP",
+      "connectedSuccess": "Connessione all'LSP riuscita",
       "kaleidoLspFetched": "Informazioni LSP di Kaleidoswap recuperate con successo",
-      "kaleidoLspFailed": "Impossibile selezionare l’LSP Kaleidoswap",
+      "kaleidoLspFailed": "Impossibile selezionare l'LSP Kaleidoswap",
       "noDefaultLsp": "Nessun URL LSP predefinito configurato per la rete: {{network}}"
     },
     "step2": {
+      "title": "Configura il Tuo Canale",
+      "subtitle": "Imposta i parametri e la capacità del tuo canale",
+      "stepLabel": "Passaggio {{current}} di {{total}}",
+      "step1Label": "Connetti",
+      "step2Label": "Configura",
+      "step3Label": "Pagamento",
+      "channelCapacity": "Capacità del Canale (sats)",
+      "channelLiquidity": "La Tua Liquidità del Canale (sats)",
+      "channelCapacityInfo": "Capacità totale del canale in satoshi",
+      "channelLiquidityInfo": "Quantità di liquidità che controllerai nel canale",
+      "addAssetTitle": "Aggiungi Asset al Canale",
+      "selectAsset": "Seleziona Asset",
+      "assetAmount": "Importo Asset",
+      "loading": "Caricamento...",
+      "backButton": "Indietro",
+      "nextButton": "Prossimo Passo",
       "fees": {
+        "title": "Commissioni Stimate",
+        "lspFee": "Commissione LSP",
+        "onchainFee": "Commissione On-chain",
+        "totalFee": "Commissione Totale",
         "fetchFailed": "Errore durante il recupero dei dati. Riprova più tardi."
       },
       "capacityRequired": "Inserisci la capacità del canale.",
       "liquidityRequired": "Inserisci la tua liquidità del canale.",
       "assetRequired": "Seleziona un asset prima di procedere.",
-      "assetUnsupported": "L’asset selezionato non è supportato da questo LSP. Aggiorna e scegli un asset supportato.",
-      "assetAmountRequired": "Inserisci un importo dell’asset prima di procedere.",
+      "assetUnsupported": "L'asset selezionato non è supportato da questo LSP. Aggiorna e scegli un asset supportato.",
+      "assetAmountRequired": "Inserisci un importo dell'asset prima di procedere.",
       "capacityAdjusted": "Capacità del canale impostata al minimo: {{amount}} sats",
       "liquidityAdjusted": "Liquidità del canale impostata al minimo: {{amount}} sats",
       "assetAdjusted": "Importo asset impostato al minimo: {{amount}} {{ticker}}",
-      "assetExceedsMax": "L’importo supera il limite massimo di {{amount}} {{ticker}}. Inserisci un importo valido.",
+      "assetExceedsMax": "L'importo supera il limite massimo di {{amount}} {{ticker}}. Inserisci un importo valido.",
       "adjustmentsMade": "Alcuni valori sono stati adattati per rispettare i requisiti.",
       "formError": "Errore nei dati del form. Controlla gli input.",
       "unexpectedError": "Si è verificato un errore imprevisto. Riprova."
     },
     "step3": {
+      "title": "Completa il Pagamento",
+      "subtitle": "Effettua il pagamento per aprire il canale",
+      "loadingOrder": "Caricamento dettagli ordine...",
+      "errorInvalidOrder": "Errore: Dati ordine non validi",
+      "stepLabel": "Passaggio {{current}} di {{total}}",
+      "step1Label": "Connetti",
+      "step2Label": "Configura",
+      "step3Label": "Pagamento",
+      "paymentMethod": "Metodo di Pagamento",
+      "lightning": "Lightning",
+      "onchain": "On-chain",
+      "scanQR": "Scansiona Codice QR",
+      "copyAddress": "Copia Indirizzo",
+      "copyInvoice": "Copia Fattura",
+      "copied": "Copiato!",
+      "amount": "Importo",
+      "address": "Indirizzo",
+      "invoice": "Fattura",
+      "expiresIn": "Scade tra",
+      "expired": "Scaduto",
+      "waitingForPayment": "In attesa del pagamento...",
+      "paymentReceived": "Pagamento ricevuto!",
+      "processingPayment": "Elaborazione pagamento...",
+      "channelOpening": "Apertura canale...",
+      "backButton": "Indietro",
+      "restartButton": "Ricomincia",
+      "paymentReceivedTitle": "Pagamento Ricevuto",
+      "paymentReceivedMessage": "Il tuo pagamento {{method}} è stato ricevuto ed è in elaborazione.",
+      "processingTitle": "Elaborazione Pagamento",
+      "processingMessage": "Attendi mentre elaboriamo il tuo pagamento e apriamo il canale. Potrebbe richiedere alcuni istanti.",
       "lightningSuccess": "Pagamento Lightning avviato con successo!",
       "onchainSuccess": "Pagamento on-chain inviato con successo!",
       "paymentFailed": "Pagamento non riuscito: {{error}}",
       "unknownError": "Errore sconosciuto"
     },
+    "step4": {
+      "success": {
+        "title": "Ordine Completato!",
+        "message": "Il tuo pagamento è stato ricevuto e il canale è in fase di apertura.",
+        "buttonText": "Vai alla Pagina dei Canali",
+        "channelOpening": "Apertura canale in corso"
+      },
+      "error": {
+        "title": "Pagamento Non Riuscito",
+        "message": "Si è verificato un problema con il tuo pagamento. Riprova.",
+        "buttonText": "Riprova",
+        "refundTitle": "Informazioni sul tuo pagamento:",
+        "refundMessage": "Un rimborso on-chain verrà elaborato automaticamente",
+        "refundDetails": "e inviato al tuo portafoglio a breve.",
+        "refundNote": "Se non ricevi un rimborso entro 24 ore, contatta il supporto LSP utilizzando l'ID ordine qui sotto.",
+        "orderIdLabel": "Il Tuo ID Ordine:",
+        "copyToClipboard": "Copia negli appunti",
+        "copyHint": "Copia questo ID quando contatti il supporto per il rimborso"
+      },
+      "expired": {
+        "title": "Ordine Scaduto",
+        "message": "L'ordine è scaduto. Crea un nuovo ordine per continuare.",
+        "buttonText": "Crea Nuovo Ordine",
+        "expiredNote": "Ordine Scaduto:",
+        "expiredDetails": "L'ordine è scaduto. Crea un nuovo ordine per continuare."
+      },
+      "pending": {
+        "title": "Elaborazione Pagamento",
+        "message": "Il tuo pagamento è in elaborazione. Potrebbe richiedere alcuni istanti.",
+        "buttonText": "Verifica Stato"
+      },
+      "returnToChannels": "Torna ai Canali"
+    },
     "orderCopy": "ID ordine copiato!",
-    "paymentCopied": "Dettagli del pagamento copiati negli appunti!"
+    "paymentCopied": "Dettagli del pagamento copiati negli appunti!",
+    "infoMessage": "I canali LSP forniscono liquidità istantanea senza richiedere la gestione di transazioni on-chain. L'LSP gestisce l'apertura del canale e fornisce liquidità in entrata per ricevere pagamenti."
   },
   "rootRoute": {
     "connectionErrorTitle": "Errore di Connessione",
@@ -2065,6 +2207,71 @@
       "testNetworkMessage": "Sei attualmente su {{network}}. Tutti i token su questa rete non hanno valore reale e sono solo per scopi di test.",
       "requestTestCoins": "Puoi richiedere monete di test dal",
       "faucetLink": "Faucet {{network}}"
+    },
+    "walletHistory": {
+      "swaps": {
+        "noSwapsFiltered": "Nessuno scambio trovato corrispondente ai tuoi filtri.",
+        "noSwaps": "Nessuno scambio trovato."
+      },
+      "deposits": {
+        "noDepositsFiltered": "Nessun deposito trovato corrispondente ai tuoi filtri.",
+        "noDeposits": "Nessun deposito trovato."
+      },
+      "withdrawals": {
+        "noWithdrawalsFiltered": "Nessun prelievo trovato corrispondente ai tuoi filtri.",
+        "noWithdrawals": "Nessun prelievo trovato."
+      },
+      "channelOrders": {
+        "noOrders": "Nessun ordine di canale trovato.",
+        "noOrdersSearch": "Nessun ordine trovato corrispondente alla tua ricerca."
+      }
+    },
+    "appVersion": {
+      "commit": "Commit:",
+      "built": "Compilato:"
+    },
+    "buyChannelModal": {
+      "discount": "Sconto",
+      "confirmationTime": "Tempo di Conferma:",
+      "noFundsDeducted": "Nessun fondo è stato detratto. Crea un nuovo ordine per riprovare.",
+      "confirmAssetPurchase": "Conferma Acquisto Asset",
+      "buyChannelWithAsset": "Acquista Canale con Asset",
+      "completePayment": "Completa Pagamento",
+      "orderStatus": "Stato Ordine",
+      "reviewAndConfirm": "Rivedi e conferma o personalizza il tuo acquisto",
+      "configureChannel": "Configura i parametri del canale e dell'asset",
+      "payForChannel": "Paga per il tuo canale per completare l'ordine",
+      "orderCompleted": "Ordine del canale completato con successo!",
+      "orderStatusSubtitle": "Stato ordine"
+    },
+    "feeBreakdown": {
+      "channelFees": "Commissioni del Canale:"
+    },
+    "createChannel": {
+      "publicChannelsDesc": "I canali pubblici sono rilevabili e possono",
+      "privateChannelsDesc": "I canali privati forniscono connettività diretta",
+      "selectAssetError": "Seleziona un asset o deseleziona l'opzione \"Aggiungi Asset\"."
+    },
+    "walletInit": {
+      "settingUpWallet": "Configurazione del tuo portafoglio..."
+    },
+    "passwordSetupForm": {
+      "description": "Imposta una password sicura per proteggere il tuo nodo. Questa password sarà necessaria per accedere al tuo portafoglio.",
+      "createPasswordLabel": "Crea Password",
+      "createPasswordPlaceholder": "Inserisci una password sicura",
+      "confirmPasswordLabel": "Conferma Password",
+      "confirmPasswordPlaceholder": "Reinserisci la tua password",
+      "passwordRequired": "La password è obbligatoria",
+      "passwordMinLength": "La password deve contenere almeno 8 caratteri",
+      "passwordConfirmRequired": "La conferma della password è obbligatoria",
+      "passwordsDoNotMatch": "Le password non corrispondono",
+      "requirementsTitle": "Requisiti della Password:",
+      "requirementMinLength": "Almeno 8 caratteri",
+      "requirementUppercase": "Contiene lettera maiuscola",
+      "requirementNumber": "Contiene numero",
+      "requirementMatch": "Le password corrispondono",
+      "initializingButton": "Inizializzazione...",
+      "initializeButton": "Inizializza Nodo"
     }
   }
 }

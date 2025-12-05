@@ -43,6 +43,9 @@
     "loadingData": "Cargando datos...",
     "openChannel": "Abrir Canal",
     "buyChannel": "Comprar Canal",
+    "createNewChannel": "Crear Nuevo Canal",
+    "buyAChannel": "Comprar un Canal",
+    "manageChannels": "Gestionar Canales",
     "refreshing": "Actualizando...",
     "refresh": "Actualizar",
     "totalBalance": "Saldo Total",
@@ -107,6 +110,7 @@
     "additionalMakerUrls": "URLs de Maker Adicionales",
     "addMakerUrl": "Agregar URL de Maker",
     "addUrl": "Agregar URL",
+    "makerUrlPlaceholder": "Introducir URL de Maker",
     "default": "Predeterminado",
     "setAsDefault": "Establecer como predeterminado",
     "currentDefault": "Predeterminado actual",
@@ -154,7 +158,30 @@
     "loadingLogs": "Cargando registros...",
     "loadingSettings": "Cargando Configuración",
     "pleaseWait": "Por favor espera mientras cargamos tu configuración...",
-    "version": "Versión"
+    "version": "Versión",
+    "securityBackup": "Seguridad y Respaldo",
+    "viewRecoveryPhrase": "Ver Frase de Recuperación",
+    "accessSeedPhrase": "Accede a tu frase semilla cifrada",
+    "backupWallet": "Respaldar Billetera",
+    "exportBackup": "Exportar respaldo cifrado de la billetera",
+    "nodeStatus": "Estado del Nodo",
+    "nodeRunning": "Nodo en Ejecución",
+    "nodeOffline": "Nodo Desconectado",
+    "connectionType": "Tipo de Conexión",
+    "logout": "Cerrar Sesión",
+    "confirmLogout": "Confirmar Cierre de Sesión",
+    "logoutMessage": "¿Estás seguro de que quieres cerrar sesión? Esto bloqueará tu nodo.",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "confirmShutdown": "Confirmar Apagado",
+    "confirmShutdownMessage": "¿Estás seguro de que quieres apagar el nodo? Esta acción no se puede deshacer.",
+    "cancel": "Cancelar",
+    "restartNode": "¿Reiniciar el Nodo?",
+    "restartNodeMessage": "La configuración de tu nodo ha cambiado. ¿Quieres reiniciar el nodo ahora para que los cambios surtan efecto?",
+    "restartNow": "Reiniciar Ahora",
+    "later": "Más Tarde",
+    "shuttingDownTitle": "Apagando Nodo",
+    "shuttingDownMessage": "Por favor espera mientras se apaga el nodo..."
   },
   "modals": {
     "logoutTitle": "Confirmar Cierre de Sesión",
@@ -277,7 +304,15 @@
     "restoreWalletDescription": "Restaura una billetera usando tu respaldo cifrado existente.",
     "connectRemoteTitle": "Conectar a Nodo Remoto",
     "connectRemoteSubtitle": "Conéctate a un nodo RGB Lightning existente hospedado por ti o un proveedor",
-    "continueSetup": "Continuar a Configuración de Conexión"
+    "continueSetup": "Continuar a Configuración de Conexión",
+    "localNodeWarningTitle": "Ejecutar un Nodo Local",
+    "localNodeWarningMessage": "Los nodos locales requieren disponibilidad 24/7 para un rendimiento óptimo. Para la mayoría de los usuarios, recomendamos usar un nodo remoto en su lugar.",
+    "learnMore": "Más información",
+    "remoteNodePrerequisitesTitle": "Requisitos Previos",
+    "remoteNodePrerequisitesMessage": "Necesitarás una instancia de rgb-lightning-node en ejecución para conectarte. Sigue nuestra guía de configuración para comenzar.",
+    "viewSetupGuide": "Ver Guía de Configuración",
+    "getStarted": "Comenzar",
+    "recommended": "Recomendado"
   },
   "createChannel": {
     "checkingBalance": "Verificando saldo...",
@@ -626,7 +661,8 @@
     "nodeStopped": "Nodo detenido",
     "unlockCancelled": "Proceso de desbloqueo cancelado",
     "failedCheckStatus": "Error al verificar el estado del nodo: {{error}}",
-    "failedGetNodeInfo": "Error al obtener información del nodo después del desbloqueo"
+    "failedGetNodeInfo": "Error al obtener información del nodo después del desbloqueo",
+    "unknownError": "Se produjo un error desconocido"
   },
   "trade": {
     "noChannels": {
@@ -770,7 +806,8 @@
     "failedToStartNode": "Error al iniciar u operar el nodo: {{error}}",
     "unexpectedError": "Ocurrió un error inesperado: {{error}}",
     "continue": "Continuar",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "defaultAccountName": "Cuenta Restaurada"
   },
   "deposits": {
     "title": "Historial de Depósitos",
@@ -1104,6 +1141,27 @@
   },
   "orderChannel": {
     "step1": {
+      "title": "Comprar un Nuevo Canal del LSP",
+      "subtitle": "Conéctate a un Proveedor de Servicios Lightning para comenzar",
+      "howItWorks": "Cómo Funciona la Apertura de Canales",
+      "step1Title": "Inicias una solicitud de canal",
+      "step1Description": "Especifica la capacidad del canal y la distribución inicial del saldo",
+      "step2Title": "El LSP procesa tu solicitud",
+      "step2Description": "El Proveedor de Servicios Lightning valida y acepta tu pedido",
+      "step3Title": "Realizas el pago",
+      "step3Description": "Completa el pago vía Lightning u on-chain para financiar el canal",
+      "step4Title": "El canal se abre automáticamente",
+      "step4Description": "Una vez confirmado el pago, el LSP abre el canal con tu nodo",
+      "lspServerUrl": "URL del Servidor LSP",
+      "lspUrlPlaceholder": "Introduce la URL del servidor LSP",
+      "selectKaleidoLsp": "Usar LSP de Kaleidoswap",
+      "checkingConnection": "Verificando Conexión LSP...",
+      "alreadyConnectedMessage": "Ya conectado a este LSP",
+      "connectButton": "Conectar al LSP",
+      "cancelButton": "Cancelar",
+      "continueButton": "Continuar",
+      "modalTitle": "¿Conectar al LSP?",
+      "modalMessage": "Esto se conectará al Proveedor de Servicios Lightning y obtendrá los parámetros del canal.",
       "checkPeerFailed": "Error al verificar el estado de conexión del peer",
       "lspFetchSuccess": "Información del LSP obtenida exitosamente",
       "lspUrlMissing": "Error al obtener la URL de conexión del LSP",
@@ -1119,7 +1177,27 @@
       "noDefaultLsp": "No hay URL de LSP predeterminada configurada para la red: {{network}}"
     },
     "step2": {
+      "title": "Configura Tu Canal",
+      "subtitle": "Establece los parámetros y capacidad de tu canal",
+      "stepLabel": "Paso {{current}} de {{total}}",
+      "step1Label": "Conectar",
+      "step2Label": "Configurar",
+      "step3Label": "Pago",
+      "channelCapacity": "Capacidad del Canal (sats)",
+      "channelLiquidity": "Tu Liquidez del Canal (sats)",
+      "channelCapacityInfo": "Capacidad total del canal en satoshis",
+      "channelLiquidityInfo": "Cantidad de liquidez que controlarás en el canal",
+      "addAssetTitle": "Agregar Activo al Canal",
+      "selectAsset": "Seleccionar Activo",
+      "assetAmount": "Cantidad de Activo",
+      "loading": "Cargando...",
+      "backButton": "Atrás",
+      "nextButton": "Siguiente Paso",
       "fees": {
+        "title": "Comisiones Estimadas",
+        "lspFee": "Comisión del LSP",
+        "onchainFee": "Comisión On-chain",
+        "totalFee": "Comisión Total",
         "fetchFailed": "Error al obtener los datos. Por favor, inténtalo de nuevo más tarde."
       },
       "capacityRequired": "Por favor introduce una capacidad de canal.",
@@ -1136,13 +1214,77 @@
       "unexpectedError": "Ocurrió un error inesperado. Por favor, inténtalo de nuevo."
     },
     "step3": {
+      "title": "Completar Pago",
+      "subtitle": "Realiza tu pago para abrir el canal",
+      "loadingOrder": "Cargando detalles del pedido...",
+      "errorInvalidOrder": "Error: Datos de pedido inválidos",
+      "stepLabel": "Paso {{current}} de {{total}}",
+      "step1Label": "Conectar",
+      "step2Label": "Configurar",
+      "step3Label": "Pago",
+      "paymentMethod": "Método de Pago",
+      "lightning": "Lightning",
+      "onchain": "On-chain",
+      "scanQR": "Escanear Código QR",
+      "copyAddress": "Copiar Dirección",
+      "copyInvoice": "Copiar Factura",
+      "copied": "¡Copiado!",
+      "amount": "Cantidad",
+      "address": "Dirección",
+      "invoice": "Factura",
+      "expiresIn": "Expira en",
+      "expired": "Expirado",
+      "waitingForPayment": "Esperando pago...",
+      "paymentReceived": "¡Pago recibido!",
+      "processingPayment": "Procesando pago...",
+      "channelOpening": "Abriendo canal...",
+      "backButton": "Atrás",
+      "restartButton": "Empezar de Nuevo",
+      "paymentReceivedTitle": "Pago Recibido",
+      "paymentReceivedMessage": "Tu pago {{method}} ha sido recibido y está siendo procesado.",
+      "processingTitle": "Procesando Pago",
+      "processingMessage": "Por favor espera mientras procesamos tu pago y abrimos el canal. Esto puede tomar unos momentos.",
       "lightningSuccess": "¡Pago Lightning iniciado exitosamente!",
       "onchainSuccess": "¡Pago on-chain enviado exitosamente!",
       "paymentFailed": "Pago fallido: {{error}}",
       "unknownError": "Error desconocido"
     },
+    "step4": {
+      "success": {
+        "title": "¡Pedido Completado!",
+        "message": "Tu pago ha sido recibido y el canal se está abriendo.",
+        "buttonText": "Ir a la Página de Canales",
+        "channelOpening": "Apertura de canal en progreso"
+      },
+      "error": {
+        "title": "Pago Fallido",
+        "message": "Hubo un problema con tu pago. Por favor, inténtalo de nuevo.",
+        "buttonText": "Intentar de Nuevo",
+        "refundTitle": "Acerca de tu pago:",
+        "refundMessage": "Se procesará automáticamente un reembolso on-chain",
+        "refundDetails": "y se enviará a tu billetera pronto.",
+        "refundNote": "Si no recibes un reembolso dentro de 24 horas, por favor contacta al soporte del LSP utilizando tu ID de pedido a continuación.",
+        "orderIdLabel": "Tu ID de Pedido:",
+        "copyToClipboard": "Copiar al portapapeles",
+        "copyHint": "Copia este ID al contactar al soporte sobre tu reembolso"
+      },
+      "expired": {
+        "title": "Pedido Expirado",
+        "message": "El pedido ha expirado. Por favor crea un nuevo pedido para continuar.",
+        "buttonText": "Crear Nuevo Pedido",
+        "expiredNote": "Pedido Expirado:",
+        "expiredDetails": "El pedido ha expirado. Por favor crea un nuevo pedido para continuar."
+      },
+      "pending": {
+        "title": "Procesando Pago",
+        "message": "Tu pago está siendo procesado. Esto puede tomar unos momentos.",
+        "buttonText": "Verificar Estado"
+      },
+      "returnToChannels": "Volver a Canales"
+    },
     "orderCopy": "¡ID de orden copiado!",
-    "paymentCopied": "¡Detalles del pago copiados al portapapeles!"
+    "paymentCopied": "¡Detalles del pago copiados al portapapeles!",
+    "infoMessage": "Los canales LSP proporcionan liquidez instantánea sin requerir que gestiones transacciones on-chain. El LSP maneja la apertura del canal y proporciona liquidez entrante para recibir pagos."
   },
   "rootRoute": {
     "connectionErrorTitle": "Error de Conexión",
@@ -1195,6 +1337,107 @@
         "NO DEBES USAR LA APP PARA ENVIAR O RECIBIR BTC TEST NET O TOKENS RGB TEST NET QUE NO ESTÉS PREPARADO PARA PERDER COMPLETAMENTE."
       ],
       "error": "Error al cargar los términos de servicio"
+    }
+  },
+  "trade": {
+    "noChannels": {
+      "insufficientBalance": "Saldo de Bitcoin Insuficiente",
+      "insufficientBalanceMessage": "Necesitas algo de bitcoin para abrir un canal. Por favor deposita algo de BTC para comenzar.",
+      "depositBTC": "Depositar BTC",
+      "noRGBChannels": "No Hay Canales RGB Disponibles",
+      "noRGBChannelsMessage": "Para comenzar a intercambiar, necesitas un canal con algunos activos",
+      "openChannel": "Abrir Canal",
+      "buyFromLSP": "Comprar de LSP",
+      "marketMaker": "Creador de Mercado",
+      "noTradingChannels": "No Hay Canales de Intercambio Disponibles",
+      "buyChannel": "Comprar Canal",
+      "availableTradingPairs": "Pares de Intercambio Disponibles",
+      "supportedAssets": "Activos Compatibles",
+      "quickStartGuide": "Guía de Inicio Rápido",
+      "quickStartMessage": "Sigue estos pasos para comenzar a intercambiar con activos RGB",
+      "checkSupportedAssets": "Verificar activos compatibles",
+      "checkSupportedAssetsMessage": "Visita el registro para ver qué activos admite este creador",
+      "createYourChannel": "Crea Tu Canal",
+      "createChannelMessage": "Compra un canal de un LSP o abre uno directamente con tus activos",
+      "startTrading": "Comenzar a Intercambiar",
+      "startTradingMessage": "Regresa aquí una vez que tu canal esté activo para comenzar a intercambiar",
+      "recommendationCompatible": "Ya tienes activos compatibles con este creador de mercado. Puedes abrir un canal directamente.",
+      "recommendationBuy": "Para el inicio más rápido, recomendamos comprar un canal de un LSP con activos compatibles con este creador.",
+      "recommendationOpen": "Este creador de mercado admite activos específicos. Puedes abrir un canal con estos activos.",
+      "recommendationDefault": "Para intercambiar con este creador de mercado, necesitas un canal con uno de sus activos compatibles."
+    },
+    "channelsNotReady": {
+      "title": "Canales Aún No Listos",
+      "message": "Tus canales de intercambio se están configurando. Este proceso suele tomar unos minutos. Por favor espera mientras preparamos todo para ti.",
+      "channelStatus": "Estado del Canal",
+      "initializing": "Inicializando...",
+      "checkStatus": "Verificar Estado",
+      "setupTime": "Tiempo de Configuración",
+      "setupTimeMessage": "La configuración del canal suele tardar de 3 a 5 minutos en completarse",
+      "autoRefresh": "Actualización Automática",
+      "autoRefreshMessage": "Verificaremos automáticamente el estado cada 30 segundos"
+    },
+    "connectionIssues": {
+      "connectionLost": "Conexión con el Creador de Mercado Perdida",
+      "connectionLostMessage": "Tus canales de intercambio están disponibles, pero tenemos problemas para mantener una conexión en tiempo real con el creador de mercado.",
+      "preventsTradingMessage": "Esto impide actualizaciones de precios en vivo y el intercambio.",
+      "retryConnection": "Reintentar Conexión",
+      "connectionIssue": "Problema de Conexión",
+      "network": "Red",
+      "checkInternetMessage": "Verifica tu conexión a internet",
+      "switchMaker": "Cambiar Creador",
+      "tryDifferentMaker": "Prueba un creador de mercado diferente arriba",
+      "wait": "Esperar",
+      "serverBusy": "El servidor puede estar temporalmente ocupado",
+      "currentMaker": "Creador actual:",
+      "marketMakerSelector": "Si el creador actual no está disponible, cambia a otro para continuar intercambiando",
+      "connectingToMaker": "Conectando al Creador de Mercado",
+      "connectionTimeout": "Tiempo de Conexión Agotado",
+      "establishingConnection": "Estableciendo Conexión",
+      "connectingMessage": "Intentando conectar con el creador de mercado...",
+      "usuallyFastMessage": "Esto suele tomar solo unos segundos.",
+      "timeoutMessage": "No se pudo conectar con el creador de mercado en 30 segundos.",
+      "serverUnreachableMessage": "El servidor puede estar inaccesible o experimentando problemas.",
+      "connectingForSeconds": "Conectando durante {{seconds}} segundos...",
+      "cancelAndRetry": "Cancelar y Reintentar",
+      "elapsedTime": "{{seconds}}s transcurridos",
+      "tryingSwitchMessage": "Actualmente intentando conectar. Puedes cambiar para probar otro creador.",
+      "switchIfUnavailable": "Cambia a un creador diferente si el actual no está disponible",
+      "connectionInProgress": "Conexión en progreso"
+    },
+    "manual": {
+      "balancesUpdated": "Saldos de activos actualizados",
+      "balancesFailed": "Error al obtener saldos de activos",
+      "swapInitiated": "Intercambio iniciado exitosamente",
+      "swapInitiateFailed": "Error al iniciar el intercambio. Por favor intenta de nuevo.",
+      "noActiveSwap": "No hay intercambio activo para ejecutar",
+      "missingTakerPubkey": "Por favor ingresa el pubkey del tomador",
+      "swapExecuted": "Intercambio ejecutado exitosamente",
+      "swapExecuteFailed": "Error al ejecutar el intercambio. Por favor intenta de nuevo."
+    },
+    "taker": {
+      "balancesUpdated": "Saldos de activos actualizados",
+      "balancesFailed": "Error al obtener saldos de activos",
+      "missingSwapString": "Por favor ingresa una cadena de intercambio",
+      "whitelistSuccess": "Intercambio incluido en lista blanca exitosamente",
+      "whitelistFailed": "Error al incluir en lista blanca el intercambio. Por favor intenta de nuevo.",
+      "pubkeyCopied": "Clave pública copiada al portapapeles"
+    },
+    "maker": {
+      "switching": "Cambiando a nuevo creador...",
+      "reconnected": "Reconectado exitosamente al creador de mercado",
+      "reconnecting": "Reconexión en progreso. Por favor espera...",
+      "changeFailed": "Error al cambiar de creador",
+      "invalidUrl": "Formato de URL inválido",
+      "reconnectingStatus": "Reconectando al creador...",
+      "reconnectionInitFailed": "Error al iniciar la reconexión. Por favor intenta de nuevo.",
+      "reconnectionFailed": "Error al reconectar con el creador"
+    },
+    "statusToast": {
+      "swapSucceeded": "Intercambio exitoso",
+      "swapExpired": "Intercambio expirado",
+      "pendingSwaps_one": "{{count}} intercambio en progreso",
+      "pendingSwaps_other": "{{count}} intercambios en progreso"
     }
   },
   "tradeManual": {
@@ -1491,120 +1734,120 @@
   },
   "tradeMarketMaker": {
     "loading": {
-      "checkingBalance": "Checking wallet balance and requirements...",
-      "verifyingChannels": "Verifying channel availability and liquidity...",
-      "connectingMaker": "Connecting to market maker and fetching trading pairs...",
-      "initializingInfrastructure": "Initializing trading infrastructure...",
-      "connectingToMaker": "Connecting to Market Maker",
-      "initializingInterface": "Initializing Trading Interface"
+      "checkingBalance": "Verificando saldo de billetera y requisitos...",
+      "verifyingChannels": "Verificando disponibilidad de canales y liquidez...",
+      "connectingMaker": "Conectando al creador de mercado y obteniendo pares de intercambio...",
+      "initializingInfrastructure": "Inicializando infraestructura de intercambio...",
+      "connectingToMaker": "Conectando al Creador de Mercado",
+      "initializingInterface": "Inicializando Interfaz de Intercambio"
     },
     "header": {
-      "liveTrading": "Live Trading",
-      "via": "via",
-      "ready": "Ready",
-      "noPairs": "No Pairs",
-      "noMaker": "No Maker",
-      "reconnect": "Reconnect"
+      "liveTrading": "Intercambio en Vivo",
+      "via": "vía",
+      "ready": "Listo",
+      "noPairs": "Sin Pares",
+      "noMaker": "Sin Creador",
+      "reconnect": "Reconectar"
     },
     "form": {
-      "youSend": "You Send",
-      "youReceive": "You Receive (Estimated)",
-      "available": "Available:",
-      "onchainAvailable": "Onchain Available:",
-      "canReceiveUpTo": "Can receive up to:",
-      "status": "Status:",
-      "channelNeeded": "Channel needed"
+      "youSend": "Envías",
+      "youReceive": "Recibes (Estimado)",
+      "available": "Disponible:",
+      "onchainAvailable": "Disponible en Cadena:",
+      "canReceiveUpTo": "Puedes recibir hasta:",
+      "status": "Estado:",
+      "channelNeeded": "Canal necesario"
     },
     "banners": {
-      "tradingOnchain": "Trading with onchain balance",
-      "noChannelsYet": "You don't have any trading channels yet. When you buy an asset, a new channel will be created automatically using your onchain BTC balance.",
-      "channelNotReady": "Channel Not Ready: {{asset}}",
-      "channelsNotReady": "Channels Not Ready: {{assets}}",
-      "channelAwaiting": "Your {{asset}} channel is awaiting blockchain confirmation. You can view the trading pair, but swapping will be disabled until the channel is confirmed. This usually takes a few minutes.",
-      "channelsAwaiting": "Your {{assets}} {{channelText}} awaiting blockchain confirmation. You can view the trading pair, but swapping will be disabled until {{confirmText}} confirmed. This usually takes a few minutes.",
-      "additionalChannelsPending": "Additional Channels Pending",
-      "channelPendingConfirmation_one": "{{asset}} channel pending confirmation.",
-      "channelPendingConfirmation_other": "{{count}} channels ({{assets}}) pending confirmation."
+      "tradingOnchain": "Intercambiando con saldo en cadena",
+      "noChannelsYet": "Aún no tienes canales de intercambio. Cuando compres un activo, se creará automáticamente un nuevo canal usando tu saldo de BTC en cadena.",
+      "channelNotReady": "Canal No Listo: {{asset}}",
+      "channelsNotReady": "Canales No Listos: {{assets}}",
+      "channelAwaiting": "Tu canal de {{asset}} está esperando confirmación de blockchain. Puedes ver el par de intercambio, pero el swap estará deshabilitado hasta que el canal sea confirmado. Esto suele tomar unos minutos.",
+      "channelsAwaiting": "Tus {{assets}} {{channelText}} esperando confirmación de blockchain. Puedes ver el par de intercambio, pero el swap estará deshabilitado hasta que {{confirmText}} confirmado. Esto suele tomar unos minutos.",
+      "additionalChannelsPending": "Canales Adicionales Pendientes",
+      "channelPendingConfirmation_one": "Canal de {{asset}} pendiente de confirmación.",
+      "channelPendingConfirmation_other": "{{count}} canales ({{assets}}) pendientes de confirmación."
     },
     "channelWarning": {
-      "title": "{{asset}} Channel Required",
-      "sendMessage": "To send {{asset}}, you need to create a Lightning channel for this asset.",
-      "receiveMessage": "To receive {{asset}}, you need to create a Lightning channel for this asset. The asset will be purchased at the current rate and deposited into your new channel."
+      "title": "Canal de {{asset}} Requerido",
+      "sendMessage": "Para enviar {{asset}}, necesitas crear un canal Lightning para este activo.",
+      "receiveMessage": "Para recibir {{asset}}, necesitas crear un canal Lightning para este activo. El activo se comprará a la tasa actual y se depositará en tu nuevo canal."
     },
     "error": {
-      "title": "Trading Error",
-      "maxLimitExceeded": "Maximum Limit Exceeded",
-      "copyErrorMessage": "Copy error message",
-      "unableToGetQuote": "Unable to get quote from market maker. Please try again.",
-      "pairNotAvailable": "This trading pair is not currently available.",
-      "assetNotValid": "One of the selected assets is not valid.",
-      "unableToCalculateQuote": "Unable to calculate quote. Please try a different amount.",
-      "amountOutsideRange": "The amount you entered is outside the valid range for this trading pair.",
-      "amountMustBeBetween": "Amount must be between {{min}} and {{max}} {{asset}}.",
-      "swapDisabledOnchain": "Asset swapping is not available when trading with onchain balance. You can only buy assets with BTC.",
-      "cannotSwapSameAsset": "Cannot select {{asset}} for both assets",
-      "noTradingPairs": "No trading pairs available for {{asset}}",
-      "failedToFindPair": "Failed to find a valid trading pair",
-      "cannotSwapZeroAmounts": "Cannot swap zero amounts. Please enter a valid amount.",
-      "noValidQuote": "No valid quote available. Please try refreshing the quote.",
-      "channelAwaitingConfirmation": "Your {{asset}} channel is awaiting confirmation. Please wait for it to be ready before swapping.",
-      "noAssetChannel": "You don't have a {{asset}} channel. Please open a channel with {{asset}} to swap.",
-      "noAssetChannelReceive": "You don't have a {{asset}} channel. Please open a channel with {{asset}} to receive.",
-      "canOnlyReceiveUpTo": "You can only receive up to {{amount}} {{asset}}.",
-      "channelAwaitingPlural": "Channel for {{asset}} is awaiting confirmation. Please wait for it to be ready.",
-      "pleaseWaitChannelConfirmation": "Please wait for your channel to be confirmed before trading."
+      "title": "Error de Intercambio",
+      "maxLimitExceeded": "Límite Máximo Excedido",
+      "copyErrorMessage": "Copiar mensaje de error",
+      "unableToGetQuote": "No se pudo obtener cotización del creador de mercado. Por favor intenta de nuevo.",
+      "pairNotAvailable": "Este par de intercambio no está disponible actualmente.",
+      "assetNotValid": "Uno de los activos seleccionados no es válido.",
+      "unableToCalculateQuote": "No se pudo calcular la cotización. Por favor intenta con una cantidad diferente.",
+      "amountOutsideRange": "La cantidad que ingresaste está fuera del rango válido para este par de intercambio.",
+      "amountMustBeBetween": "La cantidad debe estar entre {{min}} y {{max}} {{asset}}.",
+      "swapDisabledOnchain": "El intercambio de activos no está disponible cuando se opera con saldo en cadena. Solo puedes comprar activos con BTC.",
+      "cannotSwapSameAsset": "No puedes seleccionar {{asset}} para ambos activos",
+      "noTradingPairs": "No hay pares de intercambio disponibles para {{asset}}",
+      "failedToFindPair": "No se pudo encontrar un par de intercambio válido",
+      "cannotSwapZeroAmounts": "No puedes intercambiar cantidades cero. Por favor ingresa una cantidad válida.",
+      "noValidQuote": "No hay cotización válida disponible. Por favor intenta actualizar la cotización.",
+      "channelAwaitingConfirmation": "Tu canal de {{asset}} está esperando confirmación. Por favor espera a que esté listo antes de intercambiar.",
+      "noAssetChannel": "No tienes un canal de {{asset}}. Por favor abre un canal con {{asset}} para intercambiar.",
+      "noAssetChannelReceive": "No tienes un canal de {{asset}}. Por favor abre un canal con {{asset}} para recibir.",
+      "canOnlyReceiveUpTo": "Solo puedes recibir hasta {{amount}} {{asset}}.",
+      "channelAwaitingPlural": "El canal para {{asset}} está esperando confirmación. Por favor espera a que esté listo.",
+      "pleaseWaitChannelConfirmation": "Por favor espera a que tu canal sea confirmado antes de intercambiar."
     },
     "swap": {
-      "exchangeRateQuote": "Exchange Rate & Quote",
-      "refresh": "↻ Refresh"
+      "exchangeRateQuote": "Tasa de Cambio y Cotización",
+      "refresh": "↻ Actualizar"
     },
     "noChannels": {
-      "insufficientBalance": "Insufficient Bitcoin Balance",
-      "insufficientBalanceMessage": "You need bitcoin to open a trading channel. Please deposit some BTC to get started with trading.",
-      "depositBitcoin": "Deposit Bitcoin",
-      "noChannelsAvailable": "No Channels Available",
-      "noChannelsMessage": "To start trading, you need to create a channel with some assets or buy one from a Lightning Service Provider.",
-      "createChannel": "Create Channel",
-      "buyFromLSP": "Buy from LSP"
+      "insufficientBalance": "Saldo de Bitcoin Insuficiente",
+      "insufficientBalanceMessage": "Necesitas bitcoin para abrir un canal de intercambio. Por favor deposita algo de BTC para comenzar a intercambiar.",
+      "depositBitcoin": "Depositar Bitcoin",
+      "noChannelsAvailable": "No Hay Canales Disponibles",
+      "noChannelsMessage": "Para comenzar a intercambiar, necesitas crear un canal con algunos activos o comprar uno de un Proveedor de Servicios Lightning.",
+      "createChannel": "Crear Canal",
+      "buyFromLSP": "Comprar de LSP"
     },
     "toast": {
-      "swapCompleted": "Swap completed successfully!",
-      "reconnectWait": "Please wait for the app to finish loading before reconnecting.",
-      "reconnectSuccess": "Reconnected to market maker successfully!",
-      "reconnectFailed": "Failed to reconnect to market maker. Please check the maker URL and your network connection.",
-      "reconnectError": "Failed to reconnect: {{error}}",
-      "channelOrderCreating": "Creating a channel order to buy your asset with onchain balance!",
-      "createAssetChannel": "Let's create a {{asset}} channel for you!",
-      "needChannelToTrade": "You need a channel to trade. Let's create one with your desired asset.",
-      "channelCreatedSuccess": "Channel created successfully! Refreshing...",
-      "failedToRefreshAmounts": "Failed to refresh amounts. Please try again.",
-      "initializationFailed": "Failed to initialize the trading interface. Please try again.",
-      "connectionError": "Connection error occurred. Trading may be limited.",
-      "connectionFailed": "Failed to establish live connection to market maker. Please check the maker URL and try again."
+      "swapCompleted": "¡Intercambio completado exitosamente!",
+      "reconnectWait": "Por favor espera a que la aplicación termine de cargar antes de reconectar.",
+      "reconnectSuccess": "¡Reconectado al creador de mercado exitosamente!",
+      "reconnectFailed": "No se pudo reconectar al creador de mercado. Por favor verifica la URL del creador y tu conexión de red.",
+      "reconnectError": "Error al reconectar: {{error}}",
+      "channelOrderCreating": "¡Creando una orden de canal para comprar tu activo con saldo en cadena!",
+      "createAssetChannel": "¡Vamos a crear un canal de {{asset}} para ti!",
+      "needChannelToTrade": "Necesitas un canal para intercambiar. Vamos a crear uno con tu activo deseado.",
+      "channelCreatedSuccess": "¡Canal creado exitosamente! Actualizando...",
+      "failedToRefreshAmounts": "Error al actualizar las cantidades. Por favor intenta de nuevo.",
+      "initializationFailed": "Error al inicializar la interfaz de intercambio. Por favor intenta de nuevo.",
+      "connectionError": "Ocurrió un error de conexión. El intercambio puede estar limitado.",
+      "connectionFailed": "Error al establecer conexión en vivo con el creador de mercado. Por favor verifica la URL del creador e intenta de nuevo."
     },
     "assetConflict": {
-      "warning": "Warning: Multiple versions of \"{{ticker}}\" detected. Only one version will be available for trading.",
-      "multipleConflicts": "Found {{conflictCount}} asset conflicts. Excluded {{excludedPairs}} trading pairs. {{validPairs}} valid pairs available for trading.",
-      "noTradablePairs": "No tradable pairs available with this market maker. The maker does not offer trading pairs for assets you have channels with.",
-      "noValidPairs": "No valid trading pairs available after filtering asset conflicts.",
-      "tickerConflict": "Asset conflict detected: \"{{ticker}}\" has multiple asset IDs ({{assetIds}}). {{pairCount}} trading pairs excluded for safety.",
-      "assetInfo": "Found {{count}} asset conflicts. View the registry to see which assets are supported."
+      "warning": "Advertencia: Se detectaron múltiples versiones de \"{{ticker}}\". Solo una versión estará disponible para intercambiar.",
+      "multipleConflicts": "Se encontraron {{conflictCount}} conflictos de activos. Se excluyeron {{excludedPairs}} pares de intercambio. {{validPairs}} pares válidos disponibles para intercambiar.",
+      "noTradablePairs": "No hay pares intercambiables disponibles con este creador de mercado. El creador no ofrece pares de intercambio para activos con los que tienes canales.",
+      "noValidPairs": "No hay pares de intercambio válidos disponibles después de filtrar conflictos de activos.",
+      "tickerConflict": "Conflicto de activo detectado: \"{{ticker}}\" tiene múltiples IDs de activo ({{assetIds}}). {{pairCount}} pares de intercambio excluidos por seguridad.",
+      "assetInfo": "Se encontraron {{count}} conflictos de activos. Consulta el registro para ver qué activos son compatibles."
     },
     "validation": {
-      "insufficientBalance": "Insufficient balance. You don't have any {{asset}} available to send.",
-      "enterAmount": "Please enter an amount to send.",
-      "minimumOrderSize": "The minimum order size is {{amount}} {{asset}}.",
-      "maxSendAmount": "You can only send up to {{amount}} {{asset}}.",
-      "unableToReceive": "Unable to receive {{asset}}. No channel capacity available.",
-      "maxReceiveAmount": "You can only receive up to {{amount}} {{asset}}.",
-      "htlcLimit": "Due to channel constraints, you can only send up to {{amount}} {{asset}} in a single transaction.",
-      "minOrderSize": "The minimum order size for {{asset}} is {{amount}}.",
-      "maxOrderSize": "The maximum order size for {{asset}} is {{amount}}.",
-      "invalidAmount": "Invalid amount. Please check the minimum and maximum order sizes for this trading pair."
+      "insufficientBalance": "Saldo insuficiente. No tienes {{asset}} disponible para enviar.",
+      "enterAmount": "Por favor ingresa una cantidad para enviar.",
+      "minimumOrderSize": "El tamaño mínimo de orden es {{amount}} {{asset}}.",
+      "maxSendAmount": "Solo puedes enviar hasta {{amount}} {{asset}}.",
+      "unableToReceive": "No se puede recibir {{asset}}. No hay capacidad de canal disponible.",
+      "maxReceiveAmount": "Solo puedes recibir hasta {{amount}} {{asset}}.",
+      "htlcLimit": "Debido a restricciones del canal, solo puedes enviar hasta {{amount}} {{asset}} en una sola transacción.",
+      "minOrderSize": "El tamaño mínimo de orden para {{asset}} es {{amount}}.",
+      "maxOrderSize": "El tamaño máximo de orden para {{asset}} es {{amount}}.",
+      "invalidAmount": "Cantidad inválida. Por favor verifica los tamaños mínimo y máximo de orden para este par de intercambio."
     },
     "swap": {
-      "errorDetailsClipboard": "Error details copied to clipboard",
-      "swapFailed": "Swap Failed: {{error}}"
+      "errorDetailsClipboard": "Detalles del error copiados al portapapeles",
+      "swapFailed": "Intercambio Fallido: {{error}}"
     }
   },
   "withdrawModal": {
@@ -1839,6 +2082,79 @@
         "custom": "{{rate}} sat/vB (Personalizada)",
         "predefined": "{{rate}} sat/vB ({{label}})"
       }
+    }
+  },
+  "components": {
+    "alert": {
+      "testNetworkWarning": "Advertencia de Red de Prueba",
+      "testNetworkMessage": "Actualmente estás en {{network}}. Cualquier token en esta red no tiene valor real y es solo para pruebas.",
+      "requestTestCoins": "Puedes solicitar monedas de prueba desde el",
+      "faucetLink": "Faucet de {{network}}"
+    },
+    "walletHistory": {
+      "swaps": {
+        "noSwapsFiltered": "No se encontraron intercambios que coincidan con sus filtros.",
+        "noSwaps": "No se encontraron intercambios."
+      },
+      "deposits": {
+        "noDepositsFiltered": "No se encontraron depósitos que coincidan con sus filtros.",
+        "noDeposits": "No se encontraron depósitos."
+      },
+      "withdrawals": {
+        "noWithdrawalsFiltered": "No se encontraron retiros que coincidan con sus filtros.",
+        "noWithdrawals": "No se encontraron retiros."
+      },
+      "channelOrders": {
+        "noOrders": "No se encontraron órdenes de canal.",
+        "noOrdersSearch": "No se encontraron órdenes que coincidan con su búsqueda."
+      }
+    },
+    "appVersion": {
+      "commit": "Commit:",
+      "built": "Compilado:"
+    },
+    "buyChannelModal": {
+      "discount": "Descuento",
+      "confirmationTime": "Tiempo de Confirmación:",
+      "noFundsDeducted": "No se dedujo ningún fondo. Cree una nueva orden para intentarlo de nuevo.",
+      "confirmAssetPurchase": "Confirmar Compra de Activo",
+      "buyChannelWithAsset": "Comprar Canal con Activo",
+      "completePayment": "Completar Pago",
+      "orderStatus": "Estado del Pedido",
+      "reviewAndConfirm": "Revise y confirme o personalice su compra",
+      "configureChannel": "Configure los parámetros de su canal y activo",
+      "payForChannel": "Pague por su canal para completar el pedido",
+      "orderCompleted": "¡Pedido de canal completado exitosamente!",
+      "orderStatusSubtitle": "Estado del pedido"
+    },
+    "feeBreakdown": {
+      "channelFees": "Tarifas del Canal:"
+    },
+    "createChannel": {
+      "publicChannelsDesc": "Los canales públicos son detectables y pueden",
+      "privateChannelsDesc": "Los canales privados proporcionan conectividad directa",
+      "selectAssetError": "Por favor seleccione un activo o desmarque la opción \"Agregar Activo\"."
+    },
+    "walletInit": {
+      "settingUpWallet": "Configurando su billetera..."
+    },
+    "passwordSetupForm": {
+      "description": "Establezca una contraseña segura para proteger su nodo. Esta contraseña será necesaria para acceder a su billetera.",
+      "createPasswordLabel": "Crear Contraseña",
+      "createPasswordPlaceholder": "Ingrese una contraseña segura",
+      "confirmPasswordLabel": "Confirmar Contraseña",
+      "confirmPasswordPlaceholder": "Vuelva a ingresar su contraseña",
+      "passwordRequired": "La contraseña es obligatoria",
+      "passwordMinLength": "La contraseña debe tener al menos 8 caracteres",
+      "passwordConfirmRequired": "La confirmación de contraseña es obligatoria",
+      "passwordsDoNotMatch": "Las contraseñas no coinciden",
+      "requirementsTitle": "Requisitos de Contraseña:",
+      "requirementMinLength": "Al menos 8 caracteres",
+      "requirementUppercase": "Contiene letra mayúscula",
+      "requirementNumber": "Contiene número",
+      "requirementMatch": "Las contraseñas coinciden",
+      "initializingButton": "Inicializando...",
+      "initializeButton": "Inicializar Nodo"
     }
   }
 }

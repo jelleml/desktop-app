@@ -1,4 +1,5 @@
 import { CheckCircle, XCircle, Clock, Info } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface StatusScreenProps {
   status: 'success' | 'error' | 'expired'
@@ -13,6 +14,7 @@ export const StatusScreen: React.FC<StatusScreenProps> = ({
   onClose,
   onRetry,
 }) => {
+  const { t } = useTranslation()
   const config = {
     error: {
       actions: (
@@ -72,7 +74,7 @@ export const StatusScreen: React.FC<StatusScreenProps> = ({
           <div className="flex items-start gap-2">
             <Info className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-yellow-200/80">
-              <p>No funds were deducted. Create a new order to try again.</p>
+              <p>{t('components.buyChannelModal.noFundsDeducted')}</p>
             </div>
           </div>
         </div>

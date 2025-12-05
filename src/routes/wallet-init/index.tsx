@@ -841,8 +841,8 @@ export const Component = () => {
 
       case 'setup':
         return renderStepLayout(
-          'Create New Wallet',
-          'Set up your local node to create a new RGB Lightning wallet',
+          t('walletInit.setupStep.title'),
+          t('walletInit.setupStep.subtitle'),
           <Wallet />,
           <div className="w-full">
             <NodeSetupForm
@@ -856,8 +856,8 @@ export const Component = () => {
 
       case 'password':
         return renderStepLayout(
-          'Create Password',
-          'Set a strong password to secure your node',
+          t('walletInit.passwordStep.title'),
+          t('walletInit.passwordStep.subtitle'),
           <Lock />,
           <div className="w-full">
             {isInitializing && (
@@ -867,13 +867,12 @@ export const Component = () => {
                   icon={
                     <Loader2 className="w-5 h-5 animate-spin text-cyan-400" />
                   }
-                  title="Initializing Node"
+                  title={t('walletInit.passwordStep.initializingTitle')}
                   variant="info"
                 >
                   <div className="space-y-2">
                     <p className="text-sm text-slate-300">
-                      Please wait while we initialize your node. This may take a
-                      few moments...
+                      {t('walletInit.passwordStep.initializingMessage')}
                     </p>
                     <div className="flex items-center gap-2 text-xs text-slate-400">
                       <div className="flex gap-1">
@@ -890,7 +889,7 @@ export const Component = () => {
                           style={{ animationDelay: '300ms' }}
                         ></div>
                       </div>
-                      <span>Setting up your wallet...</span>
+                      <span>{t('components.walletInit.settingUpWallet')}</span>
                     </div>
                   </div>
                 </Alert>
@@ -911,8 +910,8 @@ export const Component = () => {
 
       case 'mnemonic':
         return renderStepLayout(
-          'Recovery Phrase',
-          'Save your recovery phrase in a secure location',
+          t('walletInit.mnemonicStep.title'),
+          t('walletInit.mnemonicStep.subtitle'),
           <FileText />,
           <div className="w-full">
             <MnemonicDisplay
@@ -927,8 +926,8 @@ export const Component = () => {
 
       case 'verify':
         return renderStepLayout(
-          'Verify Recovery Phrase',
-          "Confirm you've saved your recovery phrase correctly",
+          t('walletInit.verifyStep.title'),
+          t('walletInit.verifyStep.subtitle'),
           <CheckCircle />,
           <div className="w-full">
             <MnemonicVerifyForm
@@ -942,16 +941,16 @@ export const Component = () => {
 
       case 'unlock':
         return renderStepLayout(
-          isNodeError ? 'Node Error' : 'Starting Node',
+          isNodeError ? t('walletInit.unlockStep.errorTitle') : t('walletInit.unlockStep.title'),
           isNodeError
-            ? 'There was an error initializing your node'
-            : 'Your node is being initialized',
+            ? t('walletInit.unlockStep.errorSubtitle')
+            : t('walletInit.unlockStep.subtitle'),
           isNodeError ? <AlertTriangle /> : <Zap />,
           isNodeError ? (
             <Alert
               className="mb-4"
               icon={<AlertTriangle className="w-4 h-4" />}
-              title="Node Error"
+              title={t('walletInit.unlockStep.errorTitle')}
               variant="error"
             >
               <p className="text-sm">{nodeErrorMessage}</p>
@@ -961,7 +960,7 @@ export const Component = () => {
                   size="sm"
                   variant="outline"
                 >
-                  Back to Verification
+                  {t('walletInit.unlockStep.backToVerification')}
                 </Button>
               </div>
             </Alert>
@@ -1022,6 +1021,7 @@ interface NodeSetupFormProps {
 }
 
 const NodeSetupForm = ({ form, onSubmit, errors }: NodeSetupFormProps) => {
+  const { t } = useTranslation()
   const selectedNetwork = form.watch('network')
 
   // Update effect to use network defaults
@@ -1037,8 +1037,7 @@ const NodeSetupForm = ({ form, onSubmit, errors }: NodeSetupFormProps) => {
   return (
     <div className="w-full">
       <p className="text-slate-400 mb-6 leading-relaxed">
-        Configure your node settings to create a new RGB Lightning wallet.
-        Choose a name and network for your wallet.
+        {t('walletInit.setupStep.description')}
       </p>
 
       <Card className="p-6 bg-blue-dark/40 border border-white/5">
@@ -1046,7 +1045,7 @@ const NodeSetupForm = ({ form, onSubmit, errors }: NodeSetupFormProps) => {
           {errors.length > 0 && (
             <Alert
               icon={<AlertCircle className="w-4 h-4" />}
-              title="Error"
+              title={t('common.error')}
               variant="error"
             >
               <ul className="text-xs space-y-1">
@@ -1061,16 +1060,16 @@ const NodeSetupForm = ({ form, onSubmit, errors }: NodeSetupFormProps) => {
 
           <SetupSection>
             <FormField
-              description="This name will be used to identify your wallet"
+              description={t('walletInit.setupStep.accountNameDescription')}
               error={form.formState.errors.name?.message}
               htmlFor="name"
-              label="Account Name"
+              label={t('walletInit.setupStep.accountNameLabel')}
             >
               <Input
                 id="name"
-                placeholder="My Bitcoin Wallet"
+                placeholder={t('walletInit.setupStep.accountNamePlaceholder')}
                 {...form.register('name', {
-                  required: 'Account name is required',
+                  required: t('walletInit.setupStep.accountNameRequired'),
                 })}
                 error={!!form.formState.errors.name}
               />
@@ -1087,14 +1086,14 @@ const NodeSetupForm = ({ form, onSubmit, errors }: NodeSetupFormProps) => {
             <NetworkSettings form={form} />
 
             <FormField
-              description="Optional authentication token for remote node access"
+              description={t('walletInit.setupStep.bearerTokenDescription')}
               error={form.formState.errors.bearer_token?.message}
               htmlFor="bearer_token"
-              label="Bearer Token"
+              label={t('walletInit.setupStep.bearerTokenLabel')}
             >
               <Input
                 id="bearer_token"
-                placeholder="Enter your bearer token"
+                placeholder={t('walletInit.setupStep.bearerTokenPlaceholder')}
                 {...form.register('bearer_token')}
                 error={!!form.formState.errors.bearer_token}
               />
@@ -1110,7 +1109,7 @@ const NodeSetupForm = ({ form, onSubmit, errors }: NodeSetupFormProps) => {
               type="submit"
               variant="primary"
             >
-              Continue
+              {t('walletInit.setupStep.continueButton')}
             </Button>
           </div>
         </form>

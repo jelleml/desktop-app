@@ -161,6 +161,11 @@ export const getAssetPrecision = (
   bitcoinUnit: string,
   assets?: NiaAsset[]
 ): number => {
+  // Handle undefined, null or empty asset
+  if (!asset) {
+    return 8 // Default precision
+  }
+
   // Normalize asset ticker to uppercase for case-insensitive comparison
   const normalizedAsset = asset.toUpperCase()
 

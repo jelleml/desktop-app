@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface PaymentMethodTabsProps {
   paymentMethod: 'lightning' | 'onchain'
@@ -9,6 +10,8 @@ export const PaymentMethodTabs: React.FC<PaymentMethodTabsProps> = ({
   paymentMethod,
   onMethodChange,
 }) => {
+  const { t } = useTranslation()
+
   return (
     <div className="flex justify-center mb-6">
       <div className="bg-gray-900/50 p-1 rounded-xl">
@@ -22,7 +25,9 @@ export const PaymentMethodTabs: React.FC<PaymentMethodTabsProps> = ({
             key={method}
             onClick={() => onMethodChange(method as 'lightning' | 'onchain')}
           >
-            {method === 'lightning' ? '⚡ Lightning' : '₿ On-chain'}
+            {method === 'lightning'
+              ? t('orderChannel.step3.lightningTab')
+              : t('orderChannel.step3.onchainTab')}
           </button>
         ))}
       </div>

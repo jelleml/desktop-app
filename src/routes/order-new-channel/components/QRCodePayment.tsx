@@ -1,6 +1,7 @@
 import QRCode from 'qrcode.react'
 import React from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
+import { useTranslation } from 'react-i18next'
 
 import { formatBitcoinAmount } from '../../../helpers/number'
 import { Lsps1CreateOrderResponse } from '../../../slices/makerApi/makerApi.slice'
@@ -22,6 +23,7 @@ export const QRCodePayment: React.FC<QRCodePaymentProps> = ({
   order,
   onCopy,
 }) => {
+  const { t } = useTranslation()
   const getPaymentTextToCopy = (): string => {
     if (paymentMethod === 'lightning' && order?.payment?.bolt11?.invoice) {
       return order.payment.bolt11.invoice
@@ -43,7 +45,9 @@ export const QRCodePayment: React.FC<QRCodePaymentProps> = ({
       {/* Payment Details */}
       <div className="space-y-4">
         <div className="bg-gray-900/50 p-4 rounded-xl text-center">
-          <h4 className="text-sm text-gray-400 mb-2">Amount to Pay</h4>
+          <h4 className="text-sm text-gray-400 mb-2">
+            {t('orderChannel.step3.amountToPay')}
+          </h4>
           <p className="text-2xl font-bold text-white">
             {formatBitcoinAmount(
               currentPayment?.order_total_sat || 0,
@@ -55,7 +59,9 @@ export const QRCodePayment: React.FC<QRCodePaymentProps> = ({
 
         <CopyToClipboard onCopy={onCopy} text={getPaymentTextToCopy()}>
           <button className="w-full px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-200 font-medium">
-            Copy {paymentMethod === 'lightning' ? 'Invoice' : 'Address'}
+            {paymentMethod === 'lightning'
+              ? t('orderChannel.step3.copyInvoice')
+              : t('orderChannel.step3.copyAddress')}
           </button>
         </CopyToClipboard>
       </div>

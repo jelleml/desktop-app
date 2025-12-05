@@ -1,4 +1,5 @@
 import { Info, ArrowRightLeft, Coins, Zap } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import { formatNumberWithCommas } from '../../../helpers/number'
 import { ChannelFees } from '../../../slices/makerApi/makerApi.slice'
@@ -19,6 +20,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
   compact = false,
   quote,
 }) => {
+  const { t } = useTranslation()
   if (!orderPayload) return null
 
   const totalCapacity =
@@ -152,7 +154,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
             )}
             {fees.applied_discount && fees.applied_discount > 0 && (
               <div className="flex justify-between text-sm text-green-400">
-                <span>Discount</span>
+                <span>{t('components.buyChannelModal.discount')}</span>
                 <span>
                   -{formatNumberWithCommas(fees.applied_discount)} sats
                 </span>

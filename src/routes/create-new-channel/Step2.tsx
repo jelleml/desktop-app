@@ -279,7 +279,7 @@ export const Step2 = ({
 
     // Check if "Add Asset" is checked but no asset is selected
     if (addAsset && !data.assetId) {
-      toast.error('Please select an asset or uncheck the "Add Asset" option.', {
+      toast.error(t('components.createChannel.selectAssetError'), {
         autoClose: 5000,
         position: 'bottom-right',
       })
@@ -464,7 +464,7 @@ export const Step2 = ({
                           placeholder="Select an RGB asset"
                           searchPlaceholder="Search by name, ticker or asset ID..."
                           title="Select RGB Asset"
-                          value={field.value}
+                          value={field.value ?? ''}
                         />
 
                         {!field.value && addAsset && (
@@ -1001,10 +1001,8 @@ export const Step2 = ({
                   />
                 </svg>
                 <div className="text-sm text-blue-300">
-                  <strong>Public channels</strong> are discoverable and can
-                  route payments for the network.
-                  <strong>Private channels</strong> provide direct connectivity
-                  without network visibility.
+                  <strong>{t('components.createChannel.publicChannelsDesc')}</strong> route payments for the network.
+                  <strong>{t('components.createChannel.privateChannelsDesc')}</strong> without network visibility.
                 </div>
               </div>
             </div>

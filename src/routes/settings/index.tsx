@@ -528,9 +528,9 @@ export const Component: React.FC = () => {
         <div className="w-16 h-16 mb-8">
           <div className="w-full h-full border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">Loading Settings</h2>
+        <h2 className="text-2xl font-bold text-white mb-2">{t('settings.loadingSettings')}</h2>
         <p className="text-gray-400">
-          Please wait while we load your settings...
+          {t('settings.pleaseWait')}
         </p>
       </div>
     )
@@ -658,23 +658,23 @@ export const Component: React.FC = () => {
                           name="makerUrls"
                           render={({ field }) => (
                             <div className="space-y-4">
-                              {field.value.map((url, index) => (
+                              {(field.value ?? []).map((url, index) => (
                                 <div className="flex gap-2" key={index}>
                                   <div className="flex-1 relative group">
                                     <input
                                       className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200"
                                       onChange={(e) => {
-                                        const newUrls = [...field.value]
+                                        const newUrls = [...(field.value ?? [])]
                                         newUrls[index] = e.target.value
                                         field.onChange(newUrls)
                                       }}
-                                      placeholder="Maker URL"
+                                      placeholder={t('settings.makerUrlPlaceholder') || 'Maker URL'}
                                       type="text"
                                       value={url}
                                     />
                                     {url === watch('defaultMakerUrl') && (
                                       <span className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded-md">
-                                        Default
+                                        {t('settings.default')}
                                       </span>
                                     )}
                                   </div>
@@ -690,8 +690,8 @@ export const Component: React.FC = () => {
                                       }}
                                       title={
                                         url === watch('defaultMakerUrl')
-                                          ? 'Current default'
-                                          : 'Set as default'
+                                          ? t('settings.currentDefault')
+                                          : t('settings.setAsDefault')
                                       }
                                       type="button"
                                     >
@@ -706,7 +706,7 @@ export const Component: React.FC = () => {
                                     <button
                                       className="p-3 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-colors"
                                       onClick={() => {
-                                        const newUrls = field.value.filter(
+                                        const newUrls = (field.value ?? []).filter(
                                           (_, i) => i !== index
                                         )
                                         field.onChange(newUrls)
@@ -718,7 +718,7 @@ export const Component: React.FC = () => {
                                           )
                                         }
                                       }}
-                                      title="Remove URL"
+                                      title={t('settings.removeUrl')}
                                       type="button"
                                     >
                                       <Trash2 className="w-5 h-5" />
@@ -729,10 +729,10 @@ export const Component: React.FC = () => {
                               <button
                                 className="w-full px-4 py-3 border border-blue-500/20 text-blue-500 rounded-lg hover:bg-blue-500/10 transition-colors"
                                 onClick={() => {
-                                  const newUrls = [...field.value, '']
+                                  const newUrls = [...(field.value ?? []), '']
                                   field.onChange(newUrls)
                                   // If this is the first URL, set it as default
-                                  if (field.value.length === 0) {
+                                  if ((field.value ?? []).length === 0) {
                                     setValue('defaultMakerUrl', '')
                                   }
                                 }}
@@ -831,12 +831,12 @@ export const Component: React.FC = () => {
                     render={({ field }) => (
                       <div className="group transition-all duration-300 hover:translate-x-1">
                         <label className="block text-sm font-semibold text-gray-300 mb-2">
-                          RGB Proxy Endpoint
+                          {t('settings.rgbProxyEndpoint')}
                         </label>
                         <input
                           {...field}
                           className="w-full px-4 py-3 text-white bg-gray-700/50 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200"
-                          placeholder="Proxy service endpoint"
+                          placeholder={t('settings.rgbProxyPlaceholder')}
                           type="text"
                         />
                       </div>
@@ -854,7 +854,7 @@ export const Component: React.FC = () => {
                         <input
                           {...field}
                           className="block w-full pl-10 pr-12 py-3 text-white bg-gray-700/50 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200"
-                          placeholder="Enter bearer token for remote node authentication"
+                          placeholder={t('settings.bearerTokenPlaceholder')}
                           type="text"
                         />
                       </div>
@@ -906,7 +906,7 @@ export const Component: React.FC = () => {
               <div className="flex items-center gap-2 mb-6">
                 <Shield className="w-5 h-5 text-blue-400" />
                 <h3 className="text-xl font-semibold text-white">
-                  Security & Backup
+                  {t('settings.securityBackup')}
                 </h3>
               </div>
 
@@ -924,10 +924,10 @@ export const Component: React.FC = () => {
                         </div>
                         <div className="text-left">
                           <div className="font-semibold">
-                            View Recovery Phrase
+                            {t('settings.viewRecoveryPhrase')}
                           </div>
                           <div className="text-sm text-white/70">
-                            Access your encrypted seed phrase
+                            {t('settings.accessSeedPhrase')}
                           </div>
                         </div>
                       </div>
@@ -947,9 +947,9 @@ export const Component: React.FC = () => {
                         <Download className="w-5 h-5 text-blue-400" />
                       </div>
                       <div className="text-left">
-                        <div className="font-semibold">Backup Wallet</div>
+                        <div className="font-semibold">{t('settings.backupWallet')}</div>
                         <div className="text-sm text-gray-400">
-                          Export encrypted wallet backup
+                          {t('settings.exportBackup')}
                         </div>
                       </div>
                     </div>
@@ -964,7 +964,7 @@ export const Component: React.FC = () => {
               <div className="flex items-center gap-2 mb-6">
                 <Activity className="w-5 h-5 text-blue-400" />
                 <h3 className="text-xl font-semibold text-white">
-                  Node Status
+                  {t('settings.nodeStatus')}
                 </h3>
               </div>
 
@@ -994,7 +994,7 @@ export const Component: React.FC = () => {
                         isNodeRunning ? 'text-green-400' : 'text-red-400'
                       }`}
                     >
-                      Node is {isNodeRunning ? 'Running' : 'Offline'}
+                      {isNodeRunning ? t('settings.nodeRunning') : t('settings.nodeOffline')}
                     </span>
                   </div>
                 </div>
@@ -1003,10 +1003,10 @@ export const Component: React.FC = () => {
                 <div className="p-4 bg-gray-700/30 rounded-xl border border-gray-700">
                   <div className="flex items-center gap-2 text-gray-400 mb-1">
                     <Server className="w-4 h-4" />
-                    <span className="text-sm font-medium">Connection Type</span>
+                    <span className="text-sm font-medium">{t('settings.connectionType')}</span>
                   </div>
                   <p className="text-white font-medium ml-6">
-                    {isLocalNode ? 'Local Node' : 'Remote Node'}
+                    {isLocalNode ? t('settings.localNode') : t('settings.remoteNode')}
                   </p>
                 </div>
               </div>
@@ -1019,7 +1019,7 @@ export const Component: React.FC = () => {
                     onClick={handleLogout}
                   >
                     <LogOut className="w-5 h-5 mr-2" />
-                    Logout
+                    {t('settings.logout')}
                   </button>
 
                   <button
@@ -1027,7 +1027,7 @@ export const Component: React.FC = () => {
                     onClick={handleShutdown}
                   >
                     <Power className="w-5 h-5 mr-2" />
-                    Shutdown
+                    {t('settings.shutdown')}
                   </button>
                 </div>
               </div>
@@ -1049,14 +1049,14 @@ export const Component: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Activity className="w-5 h-5 text-blue-400" />
                   <h3 className="text-xl font-semibold text-white">
-                    Node Logs
+                    {t('settings.nodeLogs')}
                   </h3>
                 </div>
 
                 <div className="flex items-center gap-3">
                   {/* Entry selector */}
                   <div className="flex items-center gap-2 bg-gray-700/30 px-2 py-1 rounded-lg border border-gray-600">
-                    <span className="text-sm text-gray-400">Show</span>
+                    <span className="text-sm text-gray-400">{t('settings.show')}</span>
                     <select
                       className="bg-transparent text-white text-sm focus:outline-none focus:ring-0 border-0"
                       onChange={(e) => {
@@ -1070,7 +1070,7 @@ export const Component: React.FC = () => {
                       <option value="200">200</option>
                       <option value="500">500</option>
                     </select>
-                    <span className="text-sm text-gray-400">entries</span>
+                    <span className="text-sm text-gray-400">{t('settings.entries')}</span>
                   </div>
 
                   {/* Action buttons */}
@@ -1079,7 +1079,7 @@ export const Component: React.FC = () => {
                       className="p-2 text-sm bg-gray-700/30 hover:bg-gray-600/50 text-white rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed border border-gray-600"
                       disabled={nodeLogs.length === 0 || isLoadingLogs}
                       onClick={handleExportLogs}
-                      title="Export logs"
+                      title={t('settings.exportLogs')}
                     >
                       <Download className="w-4 h-4" />
                     </button>
@@ -1092,7 +1092,7 @@ export const Component: React.FC = () => {
                         setCurrentPage(1)
                         fetchNodeLogs()
                       }}
-                      title="Refresh logs"
+                      title={t('settings.refreshLogs')}
                     >
                       <RefreshCw className="w-4 h-4" />
                     </button>
@@ -1100,7 +1100,7 @@ export const Component: React.FC = () => {
                       className="p-2 text-sm bg-gray-700/30 hover:bg-gray-600/50 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-600"
                       disabled={nodeLogs.length === 0 || isLoadingLogs}
                       onClick={() => setNodeLogs([])}
-                      title="Clear logs"
+                      title={t('settings.clearLogs')}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -1112,13 +1112,13 @@ export const Component: React.FC = () => {
             <div className="bg-gray-900/95">
               <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700/50 bg-gray-800/50">
                 <span className="text-sm font-medium text-gray-300">
-                  Live Node Logs
+                  {t('settings.liveNodeLogs')}
                 </span>
                 <div className="flex items-center gap-4">
                   <span className="text-xs text-gray-500">
-                    Page {currentPage} of{' '}
+                    {t('settings.page')} {currentPage} {t('settings.of')}{' '}
                     {Math.max(1, Math.ceil(totalLogs / maxLogEntries))} (
-                    {totalLogs} total entries)
+                    {totalLogs} {t('settings.totalEntries')})
                   </span>
                   <div className="flex gap-2">
                     <button
@@ -1128,7 +1128,7 @@ export const Component: React.FC = () => {
                         setCurrentPage((prev) => Math.max(1, prev - 1))
                       }}
                     >
-                      Previous
+                      {t('settings.previous')}
                     </button>
                     <button
                       className="px-2 py-1 text-sm bg-gray-700/30 hover:bg-gray-600/50 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-600"
@@ -1140,7 +1140,7 @@ export const Component: React.FC = () => {
                         setCurrentPage((prev) => prev + 1)
                       }}
                     >
-                      Next
+                      {t('settings.next')}
                     </button>
                   </div>
                 </div>
@@ -1152,7 +1152,7 @@ export const Component: React.FC = () => {
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                       <span className="text-sm text-gray-400">
-                        Loading logs...
+                        {t('settings.loadingLogs')}
                       </span>
                     </div>
                   </div>
@@ -1160,7 +1160,7 @@ export const Component: React.FC = () => {
                   <div className="flex items-center justify-center h-full text-gray-500">
                     <span className="flex items-center gap-2">
                       <Activity className="w-4 h-4" />
-                      No logs available
+                      {t('settings.noLogsAvailable')}
                     </span>
                   </div>
                 ) : (
@@ -1210,11 +1210,10 @@ export const Component: React.FC = () => {
               <AlertTriangle size={48} />
             </div>
             <h2 className="text-2xl font-bold mb-4 text-center text-white">
-              Restart Node?
+              {t('settings.restartNode')}
             </h2>
             <p className="text-gray-300 text-center mb-6">
-              Your node settings have changed. Would you like to restart the
-              node now for changes to take effect?
+              {t('settings.restartNodeMessage')}
             </p>
             <div className="flex justify-between space-x-4">
               <button
@@ -1222,7 +1221,7 @@ export const Component: React.FC = () => {
                 onClick={() => setShowRestartConfirmation(false)}
                 type="button"
               >
-                Later
+                {t('settings.later')}
               </button>
               <button
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800"
@@ -1232,7 +1231,7 @@ export const Component: React.FC = () => {
                 }}
                 type="button"
               >
-                Restart Now
+                {t('settings.restartNow')}
               </button>
             </div>
           </div>
@@ -1246,10 +1245,10 @@ export const Component: React.FC = () => {
               <AlertTriangle size={48} />
             </div>
             <h2 className="text-2xl font-bold mb-4 text-center text-white">
-              Confirm Logout
+              {t('settings.confirmLogout')}
             </h2>
             <p className="text-gray-300 text-center mb-6">
-              Are you sure you want to logout? This will lock your node.
+              {t('settings.logoutMessage')}
             </p>
             <div className="flex justify-between space-x-4">
               <button
@@ -1257,14 +1256,14 @@ export const Component: React.FC = () => {
                 onClick={() => setShowLogoutConfirmation(false)}
                 type="button"
               >
-                Cancel
+                {t('settings.cancel')}
               </button>
               <button
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800"
                 onClick={confirmLogout}
                 type="button"
               >
-                Confirm Logout
+                {t('settings.confirmLogout')}
               </button>
             </div>
           </div>
@@ -1280,10 +1279,10 @@ export const Component: React.FC = () => {
                   <div className="w-full h-full border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2">
-                  Shutting Down Node
+                  {t('settings.shuttingDownTitle')}
                 </h3>
                 <p className="text-gray-400 text-center">
-                  Please wait while the node is being shut down...
+                  {t('settings.shuttingDownMessage')}
                 </p>
               </div>
             ) : (
@@ -1292,11 +1291,10 @@ export const Component: React.FC = () => {
                   <AlertTriangle size={48} />
                 </div>
                 <h2 className="text-2xl font-bold mb-4 text-center text-white">
-                  Confirm Shutdown
+                  {t('settings.confirmShutdown')}
                 </h2>
                 <p className="text-gray-300 text-center mb-6">
-                  Are you sure you want to shut down the node? This action
-                  cannot be undone.
+                  {t('settings.confirmShutdownMessage')}
                 </p>
                 <div className="flex justify-between space-x-4">
                   <button
@@ -1304,14 +1302,14 @@ export const Component: React.FC = () => {
                     onClick={() => setShowShutdownConfirmation(false)}
                     type="button"
                   >
-                    Cancel
+                    {t('settings.cancel')}
                   </button>
                   <button
                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-800"
                     onClick={confirmShutdown}
                     type="button"
                   >
-                    Confirm Shutdown
+                    {t('settings.confirmShutdown')}
                   </button>
                 </div>
               </>

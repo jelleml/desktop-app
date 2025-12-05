@@ -503,7 +503,7 @@ export const Component: React.FC = () => {
               typeFilter !== 'all' ||
               assetFilter !== 'all' ? (
                 <>
-                  <p>No swaps found matching your filters.</p>
+                  <p>{t('components.walletHistory.swaps.noSwapsFiltered')}</p>
                   <Button
                     className="mt-4"
                     onClick={() => {
@@ -519,7 +519,7 @@ export const Component: React.FC = () => {
                   </Button>
                 </>
               ) : (
-                <p>No swaps found.</p>
+                <p>{t('components.walletHistory.swaps.noSwaps')}</p>
               )}
             </div>
           }

@@ -1,5 +1,6 @@
 import { Clock, RefreshCcw, ArrowLeft } from 'lucide-react'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { formatBitcoinAmount } from '../../../helpers/number'
 import { Lsps1CreateOrderResponse } from '../../../slices/makerApi/makerApi.slice'
@@ -28,6 +29,7 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
   onRestart,
   onBack,
 }) => {
+  const { t } = useTranslation()
   if (status === 'success') {
     return (
       <div className="max-w-2xl mx-auto">
@@ -48,15 +50,16 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
             </svg>
           </div>
           <h3 className="text-2xl font-bold text-white mb-4">
-            Payment Successful!
+            {t('orderChannel.step3.paymentSuccessful')}
           </h3>
           <p className="text-gray-400 mb-6">
-            Your channel is being opened. This may take a few minutes to
-            complete.
+            {t('orderChannel.step3.channelOpening')}
           </p>
           <div className="bg-gray-800/50 rounded-xl p-4 inline-block mb-6">
             <div className="flex items-center gap-4 text-sm">
-              <span className="text-gray-400">Amount:</span>
+              <span className="text-gray-400">
+                {t('orderChannel.step3.amount')}:
+              </span>
               <span className="text-white font-medium">
                 {formatBitcoinAmount(
                   currentPayment?.order_total_sat || 0,
@@ -65,12 +68,14 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
                 {bitcoinUnit}
               </span>
               <span className="text-gray-400">•</span>
-              <span className="text-gray-400">Method:</span>
+              <span className="text-gray-400">
+                {t('orderChannel.step3.method')}:
+              </span>
               <span className="text-white font-medium flex items-center gap-1">
                 {paymentMethod === 'lightning' ? (
-                  <>⚡ Lightning</>
+                  <>⚡ {t('orderChannel.step3.lightning')}</>
                 ) : (
-                  <>₿ On-chain</>
+                  <>₿ {t('orderChannel.step3.onchain')}</>
                 )}
               </span>
             </div>
@@ -82,7 +87,7 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
               <div className="flex items-center justify-center gap-2 mb-2">
                 <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
                 <span className="text-purple-300 text-sm font-medium">
-                  RGB Asset Channel
+                  {t('orderChannel.step3.rgbAssetChannel')}
                 </span>
               </div>
               <div className="text-center text-sm text-gray-400 mb-2">
@@ -108,7 +113,9 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
                   {(order?.lsp_asset_amount ||
                     orderPayload?.lsp_asset_amount) && (
                     <div className="flex justify-center gap-2">
-                      <span className="text-gray-500">LSP Amount:</span>
+                      <span className="text-gray-500">
+                        {t('orderChannel.step3.lspAmount')}:
+                      </span>
                       <span className="text-purple-300">
                         {(
                           order?.lsp_asset_amount ||
@@ -121,7 +128,9 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
                   {(order?.client_asset_amount ||
                     orderPayload?.client_asset_amount) && (
                     <div className="flex justify-center gap-2">
-                      <span className="text-gray-500">Your Amount:</span>
+                      <span className="text-gray-500">
+                        {t('orderChannel.step3.yourAmount')}:
+                      </span>
                       <span className="text-blue-300">
                         {(
                           order?.client_asset_amount ||
@@ -148,11 +157,10 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
             <Clock className="w-10 h-10 text-yellow-500" />
           </div>
           <h3 className="text-2xl font-bold text-white mb-4">
-            Payment Expired
+            {t('orderChannel.step4.expiredTitle')}
           </h3>
           <p className="text-gray-400 mb-6">
-            The payment window has expired. Please create a new order to
-            continue.
+            {t('orderChannel.step3.expiredMessage')}
           </p>
 
           <div className="flex gap-3 justify-center">
@@ -162,7 +170,7 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
                 onClick={onRestart}
               >
                 <RefreshCcw className="w-4 h-4" />
-                Create New Order
+                {t('orderChannel.step3.createNewOrder')}
               </button>
             )}
             {onBack && (
@@ -171,7 +179,7 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
                 onClick={onBack}
               >
                 <ArrowLeft className="w-4 h-4" />
-                Back
+                {t('orderChannel.step3.backButton')}
               </button>
             )}
           </div>
@@ -199,10 +207,11 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
               />
             </svg>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-4">Payment Failed</h3>
+          <h3 className="text-2xl font-bold text-white mb-4">
+            {t('orderChannel.step4.errorTitle')}
+          </h3>
           <p className="text-gray-400 mb-6">
-            There was an issue processing your payment. You can try creating a
-            new order.
+            {t('orderChannel.step3.errorMessage')}
           </p>
 
           <div className="flex gap-3 justify-center">
@@ -212,7 +221,7 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
                 onClick={onRestart}
               >
                 <RefreshCcw className="w-4 h-4" />
-                Try Again
+                {t('orderChannel.step3.tryAgain')}
               </button>
             )}
             {onBack && (
@@ -221,7 +230,7 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
                 onClick={onBack}
               >
                 <ArrowLeft className="w-4 h-4" />
-                Back
+                {t('orderChannel.step3.backButton')}
               </button>
             )}
           </div>

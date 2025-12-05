@@ -43,6 +43,9 @@
     "loadingData": "加载数据中...",
     "openChannel": "打开通道",
     "buyChannel": "购买通道",
+    "createNewChannel": "创建新通道",
+    "buyAChannel": "购买通道",
+    "manageChannels": "管理通道",
     "refreshing": "刷新中...",
     "refresh": "刷新",
     "totalBalance": "总余额",
@@ -107,6 +110,7 @@
     "additionalMakerUrls": "附加做市商 URL",
     "addMakerUrl": "添加做市商 URL",
     "addUrl": "添加 URL",
+    "makerUrlPlaceholder": "输入做市商 URL",
     "default": "默认",
     "setAsDefault": "设为默认",
     "currentDefault": "当前默认",
@@ -154,7 +158,30 @@
     "loadingLogs": "加载日志中...",
     "loadingSettings": "加载设置中",
     "pleaseWait": "请稍候，正在加载您的设置...",
-    "version": "版本"
+    "version": "版本",
+    "securityBackup": "安全与备份",
+    "viewRecoveryPhrase": "查看恢复短语",
+    "accessSeedPhrase": "访问您的加密种子短语",
+    "backupWallet": "备份钱包",
+    "exportBackup": "导出加密钱包备份",
+    "nodeStatus": "节点状态",
+    "nodeRunning": "节点运行中",
+    "nodeOffline": "节点离线",
+    "connectionType": "连接类型",
+    "logout": "退出登录",
+    "confirmLogout": "确认退出登录",
+    "logoutMessage": "您确定要退出登录吗？这将锁定您的节点。",
+    "previous": "上一步",
+    "next": "下一步",
+    "confirmShutdown": "确认关闭",
+    "confirmShutdownMessage": "您确定要关闭节点吗？此操作无法撤消。",
+    "cancel": "取消",
+    "restartNode": "重启节点？",
+    "restartNodeMessage": "您的节点设置已更改。是否立即重启节点以使更改生效？",
+    "restartNow": "立即重启",
+    "later": "稍后",
+    "shuttingDownTitle": "正在关闭节点",
+    "shuttingDownMessage": "请稍候，节点正在关闭..."
   },
   "modals": {
     "logoutTitle": "确认退出登录",
@@ -277,7 +304,15 @@
     "restoreWalletDescription": "使用现有的加密备份恢复钱包。",
     "connectRemoteTitle": "连接到远程节点",
     "connectRemoteSubtitle": "连接到由您或提供商托管的现有 RGB Lightning 节点",
-    "continueSetup": "继续连接设置"
+    "continueSetup": "继续连接设置",
+    "localNodeWarningTitle": "运行本地节点",
+    "localNodeWarningMessage": "本地节点需要全天候运行以获得最佳性能。对于大多数用户，我们建议使用远程节点。",
+    "learnMore": "了解更多",
+    "remoteNodePrerequisitesTitle": "前置要求",
+    "remoteNodePrerequisitesMessage": "您需要运行中的 rgb-lightning-node 实例才能连接。请按照我们的设置指南开始。",
+    "viewSetupGuide": "查看设置指南",
+    "getStarted": "开始使用",
+    "recommended": "推荐"
   },
   "createChannel": {
     "checkingBalance": "检查余额中...",
@@ -626,7 +661,8 @@
     "nodeStopped": "节点已停止",
     "unlockCancelled": "解锁过程已取消",
     "failedCheckStatus": "检查节点状态失败：{{error}}",
-    "failedGetNodeInfo": "解锁后获取节点信息失败"
+    "failedGetNodeInfo": "解锁后获取节点信息失败",
+    "unknownError": "发生未知错误"
   },
   "trade": {
     "noChannels": {
@@ -770,7 +806,8 @@
     "failedToStartNode": "无法启动或操作节点：{{error}}",
     "unexpectedError": "发生意外错误：{{error}}",
     "continue": "继续",
-    "close": "关闭"
+    "close": "关闭",
+    "defaultAccountName": "已恢复的账户"
   },
   "deposits": {
     "title": "存款历史",
@@ -1197,6 +1234,27 @@
   },
   "orderChannel": {
     "step1": {
+      "title": "从 LSP 购买新通道",
+      "subtitle": "连接到闪电网络服务提供商以开始",
+      "howItWorks": "通道开设如何运作",
+      "step1Title": "您发起通道请求",
+      "step1Description": "指定通道容量和初始余额分配",
+      "step2Title": "LSP 处理您的请求",
+      "step2Description": "闪电网络服务提供商验证并接受您的订单",
+      "step3Title": "您进行支付",
+      "step3Description": "通过闪电网络或链上支付为通道提供资金",
+      "step4Title": "通道自动开设",
+      "step4Description": "支付确认后，LSP 与您的节点开设通道",
+      "lspServerUrl": "LSP 服务器 URL",
+      "lspUrlPlaceholder": "输入 LSP 服务器 URL",
+      "selectKaleidoLsp": "使用 Kaleidoswap LSP",
+      "checkingConnection": "正在检查 LSP 连接...",
+      "alreadyConnectedMessage": "已连接到此 LSP",
+      "connectButton": "连接到 LSP",
+      "cancelButton": "取消",
+      "continueButton": "继续",
+      "modalTitle": "连接到 LSP？",
+      "modalMessage": "这将连接到闪电网络服务提供商并获取通道参数。",
       "checkPeerFailed": "检查对等连接状态失败",
       "lspFetchSuccess": "LSP 信息获取成功",
       "lspUrlMissing": "获取 LSP 连接 URL 失败",
@@ -1212,7 +1270,27 @@
       "noDefaultLsp": "未为网络配置默认 LSP URL：{{network}}"
     },
     "step2": {
+      "title": "配置您的通道",
+      "subtitle": "设置您的通道参数和容量",
+      "stepLabel": "步骤 {{current}}/{{total}}",
+      "step1Label": "连接",
+      "step2Label": "配置",
+      "step3Label": "支付",
+      "channelCapacity": "通道容量（聪）",
+      "channelLiquidity": "您的通道流动性（聪）",
+      "channelCapacityInfo": "通道总容量（以聪为单位）",
+      "channelLiquidityInfo": "您将在通道中控制的流动性数量",
+      "addAssetTitle": "向通道添加资产",
+      "selectAsset": "选择资产",
+      "assetAmount": "资产数量",
+      "loading": "加载中...",
+      "backButton": "返回",
+      "nextButton": "下一步",
       "fees": {
+        "title": "估计费用",
+        "lspFee": "LSP 费用",
+        "onchainFee": "链上费用",
+        "totalFee": "总费用",
         "fetchFailed": "获取数据时出错。请稍后重试。"
       },
       "capacityRequired": "请输入通道容量。",
@@ -1229,13 +1307,77 @@
       "unexpectedError": "发生意外错误。请重试。"
     },
     "step3": {
+      "title": "完成支付",
+      "subtitle": "进行支付以开设通道",
+      "loadingOrder": "正在加载订单详情...",
+      "errorInvalidOrder": "错误：无效的订单数据",
+      "stepLabel": "步骤 {{current}}/{{total}}",
+      "step1Label": "连接",
+      "step2Label": "配置",
+      "step3Label": "支付",
+      "paymentMethod": "支付方式",
+      "lightning": "闪电网络",
+      "onchain": "链上",
+      "scanQR": "扫描二维码",
+      "copyAddress": "复制地址",
+      "copyInvoice": "复制发票",
+      "copied": "已复制！",
+      "amount": "金额",
+      "address": "地址",
+      "invoice": "发票",
+      "expiresIn": "过期时间",
+      "expired": "已过期",
+      "waitingForPayment": "等待支付中...",
+      "paymentReceived": "已收到支付！",
+      "processingPayment": "正在处理支付...",
+      "channelOpening": "正在开设通道...",
+      "backButton": "返回",
+      "restartButton": "重新开始",
+      "paymentReceivedTitle": "已收到支付",
+      "paymentReceivedMessage": "您的 {{method}} 支付已收到并正在处理中。",
+      "processingTitle": "正在处理支付",
+      "processingMessage": "请稍候，我们正在处理您的支付并开设通道。这可能需要几分钟。",
       "lightningSuccess": "Lightning 支付成功启动！",
       "onchainSuccess": "链上支付成功发送！",
       "paymentFailed": "支付失败：{{error}}",
       "unknownError": "未知错误"
     },
+    "step4": {
+      "success": {
+        "title": "订单完成！",
+        "message": "您的支付已收到，通道正在开设中。",
+        "buttonText": "前往通道页面",
+        "channelOpening": "通道开设进行中"
+      },
+      "error": {
+        "title": "支付失败",
+        "message": "您的支付出现问题。请重试。",
+        "buttonText": "重试",
+        "refundTitle": "关于您的支付：",
+        "refundMessage": "链上退款将自动处理",
+        "refundDetails": "并很快发送到您的钱包。",
+        "refundNote": "如果您在 24 小时内未收到退款，请使用下面的订单 ID 联系 LSP 支持。",
+        "orderIdLabel": "您的订单 ID：",
+        "copyToClipboard": "复制到剪贴板",
+        "copyHint": "联系支持部门咨询退款时复制此 ID"
+      },
+      "expired": {
+        "title": "订单已过期",
+        "message": "订单已过期。请创建新订单以继续。",
+        "buttonText": "创建新订单",
+        "expiredNote": "订单已过期：",
+        "expiredDetails": "订单已过期。请创建新订单以继续。"
+      },
+      "pending": {
+        "title": "正在处理支付",
+        "message": "您的支付正在处理中。这可能需要几分钟。",
+        "buttonText": "检查状态"
+      },
+      "returnToChannels": "返回通道"
+    },
     "orderCopy": "订单 ID 已复制！",
-    "paymentCopied": "支付详情已复制到剪贴板！"
+    "paymentCopied": "支付详情已复制到剪贴板！",
+    "infoMessage": "LSP 通道提供即时流动性，无需您管理链上交易。LSP 处理通道开设并提供接收支付所需的入站流动性。"
   },
   "rootRoute": {
     "connectionErrorTitle": "连接错误",
@@ -2062,6 +2204,71 @@
       "testNetworkMessage": "您当前在 {{network}} 上。此网络上的任何代币都没有实际价值，仅用于测试目的。",
       "requestTestCoins": "您可以从",
       "faucetLink": "{{network}} 水龙头"
+    },
+    "walletHistory": {
+      "swaps": {
+        "noSwapsFiltered": "未找到与您的过滤器匹配的交换。",
+        "noSwaps": "未找到交换。"
+      },
+      "deposits": {
+        "noDepositsFiltered": "未找到与您的过滤器匹配的存款。",
+        "noDeposits": "未找到存款。"
+      },
+      "withdrawals": {
+        "noWithdrawalsFiltered": "未找到与您的过滤器匹配的提款。",
+        "noWithdrawals": "未找到提款。"
+      },
+      "channelOrders": {
+        "noOrders": "未找到通道订单。",
+        "noOrdersSearch": "未找到与您的搜索匹配的订单。"
+      }
+    },
+    "appVersion": {
+      "commit": "提交:",
+      "built": "构建时间:"
+    },
+    "buyChannelModal": {
+      "discount": "折扣",
+      "confirmationTime": "确认时间:",
+      "noFundsDeducted": "未扣除任何资金。请创建新订单重试。",
+      "confirmAssetPurchase": "确认资产购买",
+      "buyChannelWithAsset": "购买带资产的通道",
+      "completePayment": "完成支付",
+      "orderStatus": "订单状态",
+      "reviewAndConfirm": "查看并确认或自定义您的购买",
+      "configureChannel": "配置您的通道和资产参数",
+      "payForChannel": "支付您的通道以完成订单",
+      "orderCompleted": "通道订单成功完成！",
+      "orderStatusSubtitle": "订单状态"
+    },
+    "feeBreakdown": {
+      "channelFees": "通道费用:"
+    },
+    "createChannel": {
+      "publicChannelsDesc": "公共通道可被发现并可以",
+      "privateChannelsDesc": "私有通道提供直接连接",
+      "selectAssetError": "请选择资产或取消选中「添加资产」选项。"
+    },
+    "walletInit": {
+      "settingUpWallet": "正在设置您的钱包..."
+    },
+    "passwordSetupForm": {
+      "description": "设置一个强密码以保护您的节点。访问您的钱包时需要此密码。",
+      "createPasswordLabel": "创建密码",
+      "createPasswordPlaceholder": "输入强密码",
+      "confirmPasswordLabel": "确认密码",
+      "confirmPasswordPlaceholder": "重新输入您的密码",
+      "passwordRequired": "密码为必填项",
+      "passwordMinLength": "密码必须至少为8个字符",
+      "passwordConfirmRequired": "密码确认为必填项",
+      "passwordsDoNotMatch": "密码不匹配",
+      "requirementsTitle": "密码要求:",
+      "requirementMinLength": "至少8个字符",
+      "requirementUppercase": "包含大写字母",
+      "requirementNumber": "包含数字",
+      "requirementMatch": "密码匹配",
+      "initializingButton": "初始化中...",
+      "initializeButton": "初始化节点"
     }
   }
 }

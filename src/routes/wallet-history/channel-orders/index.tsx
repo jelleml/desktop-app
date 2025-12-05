@@ -21,6 +21,7 @@ import {
   RotateCw,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'react-toastify'
 
 import { IconButton, Card } from '../../../components/ui'
@@ -506,6 +507,7 @@ const DeleteConfirmationModal: React.FC<{
 }
 
 export const Component = () => {
+  const { t } = useTranslation()
   const [orders, setOrders] = useState<ChannelOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -795,9 +797,9 @@ export const Component = () => {
       {filteredOrders.length === 0 ? (
         <div className="text-center py-8 text-slate-400 bg-slate-800/30 rounded-lg border border-slate-700">
           {orders.length === 0 ? (
-            <p>No channel orders found.</p>
+            <p>{t('components.walletHistory.channelOrders.noOrders')}</p>
           ) : (
-            <p>No orders found matching your search.</p>
+            <p>{t('components.walletHistory.channelOrders.noOrdersSearch')}</p>
           )}
         </div>
       ) : (
@@ -981,9 +983,9 @@ export const Component = () => {
           emptyState={
             <div className="text-center py-8 text-slate-400 bg-slate-800/30 rounded-lg border border-slate-700">
               {orders.length === 0 ? (
-                <p>No channel orders found.</p>
+                <p>{t('components.walletHistory.channelOrders.noOrders')}</p>
               ) : (
-                <p>No orders found matching your search.</p>
+                <p>{t('components.walletHistory.channelOrders.noOrdersSearch')}</p>
               )}
             </div>
           }

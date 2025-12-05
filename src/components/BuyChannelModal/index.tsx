@@ -905,23 +905,23 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
           <div>
             <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
               {showPreselectedConfirmation
-                ? 'Confirm Asset Purchase'
+                ? t('components.buyChannelModal.confirmAssetPurchase')
                 : step === 1
-                  ? 'Buy Channel with Asset'
+                  ? t('components.buyChannelModal.buyChannelWithAsset')
                   : step === 2
-                    ? 'Complete Payment'
-                    : 'Order Status'}
+                    ? t('components.buyChannelModal.completePayment')
+                    : t('components.buyChannelModal.orderStatus')}
             </h2>
             <p className="text-gray-400 mt-1">
               {showPreselectedConfirmation
-                ? 'Review and confirm or customize your purchase'
+                ? t('components.buyChannelModal.reviewAndConfirm')
                 : step === 1
-                  ? 'Configure your channel and asset parameters'
+                  ? t('components.buyChannelModal.configureChannel')
                   : step === 2
-                    ? 'Pay for your channel to complete the order'
+                    ? t('components.buyChannelModal.payForChannel')
                     : paymentStatus === 'success'
-                      ? 'Channel order completed successfully!'
-                      : 'Order status'}
+                      ? t('components.buyChannelModal.orderCompleted')
+                      : t('components.buyChannelModal.orderStatusSubtitle')}
             </p>
           </div>
           <button
@@ -1226,7 +1226,7 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                                 {fees.applied_discount &&
                                   fees.applied_discount > 0 && (
                                     <div className="flex justify-between text-green-400">
-                                      <span>Discount</span>
+                                      <span>{t('components.buyChannelModal.discount')}</span>
                                       <span>
                                         -
                                         {formatNumberWithCommas(
@@ -1358,7 +1358,7 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                   <div className="flex items-start gap-2">
                     <Clock className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
                     <p className="text-yellow-200/90 text-xs">
-                      <strong>Confirmation Time:</strong> The channel requires
+                      <strong>{t('components.buyChannelModal.confirmationTime')}</strong> The channel requires
                       ~6 on-chain confirmations (approximately 1 hour). Your
                       asset will be locked at today's rate and ready to trade
                       once confirmed.

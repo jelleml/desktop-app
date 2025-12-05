@@ -30,7 +30,8 @@ const ConnectPopup: React.FC<{
   onConfirm: () => void
   connectionUrl: string
   isAlreadyConnected: boolean
-}> = ({ onClose, onConfirm, connectionUrl, isAlreadyConnected }) => (
+  t: any
+}> = ({ onClose, onConfirm, connectionUrl, isAlreadyConnected, t }) => (
   <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
     <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-8 rounded-2xl border border-gray-700/50 max-w-lg w-full mx-4 shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
       <div className="flex items-center gap-4 mb-6">
@@ -44,7 +45,9 @@ const ConnectPopup: React.FC<{
           </div>
         )}
         <h3 className="text-2xl font-bold text-white">
-          {isAlreadyConnected ? 'Continue with LSP?' : 'Connect to LSP?'}
+          {isAlreadyConnected
+            ? t('orderChannel.step1.alreadyConnected')
+            : t('orderChannel.step1.modalTitle')}
         </h3>
       </div>
 
@@ -58,11 +61,10 @@ const ConnectPopup: React.FC<{
               />
               <div>
                 <p className="font-semibold text-green-300 mb-1">
-                  Already Connected
+                  {t('orderChannel.step1.alreadyConnectedMessage')}
                 </p>
                 <p className="text-sm text-green-200/80">
-                  You are already connected to this LSP. Would you like to
-                  proceed with buying a channel?
+                  {t('orderChannel.step1.alreadyConnectedPopup')}
                 </p>
               </div>
             </div>
@@ -70,14 +72,13 @@ const ConnectPopup: React.FC<{
         </>
       ) : (
         <p className="mb-6 text-gray-300 text-lg">
-          Establish a connection with the Lightning Service Provider to
-          continue.
+          {t('orderChannel.step1.establishConnection')}
         </p>
       )}
 
       <div className="mb-6 p-4 bg-gray-900/50 rounded-xl border border-gray-700/50">
         <p className="text-xs text-gray-400 mb-2 font-semibold uppercase tracking-wide">
-          LSP Connection String
+          {t('orderChannel.step1.lspConnectionLabel')}
         </p>
         <p className="text-sm text-gray-300 break-all font-mono">
           {connectionUrl}
@@ -89,7 +90,7 @@ const ConnectPopup: React.FC<{
           className="flex-1 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-all duration-200 font-semibold transform active:scale-95"
           onClick={onClose}
         >
-          Cancel
+          {t('orderChannel.step1.cancelButton')}
         </button>
         <button
           className={`flex-1 px-6 py-3 text-white rounded-lg font-semibold transition-all duration-200 transform active:scale-95 ${
@@ -99,7 +100,9 @@ const ConnectPopup: React.FC<{
           }`}
           onClick={onConfirm}
         >
-          {isAlreadyConnected ? 'Continue' : 'Connect'}
+          {isAlreadyConnected
+            ? t('orderChannel.step1.continueButton')
+            : t('orderChannel.step1.connectButton')}
         </button>
       </div>
     </div>
@@ -390,7 +393,7 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
       return {
         className: 'opacity-50 cursor-not-allowed',
         disabled: true,
-        text: 'Connecting...',
+        text: t('orderChannel.step1.connecting'),
       }
     }
     if (!connectionUrl) {
@@ -398,7 +401,7 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
         className:
           'opacity-50 cursor-not-allowed bg-gradient-to-r from-gray-500 to-gray-600',
         disabled: true,
-        text: 'Waiting for LSP URL...',
+        text: t('orderChannel.step1.waitingForLspUrl'),
       }
     }
     if (isAlreadyConnected) {
@@ -406,14 +409,14 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
         className:
           'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700',
         disabled: false,
-        text: 'Continue with Connected LSP',
+        text: t('orderChannel.step1.continueWithConnectedLsp'),
       }
     }
     return {
       className:
         'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700',
       disabled: false,
-      text: 'Connect to LSP',
+      text: t('orderChannel.step1.connectButton'),
     }
   }
 
@@ -425,10 +428,10 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
           <div className="text-center">
             <Loader2 className="w-16 h-16 text-blue-400 animate-spin mx-auto mb-4" />
             <p className="text-white text-lg font-semibold">
-              Checking LSP Connection...
+              {t('orderChannel.step1.checkingConnection')}
             </p>
             <p className="text-gray-400 text-sm mt-2">
-              Please wait while we verify your connection
+              {t('orderChannel.step1.verifyingConnection')}
             </p>
           </div>
         </div>
@@ -438,10 +441,10 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
         {/* Header */}
         <div className="text-center mb-6">
           <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 mb-3">
-            Buy a New Channel from LSP
+            {t('orderChannel.step1.title')}
           </h2>
           <p className="text-gray-400 text-lg">
-            Connect to a Lightning Service Provider to get started
+            {t('orderChannel.step1.subtitle')}
           </p>
         </div>
 
@@ -452,8 +455,12 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
               1
             </div>
             <div className="ml-3">
-              <p className="font-semibold text-white">Connect LSP</p>
-              <p className="text-xs text-blue-400">Current step</p>
+              <p className="font-semibold text-white">
+                {t('orderChannel.step1.connectLsp')}
+              </p>
+              <p className="text-xs text-blue-400">
+                {t('orderChannel.step1.currentStep')}
+              </p>
             </div>
           </div>
           <div className="flex-1 mx-4 mt-2">
@@ -466,8 +473,12 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
               2
             </div>
             <div className="ml-3">
-              <p className="font-semibold text-white">Configure</p>
-              <p className="text-xs text-gray-400">Set parameters</p>
+              <p className="font-semibold text-white">
+                {t('orderChannel.step2.step2Label')}
+              </p>
+              <p className="text-xs text-gray-400">
+                {t('orderChannel.step1.setParameters')}
+              </p>
             </div>
           </div>
           <div className="flex-1 mx-4 mt-2">
@@ -478,8 +489,12 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
               3
             </div>
             <div className="ml-3">
-              <p className="font-semibold text-white">Payment</p>
-              <p className="text-xs text-gray-400">Complete setup</p>
+              <p className="font-semibold text-white">
+                {t('orderChannel.step3.step3Label')}
+              </p>
+              <p className="text-xs text-gray-400">
+                {t('orderChannel.step1.completeSetup')}
+              </p>
             </div>
           </div>
         </div>
@@ -508,8 +523,8 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
                   }`}
                 >
                   {isAlreadyConnected
-                    ? '✓ Already Connected to this LSP'
-                    : 'LSP Ready to Connect'}
+                    ? `✓ ${t('orderChannel.step1.alreadyConnectedMessage')}`
+                    : t('orderChannel.step1.lspReadyConnect')}
                 </h3>
                 <p
                   className={`text-sm mt-1 ${
@@ -519,8 +534,8 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
                   }`}
                 >
                   {isAlreadyConnected
-                    ? 'You are already connected to this LSP. Click below to proceed or fetch a different LSP to connect to it instead.'
-                    : 'LSP connection details loaded. Click below to connect and continue'}
+                    ? t('orderChannel.step1.alreadyConnectedInfo')
+                    : t('orderChannel.step1.lspReadyInfo')}
                 </p>
               </div>
             </div>
@@ -547,29 +562,20 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-white mb-2">
-                How Channel Opening Works
+                {t('orderChannel.step1.howItWorks')}
               </h3>
               <div className="space-y-2 text-blue-100/90">
                 <p className="flex items-start gap-2">
                   <span className="text-blue-400 font-bold mt-0.5">1.</span>
-                  <span>
-                    Connect to a Lightning Service Provider (LSP) that will help
-                    establish your channel
-                  </span>
+                  <span>{t('orderChannel.step1.step1Description')}</span>
                 </p>
                 <p className="flex items-start gap-2">
                   <span className="text-blue-400 font-bold mt-0.5">2.</span>
-                  <span>
-                    Configure your channel parameters including capacity and
-                    balance distribution
-                  </span>
+                  <span>{t('orderChannel.step1.step2Description')}</span>
                 </p>
                 <p className="flex items-start gap-2">
                   <span className="text-blue-400 font-bold mt-0.5">3.</span>
-                  <span>
-                    Make a payment to cover the channel creation costs and
-                    initial balance
-                  </span>
+                  <span>{t('orderChannel.step1.step3Description')}</span>
                 </p>
               </div>
             </div>
@@ -582,7 +588,7 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
             <div className="flex items-center justify-between mb-4">
               <label className="text-lg font-semibold text-white flex items-center gap-2">
                 <Globe className="w-5 h-5 text-blue-400" />
-                LSP Server URL
+                {t('orderChannel.step1.lspServerUrl')}
               </label>
             </div>
             <div className="space-y-3">
@@ -590,7 +596,7 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
                 <input
                   className="w-full bg-gray-900/50 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 focus:outline-none transition-all"
                   onChange={(e) => handleDefaultLspUrlChange(e)}
-                  placeholder="Enter LSP URL (e.g., http://localhost:8000)"
+                  placeholder={t('orderChannel.step1.lspUrlPlaceholder')}
                   value={tempLspUrl}
                 />
               </div>
@@ -607,19 +613,18 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Fetching...</span>
+                    <span>{t('orderChannel.step1.fetching')}</span>
                   </>
                 ) : (
                   <>
                     <Globe className="w-4 h-4" />
-                    <span>Fetch LSP Info</span>
+                    <span>{t('orderChannel.step1.fetchLspInfo')}</span>
                   </>
                 )}
               </button>
 
               <p className="text-sm text-gray-400">
-                Enter your LSP server URL or use the default Kaleidoswap LSP
-                below
+                {t('orderChannel.step1.enterLspInstructions')}
               </p>
             </div>
 
@@ -631,12 +636,12 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
                 }`}
                 disabled={isLoading}
                 onClick={handleKaleidoswapSelect}
-                title="Use default Kaleidoswap LSP"
+                title={t('orderChannel.step1.useDefaultKaleidoLsp')}
               >
                 <div className="flex flex-col items-center gap-2">
                   <KaleidoswapBoxIcon />
                   <span className="text-sm font-medium text-gray-300">
-                    Use Default Kaleidoswap LSP
+                    {t('orderChannel.step1.useDefaultKaleidoLsp')}
                   </span>
                 </div>
               </button>
@@ -647,19 +652,22 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
           <div className="bg-gray-800/80 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-xl">
             <label className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Link className="w-5 h-5 text-purple-400" />
-              LSP Connection String
+              {t('orderChannel.step1.connectionStringLabel')}
             </label>
             <div className="relative">
               <textarea
                 className="w-full bg-gray-900/50 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 focus:outline-none transition-all h-32 resize-none font-mono text-sm"
-                placeholder="Connection string will appear here..."
+                placeholder={t('orderChannel.step1.connectionStringPlaceholder')}
                 readOnly
-                value={connectionUrl || 'Waiting for LSP connection details...'}
+                value={
+                  connectionUrl ||
+                  t('orderChannel.step1.connectionStringWaiting')
+                }
               />
               {connectionUrl && (
                 <CopyToClipboard
                   onCopy={() =>
-                    toast.success(t('orderChannel.step1.connectionCopied'), {
+                    toast.success(t('orderChannel.orderCopy'), {
                       autoClose: 2000,
                       position: 'bottom-right',
                     })
@@ -677,7 +685,7 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
               )}
             </div>
             <p className="mt-3 text-sm text-gray-400">
-              This unique connection URL identifies your LSP peer
+              {t('orderChannel.step1.connectionStringInfo')}
             </p>
           </div>
         </div>
@@ -718,6 +726,7 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
           isAlreadyConnected={isAlreadyConnected}
           onClose={() => setShowConnectPopup(false)}
           onConfirm={handleConnect}
+          t={t}
         />
       )}
     </div>

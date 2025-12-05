@@ -496,10 +496,10 @@ export const Step2: React.FC<Props> = ({ onNext, onBack }) => {
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-4">
           <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-            Configure Your Channel
+            {t('orderChannel.step2.title')}
           </h2>
           <p className="text-gray-400 mt-2">
-            Set up your channel parameters and capacity
+            {t('orderChannel.step2.subtitle')}
           </p>
         </div>
 
@@ -509,8 +509,12 @@ export const Step2: React.FC<Props> = ({ onNext, onBack }) => {
               1
             </div>
             <div className="ml-2">
-              <p className="font-medium text-white text-sm">Connect LSP</p>
-              <p className="text-xs text-gray-400">Completed</p>
+              <p className="font-medium text-white text-sm">
+                {t('orderChannel.step1.connectLsp')}
+              </p>
+              <p className="text-xs text-gray-400">
+                {t('orderChannel.step1.completed')}
+              </p>
             </div>
           </div>
           <div className="flex-1 mx-2 mt-5">
@@ -523,8 +527,12 @@ export const Step2: React.FC<Props> = ({ onNext, onBack }) => {
               2
             </div>
             <div className="ml-2">
-              <p className="font-medium text-white text-sm">Configure</p>
-              <p className="text-xs text-gray-400">Current step</p>
+              <p className="font-medium text-white text-sm">
+                {t('orderChannel.step2.step2Label')}
+              </p>
+              <p className="text-xs text-gray-400">
+                {t('orderChannel.step1.currentStep')}
+              </p>
             </div>
           </div>
           <div className="flex-1 mx-2 mt-5">
@@ -535,8 +543,12 @@ export const Step2: React.FC<Props> = ({ onNext, onBack }) => {
               3
             </div>
             <div className="ml-2">
-              <p className="font-medium text-white text-sm">Payment</p>
-              <p className="text-xs text-gray-400">Next step</p>
+              <p className="font-medium text-white text-sm">
+                {t('orderChannel.step3.step3Label')}
+              </p>
+              <p className="text-xs text-gray-400">
+                {t('orderChannel.step1.nextStep')}
+              </p>
             </div>
           </div>
         </div>
@@ -546,7 +558,7 @@ export const Step2: React.FC<Props> = ({ onNext, onBack }) => {
           onSubmit={handleSubmit(onSubmit)}
         >
           {isLoading ? (
-            <div className="text-center">Loading...</div>
+            <div className="text-center">{t('orderChannel.step2.loading')}</div>
           ) : (
             <div className="space-y-4">
               {/* Bitcoin Channel Configuration */}
@@ -628,7 +640,7 @@ export const Step2: React.FC<Props> = ({ onNext, onBack }) => {
                     type="checkbox"
                   />
                   <span className="text-lg font-medium">
-                    Add Asset to Channel
+                    {t('orderChannel.step2.addAssetTitle')}
                   </span>
                 </label>
 
@@ -641,7 +653,7 @@ export const Step2: React.FC<Props> = ({ onNext, onBack }) => {
                     onTotalAssetAmountChange={(value) =>
                       setValue('lspAssetAmount', value.toString())
                     }
-                    selectLabel="Select Asset"
+                    selectLabel={t('orderChannel.step2.selectAsset')}
                     selectedAssetId={assetId}
                     totalAssetAmount={
                       watch('lspAssetAmount')
@@ -669,7 +681,7 @@ export const Step2: React.FC<Props> = ({ onNext, onBack }) => {
               onClick={onBack}
               type="button"
             >
-              Back
+              {t('orderChannel.step2.backButton')}
             </button>
             <button
               className={`px-6 py-3 rounded-lg text-lg font-bold ${
@@ -680,7 +692,7 @@ export const Step2: React.FC<Props> = ({ onNext, onBack }) => {
               disabled={isLoading}
               type="submit"
             >
-              Next Step
+              {t('orderChannel.step2.nextButton')}
             </button>
           </div>
 
