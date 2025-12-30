@@ -1,1015 +1,365 @@
+import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
+import { getKaleidoClient } from '../../api/client';
+import { RootState } from '../../app/store';
 import {
-  BaseQueryFn,
-  createApi,
-  FetchArgs,
-  fetchBaseQuery,
-  FetchBaseQueryError,
-} from '@reduxjs/toolkit/query/react'
-
-import { RootState } from '../../app/store'
-
-interface InitRequest {
-  password: string
-}
-
-interface InitResponse {
-  mnemonic: string
-}
-interface RestoreRequest {
-  backup_path: string
-  password: string
-}
-
-interface BackupRequest {
-  backup_path: string
-  password: string
-}
-
-interface OpenChannelRequest {
-  peer_pubkey_and_opt_addr: string
-  capacity_sat: number
-  push_msat?: number
-  asset_amount?: number
-  asset_id?: string
-  with_anchors?: boolean
-  fee_rate_msat?: number
-  fee_proportional_millionths?: number
-  temporary_channel_id?: string
-  public?: boolean
-}
-
-interface OpenChannelResponse {
-  temporary_channel_id: string
-}
-
-interface Balance {
-  settled: number
-  future: number
-  spendable: number
-  offchain_outbound?: number
-  offchain_inbound?: number
-}
-
-export interface NiaAsset {
-  asset_id: string
-  asset_iface: string
-  ticker: string
-  name: string
-  details: string | null
-  precision: number
-  issued_supply: number
-  timestamp: number
-  added_at: number
-  balance: Balance
-  media: string | null
-}
-
-interface ListAssetsResponse {
-  nia: NiaAsset[]
-}
-
-interface CloseChannelRequest {
-  channel_id: string
-  peer_pubkey: string
-  force?: boolean
-}
-
-export interface Channel {
-  channel_id: string
-  funding_txid: string
-  peer_pubkey: string
-  peer_alias: string
-  short_channel_id: number
-  status: ChannelStatus
-  ready: boolean
-  capacity_sat: number
-  local_balance_sat: number
-  outbound_balance_msat: number
-  inbound_balance_msat: number
-  next_outbound_htlc_limit_msat: number
-  next_outbound_htlc_minimum_msat: number
-  is_usable: boolean
-  public: boolean
-  asset_id: string
-  asset_local_amount: number
-  asset_remote_amount: number
-}
-interface ListChannelsResponse {
-  channels: Channel[]
-}
-
-interface NodeInfoResponse {
-  pubkey: string
-  num_channels: number
-  num_usable_channels: number
-  local_balance_sat: number
-  pending_outbound_payments_sat: number
-  num_peers: number
-  onchain_pubkey: string
-  max_media_upload_size_mb: number
-  rgb_htlc_min_msat: number
-  rgb_channel_capacity_min_sat: number
-  channel_capacity_min_sat: number
-  channel_capacity_max_sat: number
-  channel_asset_min_amount: number
-  channel_asset_max_amount: number
-  network_nodes: number
-  network_channels: number
-}
-
-interface ConnectPeerRequest {
-  peer_pubkey_and_addr: string
-}
-
-interface DisconnectPeerRequest {
-  peer_pubkey: string
-}
-interface ListPeersResponse {
-  peers: Array<{
-    pubkey: string
-  }>
-}
-
-interface BtcBalanceRequest {
-  skip_sync: boolean
-}
-
-interface CreateUTXOsRequest {
-  num: number
-  size: number
-  fee_rate: number
-  skip_sync: boolean
-}
-
-interface AddressResponse {
-  address: string
-}
-
-interface IssueNiaAssetRequest {
-  amounts: number[]
-  ticker: string
-  name: string
-  precision: number
-}
-
-interface IssueNiaAssetResponse {
-  asset_id: string
-}
-
-interface BTCBalanceResponse {
-  vanilla: {
-    settled: number
-    future: number
-    spendable: number
-  }
-  colored: {
-    settled: number
-    future: number
-    spendable: number
-  }
-}
-
-export interface ApiError {
-  data: {
-    error: string
-  }
-  status: number
-}
-
-interface AssetBalanceRequest {
-  asset_id: string
-}
-
-interface AssetBalanceResponse {
-  settled: number
-  future: number
-  spendable: number
-  offchain_outbound: number
-  offchain_inbound: number
-}
-
-enum ChannelStatus {
-  Opening = 'Opening',
-  Opened = 'Opened',
-  Closing = 'Closing',
-}
-
-interface RGBInvoiceRequest {
-  asset_id?: string
-  witness?: boolean
-  assignment?: Assignment
-}
-
-interface RGBInvoiceResponse {
-  recipient_id: string
-  invoice: string
-  expiration_timestamp: number
-}
-
-interface LNInvoiceRequest {
-  amt_msat?: number
-  asset_id?: string
-  asset_amount?: number
-}
-
-interface LNINvoiceResponse {
-  invoice: string
-}
-
-interface SendBTCRequest {
-  amount: number
-  address: string
-  fee_rate: number
-}
-
-interface SendBTCResponse {
-  txid: string
-}
-
-export interface AssignmentFungible {
-  type: 'Fungible'
-  value: number
-}
-
-export interface AssignmentNonFungible {
-  type: 'NonFungible'
-}
-
-export interface AssignmentInflationRight {
-  type: 'InflationRight'
-  value: number
-}
-
-export interface AssignmentReplaceRight {
-  type: 'ReplaceRight'
-}
-
-export interface AssignmentAny {
-  type: 'Any'
-}
-
-export type Assignment =
-  | AssignmentFungible
-  | AssignmentNonFungible
-  | AssignmentInflationRight
-  | AssignmentReplaceRight
-  | AssignmentAny
-
-interface WitnessData {
-  amount_sat: number
-  blinding?: number
-}
-
-interface SendAssetRequest {
-  asset_id: string
-  assignment: Assignment
-  donation?: boolean
-  recipient_id: string
-  witness_data?: WitnessData
-  fee_rate: number
-  transport_endpoints: string[]
-}
-
-interface SendAssetResponse {
-  txid: string
-}
-
-interface SendPaymentRequest {
-  invoice: string
-}
-
-enum HTLCStatus {
-  Pending = 'Pending',
-  Succeeded = 'Succeeded',
-  Failed = 'Failed',
-}
-
-export interface SendPaymentResponse {
-  payment_hash: string
-  payment_secret: string
-  status: HTLCStatus
-}
-
-interface ListTransactionsRequest {
-  skip_sync: boolean
-}
-
-interface ListTransactionsResponse {
-  transactions: {
-    transaction_type: string
-    txid: string
-    received: number
-    sent: number
-    fee: number
-    confirmation_time: {
-      height: number
-      timestamp: number
-    }
-  }[]
-}
-
-interface ListPaymentsResponse {
-  payments: {
-    amt_msat: number
-    asset_amount: number
-    asset_id: string | null
-    payment_hash: string
-    inbound: boolean
-    status: HTLCStatus
-    created_at: number
-    updated_at: number
-    payee_pubkey: string
-  }[]
-}
-
-interface ListTransfersRequest {
-  asset_id: string
-}
-
-export interface Transfer {
-  idx: number
-  created_at: number
-  updated_at: number
-  status: 'WaitingCounterparty' | 'WaitingConfirmations' | 'Settled' | 'Failed'
-  requested_assignment: AssignmentFungible
-  assignments: AssignmentFungible[]
-  kind: 'Issuance' | 'ReceiveBlind' | 'ReceiveWitness' | 'Send'
-  txid: string
-  recipient_id?: string
-  receive_utxo?: string
-  change_utxo?: string
-  expiration?: number
-  transport_endpoints?: Array<{
-    endpoint: string
-    transport_type: string
-    used: boolean
-  }>
-}
-
-interface ListTransfersResponse {
-  transfers: Transfer[]
-}
-
-interface TakerRequest {
-  swapstring: string
-}
-
-interface MakerInitRequest {
-  qty_from: number
-  qty_to: number
-  from_asset?: string
-  to_asset?: string
-  timeout_sec: number
-}
-
-interface MakerInitResponse {
-  payment_hash: string
-  payment_secret: string
-  swapstring: string
-}
-
-interface MakerExecuteRequest {
-  swapstring: string
-  payment_secret: string
-  taker_pubkey: string
-}
-
-export interface RgbAllocation {
-  asset_id: string
-  assignment: AssignmentFungible
-  settled: boolean
-}
-
-export interface Unspent {
-  utxo: {
-    outpoint: string
-    btc_amount: number
-    colorable: boolean
-  }
-  rgb_allocations: RgbAllocation[]
-}
-
-interface ListUnspentsResponse {
-  unspents: Unspent[]
-}
-
-interface ListUnspentsRequest {
-  skip_sync: boolean
-}
-
-interface RefreshTransfersRequest {
-  skip_sync: boolean
-}
-
-export enum SwapStatus {
-  Expired = 'Expired',
-  Failed = 'Failed',
-  Pending = 'Pending',
-  Succeeded = 'Succeeded',
-  Waiting = 'Waiting',
-}
-
-export interface SwapDetails {
-  payment_hash: string
-  qty_from: number
-  qty_to: number
-  from_asset: string | null
-  to_asset: string | null
-  status: SwapStatus
-  requested_at: number | null
-  initiated_at: number | null
-  completed_at: number | null
-  type?: 'maker' | 'taker'
-}
-
-interface ListSwapsResponse {
-  maker: SwapDetails[]
-  taker: SwapDetails[]
-}
-
-export enum Network {
-  Mainnet = 'Mainnet',
-  Testnet = 'Testnet',
-  Regtest = 'Regtest',
-  Signet = 'Signet',
-}
-
-interface NetworkInfoResponse {
-  network: Network
-  height: number
-}
-
-interface DecodeInvoiceRequest {
-  invoice: string
-}
-
-export interface DecodeInvoiceResponse {
-  amt_msat: number
-  expiry_sec: number
-  timestamp: number
-  asset_id: string | null
-  asset_amount: number | null
-  payment_hash: string
-  payment_secret: string
-  payee_pubkey: string
-  network: string
-}
-
-export interface DecodeRgbInvoiceResponse {
-  recipient_id: string
-  recipient_type: 'Witness' | 'Blind'
-  asset_schema: string | null
-  asset_id: string | null
-  assignment: Assignment | null
-  network: string
-  expiration_timestamp: number
-  transport_endpoints: string[]
-}
-
-export interface DecodeRgbInvoiceRequest {
-  invoice: string
-}
-
-export interface UnlockRequest {
-  password: string
-  bitcoind_rpc_username: string
-  bitcoind_rpc_password: string
-  bitcoind_rpc_host: string
-  bitcoind_rpc_port: number
-  indexer_url: string
-  proxy_endpoint: string
-  bearer_token?: string
-}
-
-interface InvoiceStatusRequest {
-  invoice: string
-}
-
-interface InvoiceStatusResponse {
-  status: 'Pending' | 'Succeeded' | 'Failed' | 'Expired'
-}
-
-interface EstimateFeeResponse {
-  fee_rate: number
-}
-
-interface EstimateFeeRequest {
-  blocks: number
-}
+  AddressResponse,
+  AssetBalanceResponse,
+  AssetBalanceRequest,
+  BackupRequest,
+  BtcBalanceResponse,
+  CloseChannelRequest,
+  ConnectPeerRequest,
+  CreateUtxosRequest,
+  DecodeLNInvoiceResponse,
+  DecodeLNInvoiceRequest,
+  DecodeRGBInvoiceResponse,
+  DecodeRGBInvoiceRequest,
+  DisconnectPeerRequest,
+  EstimateFeeResponse,
+  EstimateFeeRequest,
+  InitResponse,
+  InitRequest,
+  InvoiceStatusResponse,
+  InvoiceStatusRequest,
+  IssueAssetNIAResponse,
+  IssueAssetNIARequest,
+  ListAssetsResponse,
+  ListChannelsResponse,
+  ListPaymentsResponse,
+  ListTransactionsResponse,
+  ListTransfersResponse,
+  ListUnspentsResponse,
+  LNInvoiceResponse,
+  LNInvoiceRequest,
+  // RgbNodeInfoResponse was exported from SDK index.ts so we use it directly
+  RgbNodeInfoResponse,
+  OpenChannelResponse,
+  OpenChannelRequest,
+  RefreshRequest,
+  RestoreRequest,
+  RgbInvoiceResponse,
+  RgbInvoiceRequest,
+  SendAssetResponse,
+  SendAssetRequest,
+  SendBtcResponse,
+  SendBtcRequest,
+  SendPaymentResponse,
+  SendPaymentRequest,
+  SignMessageResponse,
+  SignMessageRequest,
+  UnlockRequest,
+  KeysendResponse,
+  KeysendRequest,
+  ListPeersResponse,
+} from 'kaleidoswap-sdk';
 
 export interface NodeApiError {
-  status: number
+  status: number;
   data: {
-    error: string
-  }
-}
-
-const dynamicBaseQuery: BaseQueryFn<
-  string | FetchArgs,
-  unknown,
-  NodeApiError
-> = async (args, api, extraOptions) => {
-  const state = api.getState() as RootState
-  const node_url = state.nodeSettings.data.node_url
-  const bearer_token = state.nodeSettings.data?.bearer_token
-
-  if (!node_url) {
-    return {
-      error: {
-        data: {
-          error: 'Node URL not set',
-        },
-        status: 400,
-      },
-    }
-  }
-
-  const urlEnd = typeof args === 'string' ? args : args.url
-  const adjustedUrl = `${node_url}${urlEnd}`
-
-  // Handle headers including authentication
-  let headers: Record<string, string> = {}
-  if (bearer_token) {
-    headers['Authorization'] = `Bearer ${bearer_token}`
-  }
-
-  // If args is an object and has headers, merge them with our headers
-  if (typeof args !== 'string' && args.headers) {
-    headers = { ...headers, ...(args.headers as Record<string, string>) }
-  }
-
-  const adjustedArgs =
-    typeof args === 'string'
-      ? adjustedUrl
-      : {
-          ...args,
-          headers,
-          url: adjustedUrl,
-        }
-
-  const baseQuery = fetchBaseQuery({
-    baseUrl: '',
-    timeout: 300000,
-    validateStatus: (response, _) => {
-      return response.status >= 200 && response.status < 300
-    },
-  })
-
-  try {
-    const result = await baseQuery(adjustedArgs, api, extraOptions)
-
-    if (result.error) {
-      const err = result.error as FetchBaseQueryError
-
-      // Handle specific error types with better messages
-      let errorMessage = 'Unknown error'
-      let errorStatus = err.status as number
-
-      if (err.status === 'FETCH_ERROR') {
-        errorMessage =
-          'Connection failed: Unable to connect to the node. Please check if the node is running and accessible.'
-        errorStatus = 0
-      } else if (err.status === 'TIMEOUT_ERROR') {
-        errorMessage =
-          'Request timeout: The node took too long to respond. Please try again.'
-        errorStatus = 408
-      } else if (err.status === 'PARSING_ERROR') {
-        errorMessage =
-          'Response parsing error: Received invalid response from the node.'
-        errorStatus = 502
-      } else if (err.status === 'CUSTOM_ERROR') {
-        errorMessage = 'Network error: Unable to communicate with the node.'
-        errorStatus = 500
-      } else if (typeof err.data === 'string') {
-        errorMessage = err.data
-      } else if (err.data && typeof err.data === 'object') {
-        if ((err.data as any)?.error) {
-          errorMessage = (err.data as any).error
-        } else if ((err.data as any)?.message) {
-          errorMessage = (err.data as any).message
-        }
-      }
-
-      // Handle specific HTTP status codes with meaningful messages
-      if (typeof err.status === 'number') {
-        if (err.status === 0) {
-          errorMessage =
-            'Network error: Cannot connect to the node. This may be due to CORS policy, network connectivity issues, or the node being offline.'
-        } else if (err.status === 302) {
-          errorMessage =
-            'Authentication required: The node is redirecting to a login page. Please check your node authentication settings.'
-        } else if (err.status === 403) {
-          errorMessage =
-            (err.data as any)?.error ||
-            'Access denied: Your request was forbidden by the node.'
-        } else if (err.status === 404) {
-          errorMessage =
-            'Endpoint not found: The requested API endpoint does not exist on the node.'
-        } else if (err.status === 500) {
-          errorMessage =
-            'Internal server error: The node encountered an error while processing your request.'
-        } else if (err.status >= 500) {
-          errorMessage =
-            'Server error: The node is experiencing technical difficulties.'
-        }
-      }
-
-      return {
-        error: {
-          data: {
-            error: errorMessage,
-          },
-          status: errorStatus,
-        },
-      }
-    }
-
-    return result
-  } catch (error) {
-    let errorMessage = 'Unknown error occurred'
-
-    if (error instanceof Error) {
-      // Handle common error patterns
-      if (error.message.includes('CORS')) {
-        errorMessage =
-          'CORS error: Cross-origin request blocked. The frontend cannot access the node due to security restrictions. Please check your node configuration.'
-      } else if (
-        error.message.includes('NetworkError') ||
-        error.message.includes('Failed to fetch')
-      ) {
-        errorMessage =
-          'Network error: Cannot connect to the node. Please verify the node is running and accessible.'
-      } else if (error.message.includes('timeout')) {
-        errorMessage = 'Request timeout: The node took too long to respond.'
-      } else if (error.message.includes('ERR_CONNECTION_REFUSED')) {
-        errorMessage =
-          'Connection refused: The node is not accepting connections. Please check if the node is running.'
-      } else if (error.message.includes('ERR_NETWORK_CHANGED')) {
-        errorMessage =
-          'Network changed: Your network connection changed during the request. Please try again.'
-      } else {
-        errorMessage = `Connection error: ${error.message}`
-      }
-    }
-
-    return {
-      error: {
-        data: {
-          error: errorMessage,
-        },
-        status: 500,
-      },
-    }
-  }
+    error: string;
+  };
 }
 
 export const nodeApi = createApi({
-  baseQuery: dynamicBaseQuery,
+  reducerPath: 'nodeApi',
+  baseQuery: fakeBaseQuery(),
   endpoints: (builder) => ({
     address: builder.query<AddressResponse, void>({
-      query: () => ({
-        body: {},
-        method: 'POST',
-        url: '/address',
-      }),
+      queryFn: async (_args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.onChain.postAddress();
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
     assetBalance: builder.query<AssetBalanceResponse, AssetBalanceRequest>({
-      query: (body) => ({
-        body,
-        method: 'POST',
-        url: '/assetbalance',
-      }),
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.rgb.postAssetbalance(args);
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
     backup: builder.query<void, BackupRequest>({
-      query: (body) => ({
-        body,
-        method: 'POST',
-        url: '/backup',
-      }),
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          await client.node.other.postBackup(args);
+          return { data: undefined };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
-    btcBalance: builder.query<BTCBalanceResponse, BtcBalanceRequest>({
-      query: () => ({
-        body: {
-          skip_sync: false,
-        },
-        method: 'POST',
-        url: '/btcbalance',
-      }),
+    btcBalance: builder.query<BtcBalanceResponse, void>({
+      queryFn: async (_args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.onChain.postBtcbalance({ skip_sync: false });
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
     closeChannel: builder.query<void, CloseChannelRequest>({
-      query: (body) => ({
-        body: {
-          channel_id: body.channel_id,
-          force: body.force === true,
-          peer_pubkey: body.peer_pubkey,
-        },
-        method: 'POST',
-        url: '/closechannel',
-      }),
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          await client.node.channels.postClosechannel(args);
+          return { data: undefined };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
     connectPeer: builder.mutation<void, ConnectPeerRequest>({
-      query: (body) => ({
-        body,
-        method: 'POST',
-        url: '/connectpeer',
-      }),
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          await (client.node.peers as any).postConnectpeer(args);
+          return { data: undefined };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
-    createUTXOs: builder.query<AddressResponse, CreateUTXOsRequest>({
-      query: (body) => ({
-        body: {
-          fee_rate: body.fee_rate,
-          num: body.num,
-          size: body.size,
-          skip_sync: false,
-          up_to: false,
-        },
-        method: 'POST',
-        url: '/createutxos',
-      }),
+    createUTXOs: builder.query<void, CreateUtxosRequest>({
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          await client.node.rgb.postCreateutxos(args);
+          return { data: undefined };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
-    decodeInvoice: builder.query<DecodeInvoiceResponse, DecodeInvoiceRequest>({
-      query: (body) => ({
-        body,
-        method: 'POST',
-        url: '/decodelninvoice',
-      }),
+    decodeInvoice: builder.query<DecodeLNInvoiceResponse, DecodeLNInvoiceRequest>({
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.invoices.postDecodelninvoice(args);
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
-    decodeRgbInvoice: builder.query<
-      DecodeRgbInvoiceResponse,
-      DecodeRgbInvoiceRequest
-    >({
-      query: (body) => ({
-        body,
-        method: 'POST',
-        url: '/decodergbinvoice',
-      }),
+    decodeRgbInvoice: builder.query<DecodeRGBInvoiceResponse, DecodeRGBInvoiceRequest>({
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.rgb.postDecodergbinvoice(args);
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
     disconnectPeer: builder.mutation<void, DisconnectPeerRequest>({
-      query: (body) => ({
-        body,
-        method: 'POST',
-        url: '/disconnectpeer',
-      }),
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          await (client.node.peers as any).postDisconnectpeer(args);
+          return { data: undefined };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
     estimateFee: builder.query<EstimateFeeResponse, EstimateFeeRequest>({
-      query: (body) => ({
-        body,
-        method: 'POST',
-        url: '/estimatefee',
-      }),
-      transformResponse: (response: EstimateFeeResponse) => ({
-        fee_rate: Math.round(response.fee_rate),
-      }),
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.onChain.postEstimatefee(args);
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
     init: builder.query<InitResponse, InitRequest>({
-      query: (body) => ({
-        body: {
-          password: body.password,
-        },
-        method: 'POST',
-        url: '/init',
-      }),
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.other.postInit(args);
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
     invoiceStatus: builder.query<InvoiceStatusResponse, InvoiceStatusRequest>({
-      query: (body) => ({
-        body,
-        method: 'POST',
-        url: '/invoicestatus',
-      }),
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.invoices.postInvoicestatus(args);
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
-    issueNiaAsset: builder.query<IssueNiaAssetResponse, IssueNiaAssetRequest>({
-      query: (body) => ({
-        body,
-        method: 'POST',
-        url: '/issueassetnia',
-      }),
+    issueNiaAsset: builder.mutation<IssueAssetNIAResponse, IssueAssetNIARequest>({
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.rgb.postIssueassetnia(args);
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
     listAssets: builder.query<ListAssetsResponse, void>({
-      query: () => ({
-        body: {
-          filter_asset_schemas: ['Nia'],
-        },
-        method: 'POST',
-        url: '/listassets',
-      }),
+      queryFn: async (_args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.rgb.postListassets({});
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
     listChannels: builder.query<ListChannelsResponse, void>({
-      query: () => '/listchannels',
+      queryFn: async (_args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.channels.getListchannels();
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
     listPayments: builder.query<ListPaymentsResponse, void>({
-      query: () => '/listpayments',
-    }),
-    listPeers: builder.query<ListPeersResponse, void>({
-      query: () => '/listpeers',
-    }),
-    listSwaps: builder.query<ListSwapsResponse, void>({
-      query: () => ({
-        method: 'GET',
-        url: '/listswaps',
-      }),
-      transformResponse: (response: ListSwapsResponse) => {
-        const transformSwaps = (swaps: SwapDetails[]) =>
-          swaps.map((swap) => ({
-            ...swap,
-            status:
-              swap.status in SwapStatus ? swap.status : SwapStatus.Pending,
-          }))
-
-        return {
-          maker: transformSwaps(response.maker || []),
-          taker: transformSwaps(response.taker || []),
-        }
+      queryFn: async (_args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.payments.getListpayments();
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
     }),
-    listTransactions: builder.query<
-      ListTransactionsResponse,
-      ListTransactionsRequest
-    >({
-      query: (body) => ({
-        body,
-        method: 'POST',
-        url: '/listtransactions',
-      }),
-    }),
-    listTransfers: builder.query<ListTransfersResponse, ListTransfersRequest>({
-      query: (body) => ({
-        body,
-        method: 'POST',
-        url: '/listtransfers',
-      }),
-    }),
-    listUnspents: builder.query<ListUnspentsResponse, ListUnspentsRequest>({
-      query: (body) => ({
-        body,
-        method: 'POST',
-        url: '/listunspents',
-      }),
-    }),
-    lnInvoice: builder.query<LNINvoiceResponse, LNInvoiceRequest>({
-      query: (body) => ({
-        body: {
-          ...(body.asset_id
-            ? {
-                amt_msat: 3000000,
-                asset_amount: body.asset_amount,
-                asset_id: body.asset_id,
-              }
-            : {
-                amt_msat: body.amt_msat || 3000000,
-              }),
-          expiry_sec: 3600,
-        },
-        method: 'POST',
-        url: '/lninvoice',
-      }),
-    }),
-    lock: builder.query<void, void>({
-      query: () => ({
-        method: 'POST',
-        url: '/lock',
-      }),
-    }),
-    makerExecute: builder.mutation<void, MakerExecuteRequest>({
-      query: (body) => ({
-        body,
-        method: 'POST',
-        url: '/makerexecute',
-      }),
-    }),
-    makerInit: builder.mutation<MakerInitResponse, MakerInitRequest>({
-      query: (body) => ({
-        body,
-        method: 'POST',
-        url: '/makerinit',
-      }),
-    }),
-    networkInfo: builder.query<NetworkInfoResponse, void>({
-      query: () => '/networkinfo',
-    }),
-    nodeInfo: builder.query<NodeInfoResponse, void>({
-      query: () => '/nodeinfo',
-    }),
-    openChannel: builder.query<OpenChannelResponse, OpenChannelRequest>({
-      query: (body) => {
-        const requestBody: any = {
-          capacity_sat: body.capacity_sat,
-          fee_rate_msat: body.fee_rate_msat,
-          peer_pubkey_and_opt_addr: body.peer_pubkey_and_opt_addr,
-          public: body.public !== undefined ? body.public : true,
-          push_msat: 3100000,
-          with_anchors: true,
-        }
-        if (body.asset_amount && body.asset_amount > 0) {
-          requestBody.asset_amount = body.asset_amount
-          requestBody.asset_id = body.asset_id
-        }
-        return {
-          body: requestBody,
-          method: 'POST',
-          url: '/openchannel',
-        }
+    listTransactions: builder.query<ListTransactionsResponse, void>({
+      queryFn: async (_args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.onChain.postListtransactions();
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
     }),
-    refreshRgbTransfers: builder.query<void, RefreshTransfersRequest>({
-      query: (body) => ({
-        body,
-        method: 'POST',
-        url: '/refreshtransfers',
-      }),
+    listTransfers: builder.query<ListTransfersResponse, void>({
+      queryFn: async (_args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.rgb.postListtransfers(undefined);
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
+    }),
+    listUnspents: builder.query<ListUnspentsResponse, void>({
+      queryFn: async (_args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.onChain.postListunspents({});
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
+    }),
+    lnInvoice: builder.mutation<LNInvoiceResponse, LNInvoiceRequest>({
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.invoices.postLninvoice(args);
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
+    }),
+    nodeInfo: builder.query<RgbNodeInfoResponse, void>({
+      queryFn: async (_args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.other.getNodeinfo();
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
+    }),
+    openChannel: builder.mutation<OpenChannelResponse, OpenChannelRequest>({
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.channels.postOpenchannel(args);
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
+    }),
+    refresh: builder.mutation<void, RefreshRequest>({
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          await client.node.rgb.postRefreshtransfers(args);
+          return { data: undefined };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
     restore: builder.query<void, RestoreRequest>({
-      query: (body) => ({
-        body,
-        method: 'POST',
-        url: '/restore',
-      }),
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          await client.node.other.postRestore(args);
+          return { data: undefined };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
-    rgbInvoice: builder.query<RGBInvoiceResponse, RGBInvoiceRequest>({
-      query: (body) => ({
-        body: {
-          ...(body.asset_id ? { asset_id: body.asset_id } : {}),
-          ...(body.witness !== undefined ? { witness: body.witness } : {}),
-          ...(body.assignment ? { assignment: body.assignment } : {}),
-          min_confirmations: 1,
-        },
-        method: 'POST',
-        url: '/rgbinvoice',
-      }),
+    rgbInvoice: builder.mutation<RgbInvoiceResponse, RgbInvoiceRequest>({
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.rgb.postRgbinvoice(args);
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
-    sendAsset: builder.query<SendAssetResponse, SendAssetRequest>({
-      query: (body) => ({
-        body: {
-          asset_id: body.asset_id,
-          assignment: body.assignment,
-          donation: body.donation || false,
-          fee_rate: body.fee_rate,
-          min_confirmations: 1,
-          recipient_id: body.recipient_id,
-          ...(body.witness_data ? { witness_data: body.witness_data } : {}),
-          skip_sync: false,
-          transport_endpoints: body.transport_endpoints,
-        },
-        method: 'POST',
-        url: '/sendasset',
-      }),
+    sendAsset: builder.mutation<SendAssetResponse, SendAssetRequest>({
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.rgb.postSendasset(args);
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
-    sendBtc: builder.query<SendBTCResponse, SendBTCRequest>({
-      query: (body) => ({
-        body: {
-          address: body.address,
-          amount: body.amount,
-          fee_rate: body.fee_rate,
-          skip_sync: false,
-        },
-        method: 'POST',
-        url: '/sendbtc',
-      }),
+    sendBtc: builder.mutation<SendBtcResponse, SendBtcRequest>({
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.onChain.postSendbtc(args);
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
-    sendPayment: builder.query<SendPaymentResponse, SendPaymentRequest>({
-      query: (body) => ({
-        body: {
-          invoice: body.invoice,
-        },
-        method: 'POST',
-        url: '/sendpayment',
-      }),
+    sendPayment: builder.mutation<SendPaymentResponse, SendPaymentRequest>({
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.payments.postSendpayment(args);
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
-    shutdown: builder.query<void, void>({
-      query: () => ({
-        method: 'POST',
-        url: '/shutdown',
-      }),
-    }),
-    sync: builder.query<void, void>({
-      query: () => ({
-        method: 'POST',
-        url: '/sync',
-      }),
-    }),
-    taker: builder.query<void, TakerRequest>({
-      query: (body) => ({
-        body,
-        method: 'POST',
-        url: '/taker',
-      }),
+    signMessage: builder.mutation<SignMessageResponse, SignMessageRequest>({
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.other.postSignmessage(args);
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
     unlock: builder.query<void, UnlockRequest>({
-      query: (body) => ({
-        body: {
-          announce_addresses: [],
-          announce_alias: '',
-          bitcoind_rpc_host: body.bitcoind_rpc_host,
-          bitcoind_rpc_password: body.bitcoind_rpc_password,
-          bitcoind_rpc_port: body.bitcoind_rpc_port,
-          bitcoind_rpc_username: body.bitcoind_rpc_username,
-          indexer_url: body.indexer_url,
-          password: body.password,
-          proxy_endpoint: body.proxy_endpoint,
-        },
-        method: 'POST',
-        url: '/unlock',
-      }),
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          await client.node.other.postUnlock(args);
+          return { data: undefined };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
+    }),
+    keysend: builder.mutation<KeysendResponse, KeysendRequest>({
+      queryFn: async (args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.payments.postKeysend(args);
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
+    }),
+    listPeers: builder.query<ListPeersResponse, void>({
+      queryFn: async (_args, api) => {
+        try {
+          const client = getKaleidoClient(api.getState() as RootState);
+          const res = await client.node.peers.getListpeers();
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
     }),
   }),
-  reducerPath: 'nodeApi',
-})
+});
