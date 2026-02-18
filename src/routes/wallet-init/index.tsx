@@ -53,6 +53,7 @@ import { NETWORK_DEFAULTS } from '../../constants/networks'
 import { parseRpcUrl } from '../../helpers/utils'
 import { nodeApi } from '../../slices/nodeApi/nodeApi.slice'
 import { setSettingsAsync } from '../../slices/nodeSettings/nodeSettings.slice'
+import { waitForNodeReady } from '../../utils/nodeState'
 
 const checkPortAvailability = async (
   ports: string[]
@@ -375,54 +376,18 @@ export const Component = () => {
           if (!recheckPorts.available) {
             throw new Error(
               `Ports ${recheckPorts.conflictingPorts.join(', ')} are still in use by other processes. ` +
-                'Please choose different ports or stop the conflicting processes.'
+              'Please choose different ports or stop the conflicting processes.'
             )
           }
         } else {
           // Ports are in use by external processes
           throw new Error(
             `Ports ${portCheck.conflictingPorts.join(', ')} are in use by other applications. ` +
-              'Please choose different ports or stop the conflicting applications.'
+            'Please choose different ports or stop the conflicting applications.'
           )
         }
       }
 
-      // Now proceed with starting the node
-      const nodeStartedPromise = new Promise<void>((resolve, reject) => {
-        let unlistenFn: (() => void) | null = null
-        const startTimeout = 30000 // 30 seconds timeout
-
-        const timeoutId = setTimeout(async () => {
-          if (unlistenFn) unlistenFn()
-
-          try {
-            const isRunning = await invoke<boolean>('is_node_running')
-            if (isRunning) {
-              resolve()
-              return
-            }
-          } catch (error) {
-            console.error('Error checking node status:', error)
-          }
-
-          reject(new Error('Timeout waiting for node to start'))
-        }, startTimeout)
-
-        listen('node-log', (event: { payload: string }) => {
-          if (event.payload.includes('Listening on')) {
-            if (unlistenFn) unlistenFn()
-            clearTimeout(timeoutId)
-            resolve()
-          }
-        })
-          .then((unlisten) => {
-            unlistenFn = unlisten
-          })
-          .catch((error) => {
-            clearTimeout(timeoutId)
-            reject(new Error(`Failed to set up node event listener: ${error}`))
-          })
-      })
 
       // Start the node
       await invoke('start_node', {
@@ -433,7 +398,13 @@ export const Component = () => {
         network,
       })
 
-      await nodeStartedPromise
+      // Wait for node to be ready with improved detection
+      await waitForNodeReady({
+        timeoutMs: 60000, // 60 seconds timeout
+        onProgress: (message) => {
+          console.log('Node startup progress:', message)
+        },
+      })
     } catch (error) {
       // If we fail to start, try to find alternative ports
       const suggestedPorts = await invoke<{ daemon: string; ldk: string }>(
@@ -442,9 +413,9 @@ export const Component = () => {
 
       throw new Error(
         `Failed to start node: ${error}\n` +
-          `Suggested alternative ports:\n` +
-          `- Daemon port: ${suggestedPorts.daemon}\n` +
-          `- LDK peer port: ${suggestedPorts.ldk}`
+        `Suggested alternative ports:\n` +
+        `- Daemon port: ${suggestedPorts.daemon}\n` +
+        `- LDK peer port: ${suggestedPorts.ldk}`
       )
     }
   }
@@ -480,11 +451,13 @@ export const Component = () => {
       throw new Error('Node initialization failed')
     }
 
-    if (!initResult.data || !initResult.data.mnemonic) {
+    // Check for mnemonic in result (TypeScript type narrowing)
+    const resultData = initResult.data as { mnemonic?: string } | undefined
+    if (!resultData || !resultData.mnemonic) {
       throw new Error('Invalid response: missing mnemonic')
     }
 
-    return initResult.data.mnemonic.split(' ')
+    return resultData.mnemonic.split(' ')
   }
 
   const unlockExistingNode = async (password: string): Promise<void> => {

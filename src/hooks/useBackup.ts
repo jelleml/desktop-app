@@ -51,7 +51,7 @@ export const useBackup = ({
     })
 
   const [backup, { isLoading: isBackupLoading }] =
-    nodeApi.endpoints.backup.useLazyQuery()
+    nodeApi.useBackupMutation()
   const [lock] = nodeApi.endpoints.lock.useLazyQuery()
   const [unlock] = nodeApi.endpoints.unlock.useLazyQuery()
 

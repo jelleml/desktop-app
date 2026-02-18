@@ -1,7 +1,6 @@
 import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
-import { getKaleidoClient } from '../../api/client';
-import { RootState } from '../../app/store';
-import {
+import { getKaleidoClient, MinimalState } from '../../api/client';
+import type {
   AddressResponse,
   AssetBalanceResponse,
   AssetBalanceRequest,
@@ -12,37 +11,37 @@ import {
   CreateUtxosRequest,
   DecodeLNInvoiceResponse,
   DecodeLNInvoiceRequest,
-  DecodeRGBInvoiceResponse,
-  DecodeRGBInvoiceRequest,
+  DecodeRgbInvoiceResponse as DecodeRGBInvoiceResponse,
+  DecodeRgbInvoiceRequest as DecodeRGBInvoiceRequest,
   DisconnectPeerRequest,
   EstimateFeeResponse,
   EstimateFeeRequest,
-  InitResponse,
   InitRequest,
-  InvoiceStatusResponse,
-  InvoiceStatusRequest,
+
+  GetInvoiceStatusResponse as InvoiceStatusResponse,
+  GetInvoiceStatusRequest as InvoiceStatusRequest,
   IssueAssetNIAResponse,
   IssueAssetNIARequest,
   ListAssetsResponse,
   ListChannelsResponse,
   ListPaymentsResponse,
   ListTransactionsResponse,
+  ListTransfersRequest,
   ListTransfersResponse,
   ListUnspentsResponse,
-  LNInvoiceResponse,
-  LNInvoiceRequest,
-  // RgbNodeInfoResponse was exported from SDK index.ts so we use it directly
-  RgbNodeInfoResponse,
+  CreateLNInvoiceResponse as LNInvoiceResponse,
+  CreateLNInvoiceRequest as LNInvoiceRequest,
+  NodeInfoResponse,
   OpenChannelResponse,
   OpenChannelRequest,
-  RefreshRequest,
+  RefreshTransfersRequest as RefreshRequest,
   RestoreRequest,
-  RgbInvoiceResponse,
-  RgbInvoiceRequest,
+  CreateRgbInvoiceResponse as RgbInvoiceResponse,
+  CreateRgbInvoiceRequest as RgbInvoiceRequest,
   SendAssetResponse,
   SendAssetRequest,
-  SendBtcResponse,
   SendBtcRequest,
+
   SendPaymentResponse,
   SendPaymentRequest,
   SignMessageResponse,
@@ -51,7 +50,46 @@ import {
   KeysendResponse,
   KeysendRequest,
   ListPeersResponse,
+  ListSwapsResponse,
+  WhitelistTradeRequest,
+  NetworkInfoResponse,
 } from 'kaleidoswap-sdk';
+
+export type {
+  Assignment,
+  AssignmentFungible,
+  Asset,
+  Channel,
+  MakerExecuteRequest,
+  MakerInitRequest,
+  MakerInitResponse,
+  NiaAsset,
+  TakerRequest,
+  SwapDetails,
+  Transfer
+} from './types';
+
+export { SwapStatus } from './types';
+
+
+
+export const Network = {
+  Mainnet: 'mainnet',
+  Testnet: 'testnet',
+  Regtest: 'regtest',
+  Signet: 'signet',
+} as const;
+export type Network = typeof Network[keyof typeof Network];
+import {
+  MakerInitRequest,
+  MakerInitResponse,
+  MakerExecuteRequest,
+  TakerRequest,
+} from './types';
+
+// Re-export types for backwards compatibility
+export type { SendPaymentResponse };
+
 
 export interface NodeApiError {
   status: number;
@@ -67,8 +105,8 @@ export const nodeApi = createApi({
     address: builder.query<AddressResponse, void>({
       queryFn: async (_args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.onChain.postAddress();
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.getAddress();
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -76,17 +114,17 @@ export const nodeApi = createApi({
     assetBalance: builder.query<AssetBalanceResponse, AssetBalanceRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.rgb.postAssetbalance(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.getAssetBalance(args);
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
     }),
-    backup: builder.query<void, BackupRequest>({
+    backup: builder.mutation<void, BackupRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          await client.node.other.postBackup(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          await client.rln.backup(args);
           return { data: undefined };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -94,17 +132,17 @@ export const nodeApi = createApi({
     btcBalance: builder.query<BtcBalanceResponse, void>({
       queryFn: async (_args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.onChain.postBtcbalance({ skip_sync: false });
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.getBtcBalance(false);
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
     }),
-    closeChannel: builder.query<void, CloseChannelRequest>({
+    closeChannel: builder.mutation<void, CloseChannelRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          await client.node.channels.postClosechannel(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          await client.rln.closeChannel(args);
           return { data: undefined };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -112,17 +150,21 @@ export const nodeApi = createApi({
     connectPeer: builder.mutation<void, ConnectPeerRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          await (client.node.peers as any).postConnectpeer(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          await client.rln.connectPeer(args);
           return { data: undefined };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
     }),
-    createUTXOs: builder.query<void, CreateUtxosRequest>({
+    createUtxos: builder.mutation<void, CreateUtxosRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          await client.node.rgb.postCreateutxos(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          await client.rln.createUtxos({
+            up_to: false,
+            skip_sync: false,
+            ...args
+          });
           return { data: undefined };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -130,8 +172,8 @@ export const nodeApi = createApi({
     decodeInvoice: builder.query<DecodeLNInvoiceResponse, DecodeLNInvoiceRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.invoices.postDecodelninvoice(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.decodeLNInvoice(args);
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -139,8 +181,8 @@ export const nodeApi = createApi({
     decodeRgbInvoice: builder.query<DecodeRGBInvoiceResponse, DecodeRGBInvoiceRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.rgb.postDecodergbinvoice(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.decodeRgbInvoice(args);
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -148,8 +190,8 @@ export const nodeApi = createApi({
     disconnectPeer: builder.mutation<void, DisconnectPeerRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          await (client.node.peers as any).postDisconnectpeer(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          await client.rln.disconnectPeer(args);
           return { data: undefined };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -157,26 +199,26 @@ export const nodeApi = createApi({
     estimateFee: builder.query<EstimateFeeResponse, EstimateFeeRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.onChain.postEstimatefee(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.estimateFee(args);
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
     }),
-    init: builder.query<InitResponse, InitRequest>({
+    init: builder.query<void, InitRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.other.postInit(args);
-          return { data: res };
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          await client.rln.initWallet(args);
+          return { data: undefined };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
     }),
     invoiceStatus: builder.query<InvoiceStatusResponse, InvoiceStatusRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.invoices.postInvoicestatus(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.getInvoiceStatus(args);
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -184,8 +226,8 @@ export const nodeApi = createApi({
     issueNiaAsset: builder.mutation<IssueAssetNIAResponse, IssueAssetNIARequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.rgb.postIssueassetnia(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.issueAssetNIA(args);
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -193,8 +235,8 @@ export const nodeApi = createApi({
     listAssets: builder.query<ListAssetsResponse, void>({
       queryFn: async (_args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.rgb.postListassets({});
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.listAssets();
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -202,8 +244,8 @@ export const nodeApi = createApi({
     listChannels: builder.query<ListChannelsResponse, void>({
       queryFn: async (_args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.channels.getListchannels();
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.listChannels();
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -211,26 +253,27 @@ export const nodeApi = createApi({
     listPayments: builder.query<ListPaymentsResponse, void>({
       queryFn: async (_args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.payments.getListpayments();
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.listPayments()
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
     }),
-    listTransactions: builder.query<ListTransactionsResponse, void>({
-      queryFn: async (_args, api) => {
+    listTransactions: builder.query<ListTransactionsResponse, { skip_sync?: boolean } | void>({
+      queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.onChain.postListtransactions();
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          // Type assertion needed until SDK types are regenerated
+          const res = await (client.rln.listTransactions as (req?: { skip_sync?: boolean }) => Promise<ListTransactionsResponse>)(args || {});
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
     }),
-    listTransfers: builder.query<ListTransfersResponse, void>({
-      queryFn: async (_args, api) => {
+    listTransfers: builder.query<ListTransfersResponse, ListTransfersRequest | void>({
+      queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.rgb.postListtransfers(undefined);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.listTransfers(args || {});
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -238,8 +281,8 @@ export const nodeApi = createApi({
     listUnspents: builder.query<ListUnspentsResponse, void>({
       queryFn: async (_args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.onChain.postListunspents({});
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.listUnspents();
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -247,17 +290,71 @@ export const nodeApi = createApi({
     lnInvoice: builder.mutation<LNInvoiceResponse, LNInvoiceRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.invoices.postLninvoice(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const requestBody = args.asset_id
+            ? {
+              amt_msat: 3000000,
+              asset_amount: args.asset_amount,
+              asset_id: args.asset_id,
+              expiry_sec: 3600,
+            }
+            : args.amt_msat
+              ? {
+                amt_msat: args.amt_msat,
+                expiry_sec: 3600,
+              }
+              : {
+                expiry_sec: 3600,
+              };
+          const res = await client.rln.createLNInvoice(requestBody);
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
     }),
-    nodeInfo: builder.query<RgbNodeInfoResponse, void>({
+
+
+    // ... inside endpoints
+    makerInit: builder.mutation<MakerInitResponse, MakerInitRequest>({
+      queryFn: async (args, api) => {
+        try {
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await (client.rln as any).makerInit(args);
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
+    }),
+    makerExecute: builder.mutation<void, MakerExecuteRequest>({
+      queryFn: async (args, api) => {
+        try {
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          await (client.rln as any).makerExecute(args);
+          return { data: undefined };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
+    }),
+    taker: builder.mutation<void, TakerRequest>({
+      queryFn: async (args, api) => {
+        try {
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          await (client.rln as any).taker(args);
+          return { data: undefined };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
+    }),
+    nodeInfo: builder.query<NodeInfoResponse, void>({
       queryFn: async (_args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.other.getNodeinfo();
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.getNodeInfo();
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
+    }),
+    networkInfo: builder.query<NetworkInfoResponse, void>({
+      queryFn: async (_args, api) => {
+        try {
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.getNetworkInfo();
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -265,26 +362,43 @@ export const nodeApi = createApi({
     openChannel: builder.mutation<OpenChannelResponse, OpenChannelRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.channels.postOpenchannel(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const requestBody: any = {
+            peer_pubkey_and_opt_addr: args.peer_pubkey_and_opt_addr,
+            capacity_sat: args.capacity_sat,
+            push_msat: 3100000,
+            public: args.public !== undefined ? args.public : true,
+            with_anchors: true,
+            fee_base_msat: args.fee_base_msat,
+            fee_proportional_millionths: args.fee_proportional_millionths,
+            ...(args.temporary_channel_id ? { temporary_channel_id: args.temporary_channel_id } : {}),
+          };
+
+          // Only add asset fields if asset_amount is provided and > 0
+          if (args.asset_amount && args.asset_amount > 0) {
+            requestBody.asset_amount = Math.floor(args.asset_amount); // Ensure integer
+            requestBody.asset_id = args.asset_id;
+          }
+
+          const res = await client.rln.openChannel(requestBody);
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
     }),
-    refresh: builder.mutation<void, RefreshRequest>({
+    refresh: builder.mutation<void, RefreshRequest | void>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          await client.node.rgb.postRefreshtransfers(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          await client.rln.refreshTransfers({ skip_sync: false, ...(args || {}) });
           return { data: undefined };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
     }),
-    restore: builder.query<void, RestoreRequest>({
+    restore: builder.mutation<void, RestoreRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          await client.node.other.postRestore(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          await client.rln.restore(args);
           return { data: undefined };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -292,8 +406,14 @@ export const nodeApi = createApi({
     rgbInvoice: builder.mutation<RgbInvoiceResponse, RgbInvoiceRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.rgb.postRgbinvoice(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const requestBody: any = {
+            min_confirmations: 1,
+            ...(args.asset_id ? { asset_id: args.asset_id } : {}),
+            ...(args.witness !== undefined ? { witness: args.witness } : {}),
+            ...(args.assignment ? { assignment: args.assignment } : {}),
+          };
+          const res = await client.rln.createRgbInvoice(requestBody);
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -301,26 +421,36 @@ export const nodeApi = createApi({
     sendAsset: builder.mutation<SendAssetResponse, SendAssetRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.rgb.postSendasset(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.sendAsset({
+            asset_id: args.asset_id,
+            assignment: args.assignment,
+            recipient_id: args.recipient_id,
+            donation: args.donation || false,
+            fee_rate: args.fee_rate,
+            min_confirmations: 1,
+            transport_endpoints: args.transport_endpoints,
+            skip_sync: false,
+            ...(args.witness_data ? { witness_data: args.witness_data } : {}),
+          });
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
     }),
-    sendBtc: builder.mutation<SendBtcResponse, SendBtcRequest>({
+    sendBtc: builder.mutation<void, SendBtcRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.onChain.postSendbtc(args);
-          return { data: res };
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          await client.rln.sendBtc({ skip_sync: false, ...args });
+          return { data: undefined };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
     }),
     sendPayment: builder.mutation<SendPaymentResponse, SendPaymentRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.payments.postSendpayment(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.sendPayment(args);
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -328,8 +458,8 @@ export const nodeApi = createApi({
     signMessage: builder.mutation<SignMessageResponse, SignMessageRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.other.postSignmessage(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.signMessage(args);
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -337,8 +467,8 @@ export const nodeApi = createApi({
     unlock: builder.query<void, UnlockRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          await client.node.other.postUnlock(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          await client.rln.unlockWallet(args);
           return { data: undefined };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -346,8 +476,8 @@ export const nodeApi = createApi({
     keysend: builder.mutation<KeysendResponse, KeysendRequest>({
       queryFn: async (args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.payments.postKeysend(args);
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.keysend(args);
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
@@ -355,11 +485,91 @@ export const nodeApi = createApi({
     listPeers: builder.query<ListPeersResponse, void>({
       queryFn: async (_args, api) => {
         try {
-          const client = getKaleidoClient(api.getState() as RootState);
-          const res = await client.node.peers.getListpeers();
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.listPeers()
           return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
+    }),
+    listSwaps: builder.query<ListSwapsResponse, void>({
+      queryFn: async (_args, api) => {
+        try {
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          const res = await client.rln.listSwaps()
+          return { data: res };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
+    }),
+    whitelistTrade: builder.mutation<void, WhitelistTradeRequest>({
+      queryFn: async (args, api) => {
+        try {
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          await client.rln.whitelistTrade(args);
+          return { data: undefined };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
+    }),
+    shutdown: builder.query<void, void>({
+      queryFn: async (_args, api) => {
+        try {
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          await client.rln.shutdown();
+          return { data: undefined };
+        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
+      },
+    }),
+    lock: builder.query<void, void>({
+      queryFn: async (_args, api) => {
+        try {
+          const client = await getKaleidoClient(api.getState() as MinimalState);
+          await client.rln.lockWallet();
+          return { data: undefined };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
     }),
   }),
 });
+
+export const {
+  useAddressQuery,
+  useAssetBalanceQuery,
+  useBackupMutation,
+  useBtcBalanceQuery,
+  useCloseChannelMutation,
+  useConnectPeerMutation,
+  useCreateUtxosMutation,
+  useDecodeInvoiceQuery,
+  useDecodeRgbInvoiceQuery,
+  useDisconnectPeerMutation,
+  useEstimateFeeQuery,
+  useInitQuery,
+  useInvoiceStatusQuery,
+  useIssueNiaAssetMutation,
+  useListAssetsQuery,
+  useListChannelsQuery,
+  useListPaymentsQuery,
+  useListTransactionsQuery,
+  useListTransfersQuery,
+  useListUnspentsQuery,
+  useLnInvoiceMutation,
+  useMakerInitMutation,
+  useMakerExecuteMutation,
+  useTakerMutation,
+  useNodeInfoQuery,
+  useNetworkInfoQuery,
+  useOpenChannelMutation,
+  useRefreshMutation,
+  useRestoreMutation,
+  useRgbInvoiceMutation,
+  useSendAssetMutation,
+  useSendBtcMutation,
+  useSendPaymentMutation,
+  useSignMessageMutation,
+  useUnlockQuery,
+  useKeysendMutation,
+  useListPeersQuery,
+  useListSwapsQuery,
+  useWhitelistTradeMutation,
+  useShutdownQuery,
+  useLockQuery,
+} = nodeApi;

@@ -157,6 +157,7 @@ fn main() {
             save_logs_to_file,
             is_node_running,
             get_running_node_account,
+            get_node_state,
             // Port management commands
             check_ports_available,
             get_running_node_ports,
@@ -441,6 +442,13 @@ fn get_running_node_account(
     node_process: tauri::State<'_, Arc<Mutex<NodeProcess>>>,
 ) -> Option<String> {
     node_process.lock().unwrap().get_current_account()
+}
+
+#[tauri::command]
+fn get_node_state(
+    node_process: tauri::State<'_, Arc<Mutex<NodeProcess>>>,
+) -> rgb_node::NodeState {
+    node_process.lock().unwrap().get_state()
 }
 
 #[tauri::command]
