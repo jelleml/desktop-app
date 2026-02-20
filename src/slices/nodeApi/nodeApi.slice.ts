@@ -38,8 +38,8 @@ import type {
   RestoreRequest,
   CreateRgbInvoiceResponse as RgbInvoiceResponse,
   CreateRgbInvoiceRequest as RgbInvoiceRequest,
-  SendAssetResponse,
-  SendAssetRequest,
+  SendRgbResponse,
+  SendRgbRequest,
   SendBtcRequest,
 
   SendPaymentResponse,
@@ -418,20 +418,13 @@ export const nodeApi = createApi({
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
       },
     }),
-    sendAsset: builder.mutation<SendAssetResponse, SendAssetRequest>({
+    sendRgb: builder.mutation<SendRgbResponse, SendRgbRequest>({
       queryFn: async (args, api) => {
         try {
           const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.sendAsset({
-            asset_id: args.asset_id,
-            assignment: args.assignment,
-            recipient_id: args.recipient_id,
-            donation: args.donation || false,
-            fee_rate: args.fee_rate,
-            min_confirmations: 1,
-            transport_endpoints: args.transport_endpoints,
+          const res = await client.rln.sendRgb({
             skip_sync: false,
-            ...(args.witness_data ? { witness_data: args.witness_data } : {}),
+            ...args,
           });
           return { data: res };
         } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
@@ -561,7 +554,7 @@ export const {
   useRefreshMutation,
   useRestoreMutation,
   useRgbInvoiceMutation,
-  useSendAssetMutation,
+  useSendRgbMutation,
   useSendBtcMutation,
   useSendPaymentMutation,
   useSignMessageMutation,

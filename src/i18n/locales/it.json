@@ -35,7 +35,9 @@
     "manualSwaps": "Scambi Manuali",
     "nostrP2P": "Nostr P2P",
     "helpSupport": "Aiuto e Supporto",
-    "getHelpSupport": "Ottieni Aiuto e Supporto"
+    "getHelpSupport": "Ottieni Aiuto e Supporto",
+    "menu": "Menu",
+    "expandSidebar": "Expand sidebar"
   },
   "channels": {
     "pageTitle": "Dashboard Portafoglio Lightning",

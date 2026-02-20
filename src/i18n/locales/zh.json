@@ -35,7 +35,9 @@
     "manualSwaps": "手动交换",
     "nostrP2P": "Nostr 点对点",
     "helpSupport": "帮助与支持",
-    "getHelpSupport": "获取帮助与支持"
+    "getHelpSupport": "获取帮助与支持",
+    "menu": "Menu",
+    "expandSidebar": "Expand sidebar"
   },
   "channels": {
     "pageTitle": "闪电钱包仪表板",

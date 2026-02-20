@@ -35,7 +35,9 @@
     "manualSwaps": "Manual Swaps",
     "nostrP2P": "Nostr P2P",
     "helpSupport": "Help & Support",
-    "getHelpSupport": "Get Help & Support"
+    "getHelpSupport": "Get Help & Support",
+    "menu": "Menu",
+    "expandSidebar": "Expand sidebar"
   },
   "channels": {
     "pageTitle": "Lightning Wallet Dashboard",

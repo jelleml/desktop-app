@@ -35,7 +35,9 @@
     "manualSwaps": "Intercambios Manuales",
     "nostrP2P": "Nostr P2P",
     "helpSupport": "Ayuda y Soporte",
-    "getHelpSupport": "Obtener Ayuda y Soporte"
+    "getHelpSupport": "Obtener Ayuda y Soporte",
+    "menu": "Menu",
+    "expandSidebar": "Expand sidebar"
   },
   "channels": {
     "pageTitle": "Panel de Billetera Lightning",

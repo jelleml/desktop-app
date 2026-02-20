@@ -35,7 +35,9 @@
     "manualSwaps": "手動スワップ",
     "nostrP2P": "Nostr P2P",
     "helpSupport": "ヘルプ&サポート",
-    "getHelpSupport": "ヘルプ&サポートを利用"
+    "getHelpSupport": "ヘルプ&サポートを利用",
+    "menu": "Menu",
+    "expandSidebar": "Expand sidebar"
   },
   "channels": {
     "buyChannel": "チャネルを購入",

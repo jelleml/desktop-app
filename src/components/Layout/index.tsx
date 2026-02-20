@@ -124,12 +124,12 @@ const SidebarNavItem = ({ item, isCollapsed }: NavItemProps) => {
   }
 
   return (
-    <div className="relative group">
+    <div className="relative group" title={isCollapsed ? item.label : undefined}>
       <NavLink
         className={({ isActive }) => `
           flex items-center py-3.5 px-4 rounded-xl transition-all duration-300
           ${isActive
-            ? 'bg-gradient-to-r from-cyan/20 via-cyan/10 to-transparent text-cyan font-semibold shadow-lg shadow-cyan/5 border-l-4 border-cyan'
+            ? 'bg-cyan/10 text-white font-semibold border-l-2 border-cyan'
             : 'text-gray-400 hover:text-white hover:bg-blue-darker/80 hover:shadow-md'
           }
           ${isCollapsed ? 'justify-center' : hasSubMenu ? 'justify-between' : 'justify-start space-x-4'}
@@ -160,7 +160,7 @@ const SidebarNavItem = ({ item, isCollapsed }: NavItemProps) => {
                 flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm cursor-pointer
                 transition-all duration-200
                 ${subItem.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-darker/80 hover:text-white hover:translate-x-1'}
-                ${location.pathname === subItem.to ? 'bg-gradient-to-r from-cyan/15 to-transparent text-cyan font-semibold border-l-3 border-cyan/50' : 'text-gray-400'}
+                ${location.pathname === subItem.to ? 'bg-gradient-to-r from-cyan/15 to-transparent text-cyan font-semibold border-l-2 border-cyan/50' : 'text-gray-400'}
               `}
                 key={index}
                 onClick={() => handleSubMenuClick(subItem)}
@@ -385,7 +385,9 @@ export const Layout = (props: Props) => {
   const { t } = useTranslation()
   const [lastDeposit, setLastDeposit] = useState<number | undefined>(undefined)
   const [isRetrying, setIsRetrying] = useState(false)
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
+    () => localStorage.getItem('sidebarCollapsed') === 'true'
+  )
   const [isShuttingDown, setIsShuttingDown] = useState(false)
   const [shutdownStatus, setShutdownStatus] = useState<string>('')
   const [isChannelMenuOpen, setIsChannelMenuOpen] = useState(false)
@@ -599,7 +601,7 @@ export const Layout = (props: Props) => {
             <div className="flex items-center justify-between py-5 px-4 border-b border-divider/20 bg-blue-darkest">
               <img
                 alt="KaleidoSwap"
-                className={`cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95 
+                className={`cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95
                           ${isSidebarCollapsed ? 'w-10 h-10' : 'h-10 w-auto'}`}
                 onClick={() => {
                   navigate(WALLET_SETUP_PATH)
@@ -608,11 +610,15 @@ export const Layout = (props: Props) => {
               />
 
               <button
-                className="p-2 rounded-lg text-gray-400 hover:text-cyan 
+                className="p-2 rounded-lg text-gray-400 hover:text-cyan
                            hover:bg-blue-darker/50 transition-all duration-300
                            transform hover:scale-110 active:scale-95
                            ring-1 ring-transparent hover:ring-cyan/20 flex-shrink-0"
-                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                onClick={() => {
+                  const next = !isSidebarCollapsed
+                  setIsSidebarCollapsed(next)
+                  localStorage.setItem('sidebarCollapsed', String(next))
+                }}
               >
                 {isSidebarCollapsed ? (
                   <ChevronRight size={18} />
@@ -647,7 +653,7 @@ export const Layout = (props: Props) => {
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
                       <button
-                        className="flex items-center justify-center space-x-2 
+                        className="flex items-center justify-center space-x-2
                                    bg-gradient-to-br from-blue-darker to-blue-darker/80 hover:from-cyan/20 hover:to-cyan/5
                                    text-white rounded-xl py-3 px-3 transition-all duration-300
                                    border border-cyan/20 hover:border-cyan/40 group
@@ -655,7 +661,7 @@ export const Layout = (props: Props) => {
                                    transform hover:scale-[1.02] active:scale-[0.98]"
                         onClick={() => handleTransactionAction('deposit')}
                       >
-                        <div className="p-1.5 rounded-full bg-cyan/10 text-cyan group-hover:bg-cyan/20 
+                        <div className="p-1.5 rounded-full bg-cyan/10 text-cyan group-hover:bg-cyan/20
                                       transition-all duration-300 group-hover:scale-110 shadow-lg shadow-cyan/20">
                           <ArrowDownLeft className="w-4 h-4" />
                         </div>
@@ -664,7 +670,7 @@ export const Layout = (props: Props) => {
                         </span>
                       </button>
                       <button
-                        className="flex items-center justify-center space-x-2 
+                        className="flex items-center justify-center space-x-2
                                    bg-gradient-to-br from-blue-darker to-blue-darker/80 hover:from-purple/20 hover:to-purple/5
                                    text-white rounded-xl py-3 px-3 transition-all duration-300
                                    border border-purple/20 hover:border-purple/40 group
@@ -672,7 +678,7 @@ export const Layout = (props: Props) => {
                                    transform hover:scale-[1.02] active:scale-[0.98]"
                         onClick={() => handleTransactionAction('withdraw')}
                       >
-                        <div className="p-1.5 rounded-full bg-purple/10 text-purple group-hover:bg-purple/20 
+                        <div className="p-1.5 rounded-full bg-purple/10 text-purple group-hover:bg-purple/20
                                       transition-all duration-300 group-hover:scale-110 shadow-lg shadow-purple/20">
                           <ArrowUpRight className="w-4 h-4" />
                         </div>
@@ -694,7 +700,7 @@ export const Layout = (props: Props) => {
                           className={({ isActive }) => `
                               flex items-center space-x-4 px-4 py-3 rounded-xl text-sm group
                               ${isActive
-                              ? 'bg-gradient-to-r from-cyan/15 to-transparent text-cyan font-semibold border-l-3 border-cyan shadow-lg shadow-cyan/5'
+                              ? 'bg-gradient-to-r from-cyan/15 to-transparent text-cyan font-semibold border-l-2 border-cyan shadow-lg shadow-cyan/5'
                               : 'text-gray-400 hover:text-white hover:bg-blue-darker/80 hover:translate-x-1'
                             }
                               transition-all duration-300 transform active:scale-[0.98]
@@ -736,7 +742,7 @@ export const Layout = (props: Props) => {
                         ${isSidebarCollapsed ? 'ml-20' : 'ml-72'}`}
           >
             {/* Top bar with page title and notifications */}
-            <div className="sticky top-0 z-30 bg-blue-darkest backdrop-blur-xl border-b border-divider/20 px-6 py-4 
+            <div className="sticky top-0 z-30 bg-blue-darkest backdrop-blur-xl border-b border-divider/20 px-6 py-4
                           shadow-lg shadow-black/20">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4 animate-fadeInUp">
@@ -753,7 +759,7 @@ export const Layout = (props: Props) => {
 
                     return (
                       <>
-                        <div className="p-3 bg-gradient-to-br from-cyan/20 to-cyan/5 rounded-xl text-cyan 
+                        <div className="p-3 bg-gradient-to-br from-cyan/20 to-cyan/5 rounded-xl text-cyan
                                       shadow-lg shadow-cyan/10 ring-1 ring-cyan/20">
                           {icon}
                         </div>
@@ -769,7 +775,7 @@ export const Layout = (props: Props) => {
                   {/* Support button in header */}
                   <button
                     aria-label="Support"
-                    className="p-3 text-gray-400 hover:text-cyan rounded-xl hover:bg-blue-darker/50 
+                    className="p-3 text-gray-400 hover:text-cyan rounded-xl hover:bg-blue-darker/50
                              transition-all duration-300 transform hover:scale-110 active:scale-95
                              ring-1 ring-divider/10 hover:ring-cyan/30"
                     onClick={() => setShowSupportModal(true)}
@@ -810,7 +816,7 @@ export const Layout = (props: Props) => {
                   {/* Notifications bell */}
                   <button
                     aria-label="Toggle notifications"
-                    className="relative p-3 text-gray-400 hover:text-cyan rounded-xl hover:bg-blue-darker/50 
+                    className="relative p-3 text-gray-400 hover:text-cyan rounded-xl hover:bg-blue-darker/50
                              transition-all duration-300 transform hover:scale-110 active:scale-95
                              ring-1 ring-divider/10 hover:ring-cyan/30"
                     onClick={(e) => {
@@ -821,8 +827,8 @@ export const Layout = (props: Props) => {
                   >
                     <Bell className="w-5 h-5" />
                     {notifications.length > 0 && (
-                      <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-gradient-to-br from-cyan to-cyan/80 
-                                   text-white text-xs font-bold flex items-center justify-center rounded-full 
+                      <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-gradient-to-br from-cyan to-cyan/80
+                                   text-white text-xs font-bold flex items-center justify-center rounded-full
                                    shadow-lg shadow-cyan/30 animate-pulse ring-2 ring-blue-darkest">
                         {notifications.length}
                       </span>

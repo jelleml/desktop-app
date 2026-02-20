@@ -41,8 +41,8 @@ import type {
   RestoreRequest,
   CreateRgbInvoiceRequest as RgbInvoiceRequest,
   CreateRgbInvoiceResponse as RgbInvoiceResponse,
-  SendAssetRequest,
-  SendAssetResponse,
+  SendRgbRequest,
+  SendRgbResponse,
   SendBtcRequest,
   SendPaymentRequest,
   SendPaymentResponse,
@@ -64,7 +64,7 @@ import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 /**
  * Result type for API calls
  */
-export type ApiResult<T> = 
+export type ApiResult<T> =
   | { data: T; error?: never }
   | { data?: never; error: FetchBaseQueryError };
 
@@ -72,7 +72,7 @@ export type ApiResult<T> =
  * Wrapper around RlnClient with error handling and request defaults
  */
 export class NodeApiWrapper {
-  constructor(private readonly client: RlnClient) {}
+  constructor(private readonly client: RlnClient) { }
 
   /**
    * Execute an API call with error handling
@@ -174,9 +174,9 @@ export class NodeApiWrapper {
     return this.execute(() => this.client.issueAssetNIA(request));
   }
 
-  async sendAsset(request: SendAssetRequest): Promise<ApiResult<SendAssetResponse>> {
+  async sendRgb(request: SendRgbRequest): Promise<ApiResult<SendRgbResponse>> {
     const requestWithDefaults = ensureSkipSync(request);
-    return this.execute(() => this.client.sendAsset(requestWithDefaults));
+    return this.execute(() => this.client.sendRgb(requestWithDefaults));
   }
 
   async listTransfers(assetId?: string): Promise<ApiResult<ListTransfersResponse>> {

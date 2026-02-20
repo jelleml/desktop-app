@@ -42,8 +42,8 @@ import type {
   RestoreRequest,
   CreateRgbInvoiceResponse as RgbInvoiceResponse,
   CreateRgbInvoiceRequest as RgbInvoiceRequest,
-  SendAssetResponse,
-  SendAssetRequest,
+  SendRgbResponse,
+  SendRgbRequest,
   SendBtcRequest,
   SendPaymentResponse,
   SendPaymentRequest,
@@ -106,21 +106,21 @@ function createQueryFn<TArgs, TResult>(
     try {
       const wrapper = await getNodeApiWrapper(api.getState() as MinimalState);
       const result = await apiCall(wrapper, args);
-      
+
       // Transform ApiResult to RTK Query format
       if (result && 'error' in result && result.error) {
         return { error: result.error };
       }
-      
+
       // Ensure we return data even if it's undefined
       return { data: result?.data as TResult };
     } catch (error) {
-      return { 
-        error: { 
-          status: 'CUSTOM_ERROR' as const, 
+      return {
+        error: {
+          status: 'CUSTOM_ERROR' as const,
           error: String(error),
-          data: undefined 
-        } 
+          data: undefined
+        }
       };
     }
   };
@@ -136,21 +136,21 @@ function createQueryFnVoid<TResult>(
     try {
       const wrapper = await getNodeApiWrapper(api.getState() as MinimalState);
       const result = await apiCall(wrapper);
-      
+
       // Transform ApiResult to RTK Query format
       if (result && 'error' in result && result.error) {
         return { error: result.error };
       }
-      
+
       // Ensure we return data even if it's undefined
       return { data: result?.data as TResult };
     } catch (error) {
-      return { 
-        error: { 
-          status: 'CUSTOM_ERROR' as const, 
+      return {
+        error: {
+          status: 'CUSTOM_ERROR' as const,
           error: String(error),
-          data: undefined 
-        } 
+          data: undefined
+        }
       };
     }
   };
@@ -163,35 +163,35 @@ export const nodeApi = createApi({
     // ============================================================================
     // Wallet Management
     // ============================================================================
-    
+
     nodeInfo: builder.query<NodeInfoResponse, void>({
       queryFn: createQueryFnVoid((wrapper) => wrapper.getNodeInfo()),
     }),
-    
+
     networkInfo: builder.query<NetworkInfoResponse, void>({
       queryFn: createQueryFnVoid((wrapper) => wrapper.getNetworkInfo()),
     }),
-    
+
     init: builder.query<void, InitRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.initWallet(args)),
     }),
-    
+
     unlock: builder.query<void, UnlockRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.unlockWallet(args)),
     }),
-    
+
     lock: builder.query<void, void>({
       queryFn: createQueryFnVoid((wrapper) => wrapper.lockWallet()),
     }),
-    
+
     backup: builder.mutation<void, BackupRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.backup(args)),
     }),
-    
+
     restore: builder.mutation<void, RestoreRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.restore(args)),
     }),
-    
+
     shutdown: builder.query<void, void>({
       queryFn: createQueryFnVoid((wrapper) => wrapper.shutdown()),
     }),
@@ -199,31 +199,31 @@ export const nodeApi = createApi({
     // ============================================================================
     // BTC Operations
     // ============================================================================
-    
+
     address: builder.query<AddressResponse, void>({
       queryFn: createQueryFnVoid((wrapper) => wrapper.getAddress()),
     }),
-    
+
     btcBalance: builder.query<BtcBalanceResponse, void>({
       queryFn: createQueryFnVoid((wrapper) => wrapper.getBtcBalance()),
     }),
-    
+
     sendBtc: builder.mutation<void, SendBtcRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.sendBtc(args)),
     }),
-    
+
     listTransactions: builder.query<ListTransactionsResponse, void>({
       queryFn: createQueryFnVoid((wrapper) => wrapper.listTransactions()),
     }),
-    
+
     listUnspents: builder.query<ListUnspentsResponse, void>({
       queryFn: createQueryFnVoid((wrapper) => wrapper.listUnspents()),
     }),
-    
+
     createUtxos: builder.mutation<void, CreateUtxosRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.createUtxos(args)),
     }),
-    
+
     estimateFee: builder.query<EstimateFeeResponse, EstimateFeeRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.estimateFee(args)),
     }),
@@ -231,27 +231,27 @@ export const nodeApi = createApi({
     // ============================================================================
     // RGB Asset Operations
     // ============================================================================
-    
+
     listAssets: builder.query<ListAssetsResponse, void>({
       queryFn: createQueryFnVoid((wrapper) => wrapper.listAssets()),
     }),
-    
+
     assetBalance: builder.query<AssetBalanceResponse, AssetBalanceRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.getAssetBalance(args)),
     }),
-    
+
     issueNiaAsset: builder.mutation<IssueAssetNIAResponse, IssueAssetNIARequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.issueAssetNIA(args)),
     }),
-    
-    sendAsset: builder.mutation<SendAssetResponse, SendAssetRequest>({
-      queryFn: createQueryFn((wrapper, args) => wrapper.sendAsset(args)),
+
+    sendRgb: builder.mutation<SendRgbResponse, SendRgbRequest>({
+      queryFn: createQueryFn((wrapper, args) => wrapper.sendRgb(args)),
     }),
-    
+
     listTransfers: builder.query<ListTransfersResponse, void>({
       queryFn: createQueryFnVoid((wrapper) => wrapper.listTransfers()),
     }),
-    
+
     refresh: builder.mutation<void, RefreshRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.refreshTransfers(args)),
     }),
@@ -259,15 +259,15 @@ export const nodeApi = createApi({
     // ============================================================================
     // Lightning Network - Channels
     // ============================================================================
-    
+
     listChannels: builder.query<ListChannelsResponse, void>({
       queryFn: createQueryFnVoid((wrapper) => wrapper.listChannels()),
     }),
-    
+
     openChannel: builder.mutation<OpenChannelResponse, OpenChannelRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.openChannel(args)),
     }),
-    
+
     closeChannel: builder.mutation<void, CloseChannelRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.closeChannel(args)),
     }),
@@ -275,15 +275,15 @@ export const nodeApi = createApi({
     // ============================================================================
     // Lightning Network - Peers
     // ============================================================================
-    
+
     listPeers: builder.query<ListPeersResponse, void>({
       queryFn: createQueryFnVoid((wrapper) => wrapper.listPeers()),
     }),
-    
+
     connectPeer: builder.mutation<void, ConnectPeerRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.connectPeer(args)),
     }),
-    
+
     disconnectPeer: builder.mutation<void, DisconnectPeerRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.disconnectPeer(args)),
     }),
@@ -291,35 +291,35 @@ export const nodeApi = createApi({
     // ============================================================================
     // Lightning Network - Invoices & Payments
     // ============================================================================
-    
+
     lnInvoice: builder.mutation<LNInvoiceResponse, LNInvoiceRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.createLNInvoice(args)),
     }),
-    
+
     rgbInvoice: builder.mutation<RgbInvoiceResponse, RgbInvoiceRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.createRgbInvoice(args)),
     }),
-    
+
     decodeInvoice: builder.query<DecodeLNInvoiceResponse, DecodeLNInvoiceRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.decodeLNInvoice(args)),
     }),
-    
+
     decodeRgbInvoice: builder.query<DecodeRGBInvoiceResponse, DecodeRGBInvoiceRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.decodeRgbInvoice(args)),
     }),
-    
+
     invoiceStatus: builder.query<InvoiceStatusResponse, InvoiceStatusRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.getInvoiceStatus(args)),
     }),
-    
+
     sendPayment: builder.mutation<SendPaymentResponse, SendPaymentRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.sendPayment(args)),
     }),
-    
+
     keysend: builder.mutation<KeysendResponse, KeysendRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.keysend(args)),
     }),
-    
+
     listPayments: builder.query<ListPaymentsResponse, void>({
       queryFn: createQueryFnVoid((wrapper) => wrapper.listPayments()),
     }),
@@ -327,11 +327,11 @@ export const nodeApi = createApi({
     // ============================================================================
     // Swaps
     // ============================================================================
-    
+
     listSwaps: builder.query<ListSwapsResponse, void>({
       queryFn: createQueryFnVoid((wrapper) => wrapper.listSwaps()),
     }),
-    
+
     whitelistTrade: builder.mutation<void, WhitelistTradeRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.whitelistTrade(args)),
     }),
@@ -339,7 +339,7 @@ export const nodeApi = createApi({
     // ============================================================================
     // Maker Operations (using raw client for now)
     // ============================================================================
-    
+
     makerInit: builder.mutation<MakerInitResponse, MakerInitRequest>({
       queryFn: async (args, api) => {
         try {
@@ -352,7 +352,7 @@ export const nodeApi = createApi({
         }
       },
     }),
-    
+
     makerExecute: builder.mutation<void, MakerExecuteRequest>({
       queryFn: async (args, api) => {
         try {
@@ -364,7 +364,7 @@ export const nodeApi = createApi({
         }
       },
     }),
-    
+
     taker: builder.mutation<void, TakerRequest>({
       queryFn: async (args, api) => {
         try {
@@ -380,7 +380,7 @@ export const nodeApi = createApi({
     // ============================================================================
     // Utility Methods
     // ============================================================================
-    
+
     signMessage: builder.mutation<SignMessageResponse, SignMessageRequest>({
       queryFn: createQueryFn((wrapper, args) => wrapper.signMessage(args)),
     }),
@@ -418,7 +418,7 @@ export const {
   useRefreshMutation,
   useRestoreMutation,
   useRgbInvoiceMutation,
-  useSendAssetMutation,
+  useSendRgbMutation,
   useSendBtcMutation,
   useSendPaymentMutation,
   useSignMessageMutation,

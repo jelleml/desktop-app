@@ -84,7 +84,7 @@ export const WithdrawModalContent: React.FC = () => {
   const [isPollingStatus, setIsPollingStatus] = useState(false)
 
   const [sendBtc] = nodeApi.useSendBtcMutation()
-  const [sendAsset] = nodeApi.useSendAssetMutation()
+  const [sendRgb] = nodeApi.useSendRgbMutation()
   const [sendPayment] = nodeApi.useSendPaymentMutation()
   const [listPayments] = nodeApi.useLazyListPaymentsQuery()
   const [estimateFee] = nodeApi.useLazyEstimateFeeQuery()
@@ -1104,9 +1104,8 @@ export const WithdrawModalContent: React.FC = () => {
               }
             }
 
-            res = await sendAsset({
-              asset_id: decodedRgbInvoice.asset_id || pendingData.asset_id,
-              assignment,
+            const targetAssetId = decodedRgbInvoice.asset_id || pendingData.asset_id;
+            res = await sendRgb({
               donation: pendingData.donation || false,
               fee_rate:
                 pendingData.fee_rate !== 'custom'
@@ -1114,9 +1113,16 @@ export const WithdrawModalContent: React.FC = () => {
                   pendingData.fee_rate as keyof typeof feeEstimations
                   ]
                   : customFee,
-              recipient_id: decodedRgbInvoice.recipient_id,
-              transport_endpoints: decodedRgbInvoice.transport_endpoints,
-              witness_data: witnessData,
+              recipient_map: {
+                [targetAssetId]: [
+                  {
+                    recipient_id: decodedRgbInvoice.recipient_id,
+                    assignment,
+                    transport_endpoints: decodedRgbInvoice.transport_endpoints,
+                    ...(witnessData ? { witness_data: witnessData } : {}),
+                  },
+                ],
+              },
             }).unwrap()
           } else {
             if (!transportEndpoint) {
@@ -1124,9 +1130,7 @@ export const WithdrawModalContent: React.FC = () => {
                 t('withdrawModal.main.errors.proxyEndpointMissing')
               )
             }
-            res = await sendAsset({
-              asset_id: pendingData.asset_id,
-              assignment: createFungibleAssignment(rawAmount),
+            res = await sendRgb({
               donation: pendingData.donation || false,
               fee_rate:
                 pendingData.fee_rate !== 'custom'
@@ -1134,8 +1138,15 @@ export const WithdrawModalContent: React.FC = () => {
                   pendingData.fee_rate as keyof typeof feeEstimations
                   ]
                   : customFee,
-              recipient_id: pendingData.address,
-              transport_endpoints: [transportEndpoint],
+              recipient_map: {
+                [pendingData.asset_id]: [
+                  {
+                    recipient_id: pendingData.address,
+                    assignment: createFungibleAssignment(rawAmount),
+                    transport_endpoints: [transportEndpoint],
+                  },
+                ],
+              },
             }).unwrap()
           }
 
@@ -1214,7 +1225,7 @@ export const WithdrawModalContent: React.FC = () => {
     customFee,
     assets.data?.nia,
     decodedRgbInvoice,
-    sendAsset,
+    sendRgb,
     transportEndpoint,
     dispatch,
     t,

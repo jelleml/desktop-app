@@ -35,7 +35,9 @@
     "manualSwaps": "Swaps manuels",
     "nostrP2P": "Nostr P2P",
     "helpSupport": "Aide et support",
-    "getHelpSupport": "Obtenir de l'aide et du support"
+    "getHelpSupport": "Obtenir de l'aide et du support",
+    "menu": "Menu",
+    "expandSidebar": "Expand sidebar"
   },
   "channels": {
     "buyChannel": "Acheter un canal",
