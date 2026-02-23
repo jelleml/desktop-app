@@ -63,8 +63,8 @@ importers:
         specifier: ^8.2.1
         version: 8.2.1
       kaleidoswap-sdk:
-        specifier: file:../kaleido-sdk/typescript-sdk
-        version: file:../kaleido-sdk/typescript-sdk
+        specifier: 0.5.1
+        version: 0.5.1
       lucide-react:
         specifier: ^0.575.0
         version: 0.575.0(react@18.3.1)
@@ -2081,8 +2081,8 @@ packages:
     resolution: {integrity: sha512-ZZow9HBI5O6EPgSJLUb8n2NKgmVWTwCvHGwFuJlMjvLFqlGG6pjirPhtdsseaLZjSibD8eegzmYpUZwoIlj2cQ==}
     engines: {node: '>=4.0'}
 
-  kaleidoswap-sdk@file:../kaleido-sdk/typescript-sdk:
-    resolution: {directory: ../kaleido-sdk/typescript-sdk, type: directory}
+  kaleidoswap-sdk@0.5.1:
+    resolution: {integrity: sha512-gWv40HSNTY+j+/omnLEQ0FUDEG0TiwpPeHDqDBpvp1uc+FfbsFRSg46Jxi9p0YJr9vP9FonGM0TbtYjqNXJ8Fw==}
     engines: {node: '>=18.0.0'}
 
   keyv@4.5.4:
@@ -5233,7 +5233,7 @@ snapshots:
       object.assign: 4.1.7
       object.values: 1.2.1
 
-  kaleidoswap-sdk@file:../kaleido-sdk/typescript-sdk:
+  kaleidoswap-sdk@0.5.1:
     dependencies:
       '@types/ws': 8.18.1
       openapi-fetch: 0.15.2
