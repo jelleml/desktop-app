@@ -380,8 +380,8 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
 
       const response = await makerInit(requestPayload).unwrap()
 
-      setSwapString(response.swapstring)
-      setPaymentSecret(response.payment_secret)
+      setSwapString(response.swapstring ?? '')
+      setPaymentSecret(response.payment_secret ?? '')
       setSwapInitiated(true)
       toast.success(t('trade.manual.swapInitiated'))
     } catch (error) {

@@ -411,7 +411,7 @@ export const Layout = (props: Props) => {
   const SUPPORT_RESOURCES = getSupportResources(t)
   const PAGE_CONFIG = getPageConfig(t)
 
-  const [lock] = nodeApi.endpoints.lock.useLazyQuery()
+  const [lock] = nodeApi.endpoints.lock.useMutation()
 
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)

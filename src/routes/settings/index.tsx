@@ -109,8 +109,8 @@ export const Component: React.FC = () => {
     type: ModalType.NONE,
   })
 
-  const [shutdown] = nodeApi.endpoints.shutdown.useLazyQuery()
-  const [lock] = nodeApi.endpoints.lock.useLazyQuery()
+  const [shutdown] = nodeApi.endpoints.shutdown.useMutation()
+  const [lock] = nodeApi.endpoints.lock.useMutation()
 
   const { control, handleSubmit, reset, watch, setValue } = useForm<FormFields>(
     {

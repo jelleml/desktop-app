@@ -6,7 +6,7 @@
 
 import type {
   SendBtcRequest,
-  SendAssetRequest,
+  SendRgbRequest,
   CreateUtxosRequest,
   RefreshTransfersRequest as RefreshRequest,
   FailTransfersRequest,
@@ -20,9 +20,9 @@ export const DEFAULT_SKIP_SYNC = false;
 /**
  * Request types that require skip_sync field
  */
-export type SkipSyncRequest = 
+export type SkipSyncRequest =
   | SendBtcRequest
-  | SendAssetRequest
+  | SendRgbRequest
   | CreateUtxosRequest
   | RefreshRequest
   | FailTransfersRequest;

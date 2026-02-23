@@ -1,9 +1,3 @@
-/**
- * Node API Wrapper
- * 
- * Wraps the RLN client with enhanced error handling and request defaults
- */
-
 import type { RlnClient } from 'kaleidoswap-sdk';
 import type {
   AddressResponse,
@@ -13,6 +7,7 @@ import type {
   BtcBalanceResponse,
   CloseChannelRequest,
   ConnectPeerRequest,
+  ConnectPeerResponse,
   CreateUtxosRequest,
   DecodeLNInvoiceRequest,
   DecodeLNInvoiceResponse,
@@ -23,6 +18,7 @@ import type {
   EstimateFeeResponse,
   GetInvoiceStatusRequest as InvoiceStatusRequest,
   GetInvoiceStatusResponse as InvoiceStatusResponse,
+  InitResponse,
   InitRequest,
   IssueAssetNIARequest,
   IssueAssetNIAResponse,
@@ -34,6 +30,11 @@ import type {
   ListUnspentsResponse,
   CreateLNInvoiceRequest as LNInvoiceRequest,
   CreateLNInvoiceResponse as LNInvoiceResponse,
+  MakerExecuteRequest,
+  MakerExecuteResponse,
+  MakerInitRequest,
+  MakerInitResponse,
+  NetworkInfoResponse,
   NodeInfoResponse,
   OpenChannelRequest,
   OpenChannelResponse,
@@ -41,11 +42,11 @@ import type {
   RestoreRequest,
   CreateRgbInvoiceRequest as RgbInvoiceRequest,
   CreateRgbInvoiceResponse as RgbInvoiceResponse,
-  SendRgbRequest,
-  SendRgbResponse,
   SendBtcRequest,
   SendPaymentRequest,
   SendPaymentResponse,
+  SendRgbRequest,
+  SendRgbResponse,
   SignMessageRequest,
   SignMessageResponse,
   UnlockRequest,
@@ -54,32 +55,20 @@ import type {
   ListPeersResponse,
   ListSwapsResponse,
   WhitelistTradeRequest,
-  NetworkInfoResponse,
 } from 'kaleidoswap-sdk';
 
 import { ensureSkipSync } from './request-defaults';
 import { transformSdkError } from './errors';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
-/**
- * Result type for API calls
- */
 export type ApiResult<T> =
   | { data: T; error?: never }
   | { data?: never; error: FetchBaseQueryError };
 
-/**
- * Wrapper around RlnClient with error handling and request defaults
- */
 export class NodeApiWrapper {
   constructor(private readonly client: RlnClient) { }
 
-  /**
-   * Execute an API call with error handling
-   */
-  private async execute<T>(
-    fn: () => Promise<T>
-  ): Promise<ApiResult<T>> {
+  private async execute<T>(fn: () => Promise<T>): Promise<ApiResult<T>> {
     try {
       const data = await fn();
       return { data };
@@ -100,7 +89,7 @@ export class NodeApiWrapper {
     return this.execute(() => this.client.getNetworkInfo());
   }
 
-  async initWallet(request: InitRequest): Promise<ApiResult<void>> {
+  async initWallet(request: InitRequest): Promise<ApiResult<InitResponse>> {
     return this.execute(() => this.client.initWallet(request));
   }
 
@@ -137,8 +126,7 @@ export class NodeApiWrapper {
   }
 
   async sendBtc(request: SendBtcRequest): Promise<ApiResult<void>> {
-    const requestWithDefaults = ensureSkipSync(request);
-    return this.execute(() => this.client.sendBtc(requestWithDefaults));
+    return this.execute(() => this.client.sendBtc(ensureSkipSync(request)));
   }
 
   async listTransactions(): Promise<ApiResult<ListTransactionsResponse>> {
@@ -150,8 +138,7 @@ export class NodeApiWrapper {
   }
 
   async createUtxos(request: CreateUtxosRequest): Promise<ApiResult<void>> {
-    const requestWithDefaults = ensureSkipSync(request);
-    return this.execute(() => this.client.createUtxos(requestWithDefaults));
+    return this.execute(() => this.client.createUtxos(ensureSkipSync(request)));
   }
 
   async estimateFee(request: EstimateFeeRequest): Promise<ApiResult<EstimateFeeResponse>> {
@@ -175,18 +162,15 @@ export class NodeApiWrapper {
   }
 
   async sendRgb(request: SendRgbRequest): Promise<ApiResult<SendRgbResponse>> {
-    const requestWithDefaults = ensureSkipSync(request);
-    return this.execute(() => this.client.sendRgb(requestWithDefaults));
+    return this.execute(() => this.client.sendRgb(ensureSkipSync(request)));
   }
 
   async listTransfers(assetId?: string): Promise<ApiResult<ListTransfersResponse>> {
-    const request = assetId ? { asset_id: assetId } : {};
-    return this.execute(() => this.client.listTransfers(request));
+    return this.execute(() => this.client.listTransfers(assetId ? { asset_id: assetId } : {}));
   }
 
   async refreshTransfers(request?: RefreshRequest): Promise<ApiResult<void>> {
-    const requestWithDefaults = ensureSkipSync(request || {});
-    return this.execute(() => this.client.refreshTransfers(requestWithDefaults));
+    return this.execute(() => this.client.refreshTransfers(ensureSkipSync(request || {})));
   }
 
   // ============================================================================
@@ -198,7 +182,18 @@ export class NodeApiWrapper {
   }
 
   async openChannel(request: OpenChannelRequest): Promise<ApiResult<OpenChannelResponse>> {
-    return this.execute(() => this.client.openChannel(request));
+    const body: OpenChannelRequest = {
+      public: true,
+      ...request,
+      // Protocol requirements — always enforced regardless of caller input
+      push_msat: 3100000,
+      with_anchors: true,
+      // Floor asset_amount to an integer if provided
+      ...(request.asset_amount != null && request.asset_amount > 0
+        ? { asset_amount: Math.floor(request.asset_amount) }
+        : {}),
+    };
+    return this.execute(() => this.client.openChannel(body));
   }
 
   async closeChannel(request: CloseChannelRequest): Promise<ApiResult<void>> {
@@ -213,12 +208,12 @@ export class NodeApiWrapper {
     return this.execute(() => this.client.listPeers());
   }
 
-  async connectPeer(request: ConnectPeerRequest): Promise<ApiResult<Record<string, never>>> {
-    return this.execute(() => this.client.connectPeer(request)) as Promise<ApiResult<Record<string, never>>>;
+  async connectPeer(request: ConnectPeerRequest): Promise<ApiResult<ConnectPeerResponse>> {
+    return this.execute(() => this.client.connectPeer(request));
   }
 
-  async disconnectPeer(request: DisconnectPeerRequest): Promise<ApiResult<Record<string, never>>> {
-    return this.execute(() => this.client.disconnectPeer(request)) as Promise<ApiResult<Record<string, never>>>;
+  async disconnectPeer(request: DisconnectPeerRequest): Promise<ApiResult<void>> {
+    return this.execute(() => this.client.disconnectPeer(request));
   }
 
   // ============================================================================
@@ -226,11 +221,15 @@ export class NodeApiWrapper {
   // ============================================================================
 
   async createLNInvoice(request: LNInvoiceRequest): Promise<ApiResult<LNInvoiceResponse>> {
-    return this.execute(() => this.client.createLNInvoice(request));
+    // Always set expiry_sec; for RGB invoices force a fixed route-hint amount
+    const body: LNInvoiceRequest = request.asset_id
+      ? { expiry_sec: 3600, amt_msat: 3000000, ...request }
+      : { expiry_sec: 3600, ...request };
+    return this.execute(() => this.client.createLNInvoice(body));
   }
 
   async createRgbInvoice(request: RgbInvoiceRequest): Promise<ApiResult<RgbInvoiceResponse>> {
-    return this.execute(() => this.client.createRgbInvoice(request));
+    return this.execute(() => this.client.createRgbInvoice({ min_confirmations: 1, ...request }));
   }
 
   async decodeLNInvoice(request: DecodeLNInvoiceRequest | string): Promise<ApiResult<DecodeLNInvoiceResponse>> {
@@ -266,7 +265,19 @@ export class NodeApiWrapper {
   }
 
   async whitelistTrade(request: WhitelistTradeRequest | string): Promise<ApiResult<void>> {
-    return this.execute(() => this.client.whitelistTrade(request));
+    return this.execute(() => this.client.whitelistSwap(request));
+  }
+
+  async makerInit(request: MakerInitRequest): Promise<ApiResult<MakerInitResponse>> {
+    return this.execute(() => this.client.makerInit(request));
+  }
+
+  async makerExecute(request: MakerExecuteRequest): Promise<ApiResult<MakerExecuteResponse>> {
+    return this.execute(() => this.client.makerExecute(request));
+  }
+
+  async taker(request: { swapstring: string }): Promise<ApiResult<void>> {
+    return this.execute(() => this.client.whitelistSwap(request as WhitelistTradeRequest));
   }
 
   // ============================================================================

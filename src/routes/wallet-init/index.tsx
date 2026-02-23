@@ -127,8 +127,8 @@ export const Component = () => {
   const [isInitializing, setIsInitializing] = useState(false)
   const [showSkipMnemonicWarning, setShowSkipMnemonicWarning] = useState(false)
 
-  const [init] = nodeApi.endpoints.init.useLazyQuery()
-  const [unlock] = nodeApi.endpoints.unlock.useLazyQuery()
+  const [init] = nodeApi.endpoints.init.useMutation()
+  const [unlock] = nodeApi.endpoints.unlock.useMutation()
   const [nodeInfo] = nodeApi.endpoints.nodeInfo.useLazyQuery()
 
   const dispatch = useAppDispatch()
@@ -423,47 +423,39 @@ export const Component = () => {
   const initializeNode = async (password: string): Promise<string[]> => {
     const initResult = await init({ password })
 
-    if (!initResult.isSuccess) {
+    if ('error' in initResult) {
+      const error = initResult.error
       // Handle 403 status case
-      if (
-        initResult.error &&
-        typeof initResult.error === 'object' &&
-        'status' in initResult.error &&
-        initResult.error.status === 403
-      ) {
+      if (typeof error === 'object' && error !== null && 'status' in error && error.status === 403) {
         throw new Error('NODE_ALREADY_INITIALIZED')
       }
-
-      // Handle error with data property
+      // Extract message from error data if available
       if (
-        initResult.error &&
-        typeof initResult.error === 'object' &&
-        'data' in initResult.error &&
-        initResult.error.data &&
-        typeof initResult.error.data === 'object' &&
-        'error' in initResult.error.data &&
-        typeof initResult.error.data.error === 'string'
+        typeof error === 'object' &&
+        error !== null &&
+        'data' in error &&
+        error.data &&
+        typeof error.data === 'object' &&
+        'error' in error.data &&
+        typeof (error.data as Record<string, unknown>).error === 'string'
       ) {
-        throw new Error(initResult.error.data.error)
+        throw new Error((error.data as Record<string, string>).error)
       }
-
-      // Default error case
       throw new Error('Node initialization failed')
     }
 
-    // Check for mnemonic in result (TypeScript type narrowing)
-    const resultData = initResult.data as { mnemonic?: string } | undefined
-    if (!resultData || !resultData.mnemonic) {
+    const { mnemonic } = initResult.data
+    if (!mnemonic) {
       throw new Error('Invalid response: missing mnemonic')
     }
 
-    return resultData.mnemonic.split(' ')
+    return mnemonic.split(' ')
   }
 
   const unlockExistingNode = async (password: string): Promise<void> => {
     const rpcConfig = parseRpcUrl(nodeSetupForm.getValues('rpc_connection_url'))
 
-    const unlockResult = await unlock({
+    await unlock({
       bitcoind_rpc_host: rpcConfig.host,
       bitcoind_rpc_password: rpcConfig.password,
       bitcoind_rpc_port: rpcConfig.port,
@@ -472,10 +464,6 @@ export const Component = () => {
       password,
       proxy_endpoint: nodeSetupForm.getValues('proxy_endpoint'),
     }).unwrap()
-
-    if (unlockResult === undefined) {
-      throw new Error('Failed to unlock the node')
-    }
 
     const nodeInfoResult = await nodeInfo()
     if (!nodeInfoResult.isSuccess) {
@@ -662,7 +650,7 @@ export const Component = () => {
         nodeSetupForm.getValues('rpc_connection_url')
       )
 
-      const unlockResult = await unlock({
+      await unlock({
         bitcoind_rpc_host: rpcConfig.host,
         bitcoind_rpc_password: rpcConfig.password,
         bitcoind_rpc_port: rpcConfig.port,
@@ -671,10 +659,6 @@ export const Component = () => {
         password: nodePassword,
         proxy_endpoint: nodeSetupForm.getValues('proxy_endpoint'),
       }).unwrap()
-
-      if (unlockResult === undefined) {
-        throw new Error(t('walletInit.unlockStep.failedToUnlock'))
-      }
 
       // Verify node status after unlock
       const nodeInfoResult = await nodeInfo()

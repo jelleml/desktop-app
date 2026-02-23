@@ -1,5 +1,8 @@
 import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
-import { getKaleidoClient, MinimalState } from '../../api/client';
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import { getNodeApiWrapper, MinimalState } from '../../api/client';
+import type { NodeApiWrapper } from '../../api/node-api-wrapper';
+import type { ApiResult } from '../../api/node-api-wrapper';
 import type {
   AddressResponse,
   AssetBalanceResponse,
@@ -8,6 +11,7 @@ import type {
   BtcBalanceResponse,
   CloseChannelRequest,
   ConnectPeerRequest,
+  ConnectPeerResponse,
   CreateUtxosRequest,
   DecodeLNInvoiceResponse,
   DecodeLNInvoiceRequest,
@@ -17,7 +21,7 @@ import type {
   EstimateFeeResponse,
   EstimateFeeRequest,
   InitRequest,
-
+  InitResponse,
   GetInvoiceStatusResponse as InvoiceStatusResponse,
   GetInvoiceStatusRequest as InvoiceStatusRequest,
   IssueAssetNIAResponse,
@@ -26,11 +30,15 @@ import type {
   ListChannelsResponse,
   ListPaymentsResponse,
   ListTransactionsResponse,
-  ListTransfersRequest,
   ListTransfersResponse,
   ListUnspentsResponse,
   CreateLNInvoiceResponse as LNInvoiceResponse,
   CreateLNInvoiceRequest as LNInvoiceRequest,
+  MakerExecuteRequest,
+  MakerExecuteResponse,
+  MakerInitRequest,
+  MakerInitResponse,
+  NetworkInfoResponse,
   NodeInfoResponse,
   OpenChannelResponse,
   OpenChannelRequest,
@@ -41,7 +49,6 @@ import type {
   SendRgbResponse,
   SendRgbRequest,
   SendBtcRequest,
-
   SendPaymentResponse,
   SendPaymentRequest,
   SignMessageResponse,
@@ -52,26 +59,27 @@ import type {
   ListPeersResponse,
   ListSwapsResponse,
   WhitelistTradeRequest,
-  NetworkInfoResponse,
 } from 'kaleidoswap-sdk';
 
 export type {
   Assignment,
   AssignmentFungible,
-  Asset,
   Channel,
-  MakerExecuteRequest,
-  MakerInitRequest,
-  MakerInitResponse,
   NiaAsset,
-  TakerRequest,
   SwapDetails,
-  Transfer
+  Transfer,
 } from './types';
 
 export { SwapStatus } from './types';
 
+export type {
+  MakerExecuteRequest,
+  MakerInitRequest,
+  MakerInitResponse,
+} from 'kaleidoswap-sdk';
 
+// TakerRequest kept as local type for backward compatibility
+export type { TakerRequest } from './types';
 
 export const Network = {
   Mainnet: 'mainnet',
@@ -80,16 +88,9 @@ export const Network = {
   Signet: 'signet',
 } as const;
 export type Network = typeof Network[keyof typeof Network];
-import {
-  MakerInitRequest,
-  MakerInitResponse,
-  MakerExecuteRequest,
-  TakerRequest,
-} from './types';
 
 // Re-export types for backwards compatibility
-export type { SendPaymentResponse };
-
+export type { SendPaymentResponse, InitResponse };
 
 export interface NodeApiError {
   status: number;
@@ -98,427 +99,230 @@ export interface NodeApiError {
   };
 }
 
+type ApiState = { getState: () => unknown };
+
+/**
+ * Unified query function factory.
+ * Works for both endpoints with arguments and void endpoints.
+ * All error handling is delegated to NodeApiWrapper.execute().
+ */
+function queryFn<TArgs, TResult>(
+  call: (wrapper: NodeApiWrapper, args: TArgs) => Promise<ApiResult<TResult>>
+) {
+  return async (args: TArgs, api: ApiState): Promise<{ data: TResult } | { error: FetchBaseQueryError }> => {
+    try {
+      const wrapper = await getNodeApiWrapper(api.getState() as MinimalState);
+      const result = await call(wrapper, args);
+      if ('error' in result && result.error) return { error: result.error };
+      return { data: result.data as TResult };
+    } catch (error) {
+      return { error: { status: 500, data: { error: String(error) } } };
+    }
+  };
+}
+
+import { TakerRequest } from './types';
+
 export const nodeApi = createApi({
   reducerPath: 'nodeApi',
   baseQuery: fakeBaseQuery(),
   endpoints: (builder) => ({
-    address: builder.query<AddressResponse, void>({
-      queryFn: async (_args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.getAddress();
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    assetBalance: builder.query<AssetBalanceResponse, AssetBalanceRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.getAssetBalance(args);
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    backup: builder.mutation<void, BackupRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          await client.rln.backup(args);
-          return { data: undefined };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    btcBalance: builder.query<BtcBalanceResponse, void>({
-      queryFn: async (_args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.getBtcBalance(false);
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    closeChannel: builder.mutation<void, CloseChannelRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          await client.rln.closeChannel(args);
-          return { data: undefined };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    connectPeer: builder.mutation<void, ConnectPeerRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          await client.rln.connectPeer(args);
-          return { data: undefined };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    createUtxos: builder.mutation<void, CreateUtxosRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          await client.rln.createUtxos({
-            up_to: false,
-            skip_sync: false,
-            ...args
-          });
-          return { data: undefined };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    decodeInvoice: builder.query<DecodeLNInvoiceResponse, DecodeLNInvoiceRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.decodeLNInvoice(args);
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    decodeRgbInvoice: builder.query<DecodeRGBInvoiceResponse, DecodeRGBInvoiceRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.decodeRgbInvoice(args);
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    disconnectPeer: builder.mutation<void, DisconnectPeerRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          await client.rln.disconnectPeer(args);
-          return { data: undefined };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    estimateFee: builder.query<EstimateFeeResponse, EstimateFeeRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.estimateFee(args);
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    init: builder.query<void, InitRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          await client.rln.initWallet(args);
-          return { data: undefined };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    invoiceStatus: builder.query<InvoiceStatusResponse, InvoiceStatusRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.getInvoiceStatus(args);
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    issueNiaAsset: builder.mutation<IssueAssetNIAResponse, IssueAssetNIARequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.issueAssetNIA(args);
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    listAssets: builder.query<ListAssetsResponse, void>({
-      queryFn: async (_args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.listAssets();
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    listChannels: builder.query<ListChannelsResponse, void>({
-      queryFn: async (_args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.listChannels();
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    listPayments: builder.query<ListPaymentsResponse, void>({
-      queryFn: async (_args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.listPayments()
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    listTransactions: builder.query<ListTransactionsResponse, { skip_sync?: boolean } | void>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          // Type assertion needed until SDK types are regenerated
-          const res = await (client.rln.listTransactions as (req?: { skip_sync?: boolean }) => Promise<ListTransactionsResponse>)(args || {});
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    listTransfers: builder.query<ListTransfersResponse, ListTransfersRequest | void>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.listTransfers(args || {});
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    listUnspents: builder.query<ListUnspentsResponse, void>({
-      queryFn: async (_args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.listUnspents();
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    lnInvoice: builder.mutation<LNInvoiceResponse, LNInvoiceRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const requestBody = args.asset_id
-            ? {
-              amt_msat: 3000000,
-              asset_amount: args.asset_amount,
-              asset_id: args.asset_id,
-              expiry_sec: 3600,
-            }
-            : args.amt_msat
-              ? {
-                amt_msat: args.amt_msat,
-                expiry_sec: 3600,
-              }
-              : {
-                expiry_sec: 3600,
-              };
-          const res = await client.rln.createLNInvoice(requestBody);
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
 
+    // ============================================================================
+    // Wallet Management
+    // ============================================================================
 
-    // ... inside endpoints
-    makerInit: builder.mutation<MakerInitResponse, MakerInitRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await (client.rln as any).makerInit(args);
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    makerExecute: builder.mutation<void, MakerExecuteRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          await (client.rln as any).makerExecute(args);
-          return { data: undefined };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
-    taker: builder.mutation<void, TakerRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          await (client.rln as any).taker(args);
-          return { data: undefined };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
-    }),
     nodeInfo: builder.query<NodeInfoResponse, void>({
-      queryFn: async (_args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.getNodeInfo();
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
+      queryFn: queryFn((w, _: void) => w.getNodeInfo()),
     }),
+
     networkInfo: builder.query<NetworkInfoResponse, void>({
-      queryFn: async (_args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.getNetworkInfo();
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
+      queryFn: queryFn((w, _: void) => w.getNetworkInfo()),
     }),
-    openChannel: builder.mutation<OpenChannelResponse, OpenChannelRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const requestBody: any = {
-            peer_pubkey_and_opt_addr: args.peer_pubkey_and_opt_addr,
-            capacity_sat: args.capacity_sat,
-            push_msat: 3100000,
-            public: args.public !== undefined ? args.public : true,
-            with_anchors: true,
-            fee_base_msat: args.fee_base_msat,
-            fee_proportional_millionths: args.fee_proportional_millionths,
-            ...(args.temporary_channel_id ? { temporary_channel_id: args.temporary_channel_id } : {}),
-          };
 
-          // Only add asset fields if asset_amount is provided and > 0
-          if (args.asset_amount && args.asset_amount > 0) {
-            requestBody.asset_amount = Math.floor(args.asset_amount); // Ensure integer
-            requestBody.asset_id = args.asset_id;
-          }
+    // init/unlock/lock/shutdown are state-changing operations — mutations, not queries
+    init: builder.mutation<InitResponse, InitRequest>({
+      queryFn: queryFn((w, args) => w.initWallet(args)),
+    }),
 
-          const res = await client.rln.openChannel(requestBody);
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
+    unlock: builder.mutation<void, UnlockRequest>({
+      queryFn: queryFn((w, args) => w.unlockWallet(args)),
     }),
-    refresh: builder.mutation<void, RefreshRequest | void>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          await client.rln.refreshTransfers({ skip_sync: false, ...(args || {}) });
-          return { data: undefined };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
+
+    lock: builder.mutation<void, void>({
+      queryFn: queryFn((w, _: void) => w.lockWallet()),
     }),
+
+    shutdown: builder.mutation<void, void>({
+      queryFn: queryFn((w, _: void) => w.shutdown()),
+    }),
+
+    backup: builder.mutation<void, BackupRequest>({
+      queryFn: queryFn((w, args) => w.backup(args)),
+    }),
+
     restore: builder.mutation<void, RestoreRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          await client.rln.restore(args);
-          return { data: undefined };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
+      queryFn: queryFn((w, args) => w.restore(args)),
     }),
-    rgbInvoice: builder.mutation<RgbInvoiceResponse, RgbInvoiceRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const requestBody: any = {
-            min_confirmations: 1,
-            ...(args.asset_id ? { asset_id: args.asset_id } : {}),
-            ...(args.witness !== undefined ? { witness: args.witness } : {}),
-            ...(args.assignment ? { assignment: args.assignment } : {}),
-          };
-          const res = await client.rln.createRgbInvoice(requestBody);
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
+
+    // ============================================================================
+    // BTC Operations
+    // ============================================================================
+
+    address: builder.query<AddressResponse, void>({
+      queryFn: queryFn((w, _: void) => w.getAddress()),
     }),
-    sendRgb: builder.mutation<SendRgbResponse, SendRgbRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.sendRgb({
-            skip_sync: false,
-            ...args,
-          });
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
+
+    btcBalance: builder.query<BtcBalanceResponse, void>({
+      queryFn: queryFn((w, _: void) => w.getBtcBalance()),
     }),
+
     sendBtc: builder.mutation<void, SendBtcRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          await client.rln.sendBtc({ skip_sync: false, ...args });
-          return { data: undefined };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
+      queryFn: queryFn((w, args) => w.sendBtc(args)),
     }),
-    sendPayment: builder.mutation<SendPaymentResponse, SendPaymentRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.sendPayment(args);
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
+
+    listTransactions: builder.query<ListTransactionsResponse, void>({
+      queryFn: queryFn((w, _: void) => w.listTransactions()),
     }),
-    signMessage: builder.mutation<SignMessageResponse, SignMessageRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.signMessage(args);
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
+
+    listUnspents: builder.query<ListUnspentsResponse, void>({
+      queryFn: queryFn((w, _: void) => w.listUnspents()),
     }),
-    unlock: builder.query<void, UnlockRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          await client.rln.unlockWallet(args);
-          return { data: undefined };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
+
+    createUtxos: builder.mutation<void, CreateUtxosRequest>({
+      queryFn: queryFn((w, args) => w.createUtxos(args)),
     }),
-    keysend: builder.mutation<KeysendResponse, KeysendRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.keysend(args);
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
+
+    estimateFee: builder.query<EstimateFeeResponse, EstimateFeeRequest>({
+      queryFn: queryFn((w, args) => w.estimateFee(args)),
     }),
+
+    // ============================================================================
+    // RGB Asset Operations
+    // ============================================================================
+
+    listAssets: builder.query<ListAssetsResponse, void>({
+      queryFn: queryFn((w, _: void) => w.listAssets()),
+    }),
+
+    assetBalance: builder.query<AssetBalanceResponse, AssetBalanceRequest>({
+      queryFn: queryFn((w, args) => w.getAssetBalance(args)),
+    }),
+
+    issueNiaAsset: builder.mutation<IssueAssetNIAResponse, IssueAssetNIARequest>({
+      queryFn: queryFn((w, args) => w.issueAssetNIA(args)),
+    }),
+
+    sendRgb: builder.mutation<SendRgbResponse, SendRgbRequest>({
+      queryFn: queryFn((w, args) => w.sendRgb(args)),
+    }),
+
+    listTransfers: builder.query<ListTransfersResponse, void>({
+      queryFn: queryFn((w, _: void) => w.listTransfers()),
+    }),
+
+    refresh: builder.mutation<void, RefreshRequest | void>({
+      queryFn: queryFn((w, args) => w.refreshTransfers(args || {})),
+    }),
+
+    // ============================================================================
+    // Lightning Network - Channels
+    // ============================================================================
+
+    listChannels: builder.query<ListChannelsResponse, void>({
+      queryFn: queryFn((w, _: void) => w.listChannels()),
+    }),
+
+    openChannel: builder.mutation<OpenChannelResponse, OpenChannelRequest>({
+      queryFn: queryFn((w, args) => w.openChannel(args)),
+    }),
+
+    closeChannel: builder.mutation<void, CloseChannelRequest>({
+      queryFn: queryFn((w, args) => w.closeChannel(args)),
+    }),
+
+    // ============================================================================
+    // Lightning Network - Peers
+    // ============================================================================
+
     listPeers: builder.query<ListPeersResponse, void>({
-      queryFn: async (_args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.listPeers()
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
+      queryFn: queryFn((w, _: void) => w.listPeers()),
     }),
+
+    connectPeer: builder.mutation<ConnectPeerResponse, ConnectPeerRequest>({
+      queryFn: queryFn((w, args) => w.connectPeer(args)),
+    }),
+
+    disconnectPeer: builder.mutation<void, DisconnectPeerRequest>({
+      queryFn: queryFn((w, args) => w.disconnectPeer(args)),
+    }),
+
+    // ============================================================================
+    // Lightning Network - Invoices & Payments
+    // ============================================================================
+
+    lnInvoice: builder.mutation<LNInvoiceResponse, LNInvoiceRequest>({
+      queryFn: queryFn((w, args) => w.createLNInvoice(args)),
+    }),
+
+    rgbInvoice: builder.mutation<RgbInvoiceResponse, RgbInvoiceRequest>({
+      queryFn: queryFn((w, args) => w.createRgbInvoice(args)),
+    }),
+
+    decodeInvoice: builder.query<DecodeLNInvoiceResponse, DecodeLNInvoiceRequest>({
+      queryFn: queryFn((w, args) => w.decodeLNInvoice(args)),
+    }),
+
+    decodeRgbInvoice: builder.query<DecodeRGBInvoiceResponse, DecodeRGBInvoiceRequest>({
+      queryFn: queryFn((w, args) => w.decodeRgbInvoice(args)),
+    }),
+
+    invoiceStatus: builder.query<InvoiceStatusResponse, InvoiceStatusRequest>({
+      queryFn: queryFn((w, args) => w.getInvoiceStatus(args)),
+    }),
+
+    sendPayment: builder.mutation<SendPaymentResponse, SendPaymentRequest>({
+      queryFn: queryFn((w, args) => w.sendPayment(args)),
+    }),
+
+    keysend: builder.mutation<KeysendResponse, KeysendRequest>({
+      queryFn: queryFn((w, args) => w.keysend(args)),
+    }),
+
+    listPayments: builder.query<ListPaymentsResponse, void>({
+      queryFn: queryFn((w, _: void) => w.listPayments()),
+    }),
+
+    // ============================================================================
+    // Swaps
+    // ============================================================================
+
     listSwaps: builder.query<ListSwapsResponse, void>({
-      queryFn: async (_args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          const res = await client.rln.listSwaps()
-          return { data: res };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
+      queryFn: queryFn((w, _: void) => w.listSwaps()),
     }),
+
     whitelistTrade: builder.mutation<void, WhitelistTradeRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          await client.rln.whitelistTrade(args);
-          return { data: undefined };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
+      queryFn: queryFn((w, args) => w.whitelistTrade(args)),
     }),
-    shutdown: builder.query<void, void>({
-      queryFn: async (_args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          await client.rln.shutdown();
-          return { data: undefined };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
+
+    makerInit: builder.mutation<MakerInitResponse, MakerInitRequest>({
+      queryFn: queryFn((w, args) => w.makerInit(args)),
     }),
-    lock: builder.query<void, void>({
-      queryFn: async (_args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as MinimalState);
-          await client.rln.lockWallet();
-          return { data: undefined };
-        } catch (e) { return { error: { status: 500, data: { error: String(e) } } }; }
-      },
+
+    makerExecute: builder.mutation<MakerExecuteResponse, MakerExecuteRequest>({
+      queryFn: queryFn((w, args) => w.makerExecute(args)),
+    }),
+
+    taker: builder.mutation<void, TakerRequest>({
+      queryFn: queryFn((w, args) => w.taker(args)),
+    }),
+
+    // ============================================================================
+    // Utility Methods
+    // ============================================================================
+
+    signMessage: builder.mutation<SignMessageResponse, SignMessageRequest>({
+      queryFn: queryFn((w, args) => w.signMessage(args)),
     }),
   }),
 });
@@ -535,7 +339,7 @@ export const {
   useDecodeRgbInvoiceQuery,
   useDisconnectPeerMutation,
   useEstimateFeeQuery,
-  useInitQuery,
+  useInitMutation,
   useInvoiceStatusQuery,
   useIssueNiaAssetMutation,
   useListAssetsQuery,
@@ -558,11 +362,11 @@ export const {
   useSendBtcMutation,
   useSendPaymentMutation,
   useSignMessageMutation,
-  useUnlockQuery,
+  useUnlockMutation,
   useKeysendMutation,
   useListPeersQuery,
   useListSwapsQuery,
   useWhitelistTradeMutation,
-  useShutdownQuery,
-  useLockQuery,
+  useShutdownMutation,
+  useLockMutation,
 } = nodeApi;

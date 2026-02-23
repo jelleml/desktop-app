@@ -52,8 +52,8 @@ export const useBackup = ({
 
   const [backup, { isLoading: isBackupLoading }] =
     nodeApi.useBackupMutation()
-  const [lock] = nodeApi.endpoints.lock.useLazyQuery()
-  const [unlock] = nodeApi.endpoints.unlock.useLazyQuery()
+  const [lock] = nodeApi.endpoints.lock.useMutation()
+  const [unlock] = nodeApi.endpoints.unlock.useMutation()
 
   const backupPath = watch('backupPath')
 
