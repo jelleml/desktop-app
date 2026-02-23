@@ -1,5 +1,6 @@
 import { Info } from 'lucide-react'
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 
 // Countdown Timer Component
 interface CountdownTimerProps {
@@ -11,6 +12,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
   expiresAt,
   onExpiry,
 }) => {
+  const { t } = useTranslation()
   const expiryDate = new Date(expiresAt)
   const now = new Date()
   const initialSecondsRef = React.useRef(
@@ -47,7 +49,9 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
   return (
     <div className="bg-gray-800/70 p-4 rounded-xl border border-gray-700">
       <div className="flex items-center justify-between mb-3">
-        <h4 className="text-sm text-gray-400">Payment Expires In</h4>
+        <h4 className="text-sm text-gray-400">
+          {t('orderChannel.step3.paymentExpiresIn')}
+        </h4>
         <div className="flex items-center">
           <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-2"></div>
           <span className="text-white font-mono bg-gray-700/70 px-3 py-1 rounded-lg text-lg">
@@ -78,8 +82,8 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
           </div>
           <p className="text-gray-400 text-xs">
             {countdown < 60
-              ? 'Payment expires soon!'
-              : 'Payment expiring soon.'}
+              ? t('orderChannel.step3.expiresVerySoon')
+              : t('orderChannel.step3.expiresSoon')}
           </p>
         </div>
       )}

@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import { Info } from 'lucide-react'
 import { useCallback, useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ClipLoader } from 'react-spinners'
 import { toast } from 'react-toastify'
 
@@ -24,6 +25,7 @@ import { Step4 } from './Step4'
 import 'react-toastify/dist/ReactToastify.css'
 
 export const Component = () => {
+  const { t } = useTranslation()
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
   const [loading, setLoading] = useState(false)
   const [orderId, setOrderId] = useState<string | null>(null)
@@ -46,11 +48,11 @@ export const Component = () => {
     makerApi.endpoints.get_order.useLazyQuery()
   const [getInfoRequest] = makerApi.endpoints.get_info.useLazyQuery()
 
-  let toastId: string | number | null = null
+  const toastId: string | number | null = null
 
   useEffect(() => {
     if (orderId && step === 3) {
-      let timeoutId: ReturnType<typeof setTimeout> | null = null
+      const timeoutId: ReturnType<typeof setTimeout> | null = null
 
       const intervalId = setInterval(async () => {
         const orderResponse = await getOrderRequest({ order_id: orderId })
@@ -379,24 +381,23 @@ export const Component = () => {
       />
       <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full relative z-10">
         <h3 className="text-xl font-bold text-white mb-4">
-          Are you sure you want to go back?
+          {t('orderChannel.backConfirmTitle')}
         </h3>
         <p className="text-gray-300 mb-6">
-          Going back will cancel your current order. You'll need to create a new
-          order if you want to proceed later.
+          {t('orderChannel.backConfirmMessage')}
         </p>
         <div className="flex gap-4">
           <button
             className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
             onClick={() => setShowBackConfirmation(false)}
           >
-            Cancel
+            {t('orderChannel.backConfirmCancel')}
           </button>
           <button
             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             onClick={handleConfirmBack}
           >
-            Go Back
+            {t('orderChannel.backConfirmGoBack')}
           </button>
         </div>
       </div>
@@ -444,11 +445,7 @@ export const Component = () => {
       {/* Info Section */}
       <div className="flex items-center space-x-2 text-sm text-gray-400 mt-3 p-3 bg-blue-900/20 border border-blue-800/30 rounded-lg">
         <Info className="h-5 w-5 text-blue-400 flex-shrink-0" />
-        <p>
-          LSP channels provide instant liquidity without requiring you to manage
-          on-chain transactions. The LSP handles channel opening and provides
-          inbound liquidity for receiving payments.
-        </p>
+        <p>{t('orderChannel.infoMessage')}</p>
       </div>
     </div>
   )

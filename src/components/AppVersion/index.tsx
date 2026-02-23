@@ -1,6 +1,7 @@
 import { getName, getVersion } from '@tauri-apps/api/app'
 import { GitCommit, Calendar, Package } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface AppVersionInfo {
   name: string
@@ -21,6 +22,7 @@ export const AppVersion: React.FC<AppVersionProps> = ({
   showDetailed = false,
   className = '',
 }) => {
+  const { t } = useTranslation()
   const [versionInfo, setVersionInfo] = useState<AppVersionInfo | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showDetails, setShowDetails] = useState(false)
@@ -110,7 +112,7 @@ export const AppVersion: React.FC<AppVersionProps> = ({
               </div>
               {versionInfo.commit && (
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Commit:</span>
+                  <span className="text-gray-400">{t('components.appVersion.commit')}</span>
                   <span className="font-mono text-xs">
                     {formatCommit(versionInfo.commit)}
                   </span>
@@ -118,7 +120,7 @@ export const AppVersion: React.FC<AppVersionProps> = ({
               )}
               {versionInfo.buildDate && (
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Built:</span>
+                  <span className="text-gray-400">{t('components.appVersion.built')}</span>
                   <span className="text-xs">
                     {formatDate(versionInfo.buildDate)}
                   </span>
@@ -159,7 +161,7 @@ export const AppVersion: React.FC<AppVersionProps> = ({
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-1 text-gray-400">
                 <GitCommit className="w-3 h-3" />
-                <span>Commit:</span>
+                <span>{t('components.appVersion.commit')}</span>
               </div>
               <span className="font-mono text-white bg-gray-600/30 px-2 py-1 rounded">
                 {formatCommit(versionInfo.commit)}
@@ -171,7 +173,7 @@ export const AppVersion: React.FC<AppVersionProps> = ({
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-1 text-gray-400">
                 <Calendar className="w-3 h-3" />
-                <span>Built:</span>
+                <span>{t('components.appVersion.built')}</span>
               </div>
               <span className="text-white">
                 {formatDate(versionInfo.buildDate)}

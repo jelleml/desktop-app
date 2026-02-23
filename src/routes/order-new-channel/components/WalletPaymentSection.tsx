@@ -1,5 +1,6 @@
 import { AlertTriangle } from 'lucide-react'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { ClipLoader } from 'react-spinners'
 
 import { formatBitcoinAmount } from '../../../helpers/number'
@@ -37,6 +38,7 @@ export const WalletPaymentSection: React.FC<WalletPaymentSectionProps> = ({
   onCustomFeeChange,
   onPayClick,
 }) => {
+  const { t } = useTranslation()
   const hasBalanceData =
     !isLoadingData &&
     typeof outboundLiquidity === 'number' &&
@@ -46,7 +48,9 @@ export const WalletPaymentSection: React.FC<WalletPaymentSectionProps> = ({
     return (
       <div className="flex items-center justify-center gap-3 p-8">
         <ClipLoader color="#3B82F6" size={24} />
-        <span className="text-gray-400">Loading wallet balance...</span>
+        <span className="text-gray-400">
+          {t('orderChannel.step3.loadingBalance')}
+        </span>
       </div>
     )
   }
@@ -79,12 +83,14 @@ export const WalletPaymentSection: React.FC<WalletPaymentSectionProps> = ({
           <span
             className={`font-medium ${insufficientBalance ? 'text-gray-500' : 'text-white'}`}
           >
-            Pay with Wallet
+            {t('orderChannel.step3.payWithWallet')}
           </span>
         </label>
         <div className="text-right">
           <div className="text-sm text-gray-400">
-            {paymentMethod === 'lightning' ? 'Max Sendable' : 'Available'}
+            {paymentMethod === 'lightning'
+              ? t('orderChannel.step3.maxSendable')
+              : t('orderChannel.step3.available')}
           </div>
           <div className="text-white font-medium">
             {formatBitcoinAmount(
@@ -105,10 +111,10 @@ export const WalletPaymentSection: React.FC<WalletPaymentSectionProps> = ({
             <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
             <div>
               <h4 className="text-red-500 font-medium text-sm">
-                Insufficient Balance
+                {t('orderChannel.step3.insufficientBalance')}
               </h4>
               <p className="text-gray-400 text-xs mt-1">
-                Required:{' '}
+                {t('orderChannel.step3.required')}:{' '}
                 {formatBitcoinAmount(
                   currentPayment?.order_total_sat || 0,
                   bitcoinUnit
@@ -139,14 +145,18 @@ export const WalletPaymentSection: React.FC<WalletPaymentSectionProps> = ({
             onClick={onPayClick}
           >
             <span>{paymentMethod === 'lightning' ? '⚡' : '₿'}</span>
-            Pay{' '}
+            {t('orderChannel.step3.pay')}{' '}
             {formatBitcoinAmount(
               currentPayment?.order_total_sat || 0,
               bitcoinUnit
             )}{' '}
             {bitcoinUnit}
             <span className="text-xs opacity-75">
-              ({paymentMethod === 'lightning' ? 'Lightning' : 'On-chain'})
+              (
+              {paymentMethod === 'lightning'
+                ? t('orderChannel.step3.lightning')
+                : t('orderChannel.step3.onchain')}
+              )
             </span>
           </button>
         </div>

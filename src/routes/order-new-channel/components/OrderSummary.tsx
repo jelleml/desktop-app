@@ -1,5 +1,6 @@
 import React from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'react-toastify'
 
 import { formatBitcoinAmount } from '../../../helpers/number'
@@ -21,6 +22,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
   assetInfo,
   orderPayload,
 }) => {
+  const { t } = useTranslation()
   const totalCapacity = order.lsp_balance_sat + order.client_balance_sat
 
   return (
@@ -28,11 +30,11 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-white flex items-center">
           <span className="bg-blue-500 w-2 h-2 rounded-full mr-2"></span>
-          Order Summary
+          {t('orderChannel.step3.orderSummary')}
         </h3>
         {order.order_id && (
           <CopyToClipboard
-            onCopy={() => toast.success('Order ID copied!')}
+            onCopy={() => toast.success(t('orderChannel.orderCopy'))}
             text={order.order_id}
           >
             <button className="text-xs text-gray-400 hover:text-white font-mono bg-gray-900/50 px-2 py-1 rounded transition-colors">
@@ -46,7 +48,9 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
         {/* Channel Info (Confirmed) */}
         <div className="bg-gray-900/50 rounded-xl p-4">
           <div className="flex justify-between items-center mb-3">
-            <span className="text-sm text-gray-400">Confirmed Channel</span>
+            <span className="text-sm text-gray-400">
+              {t('orderChannel.step3.confirmedChannel')}
+            </span>
             <span className="text-white font-bold">
               {formatBitcoinAmount(totalCapacity, bitcoinUnit)} {bitcoinUnit}
             </span>
@@ -55,8 +59,8 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
           {/* Liquidity Bar */}
           <div className="mb-3">
             <div className="flex justify-between text-xs text-gray-400 mb-1">
-              <span>Your Liquidity</span>
-              <span>LSP Liquidity</span>
+              <span>{t('orderChannel.step3.yourLiquidity')}</span>
+              <span>{t('orderChannel.step3.lspLiquidity')}</span>
             </div>
             <div className="relative h-3 bg-gray-700 rounded-full overflow-hidden">
               <div
@@ -77,14 +81,18 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
           <div className="flex justify-between text-xs">
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span className="text-gray-400">Your:</span>
+              <span className="text-gray-400">
+                {t('orderChannel.step3.your')}:
+              </span>
               <span className="text-blue-400 font-medium">
                 {formatBitcoinAmount(order.client_balance_sat, bitcoinUnit)}{' '}
                 {bitcoinUnit}
               </span>
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-gray-400">LSP:</span>
+              <span className="text-gray-400">
+                {t('orderChannel.step3.lsp')}:
+              </span>
               <span className="text-purple-400 font-medium">
                 {formatBitcoinAmount(order.lsp_balance_sat, bitcoinUnit)}{' '}
                 {bitcoinUnit}
@@ -100,12 +108,14 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-purple-300 font-medium flex items-center gap-2">
                 <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                RGB Asset Channel
+                {t('orderChannel.step3.rgbAssetChannel')}
               </span>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Asset ID:</span>
+                <span className="text-gray-400">
+                  {t('orderChannel.step3.assetId')}:
+                </span>
                 <span className="text-purple-300 font-mono text-xs">
                   {assetInfo ? (
                     <>
@@ -124,7 +134,9 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
               </div>
               {(order.lsp_asset_amount || orderPayload?.lsp_asset_amount) && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">LSP Asset Amount:</span>
+                  <span className="text-gray-400">
+                    {t('orderChannel.step3.lspAssetAmount')}:
+                  </span>
                   <span className="text-purple-300 font-medium">
                     {(
                       order.lsp_asset_amount || orderPayload.lsp_asset_amount
@@ -136,7 +148,9 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
               {(order.client_asset_amount ||
                 orderPayload?.client_asset_amount) && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Your Asset Amount:</span>
+                  <span className="text-gray-400">
+                    {t('orderChannel.step3.yourAssetAmount')}:
+                  </span>
                   <span className="text-blue-300 font-medium">
                     {(
                       order.client_asset_amount ||
@@ -154,7 +168,9 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
         <div className="bg-gray-900/50 rounded-xl p-4">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-400">Channel Amount:</span>
+              <span className="text-gray-400">
+                {t('orderChannel.step3.channelAmount')}:
+              </span>
               <span className="text-white">
                 {formatBitcoinAmount(
                   (currentPayment?.order_total_sat || 0) -
@@ -165,7 +181,9 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-400">Service Fee:</span>
+              <span className="text-gray-400">
+                {t('orderChannel.step3.serviceFee')}:
+              </span>
               <span className="text-white">
                 {formatBitcoinAmount(
                   currentPayment?.fee_total_sat || 0,
@@ -176,7 +194,9 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
             </div>
             <div className="h-px bg-gray-700 my-2"></div>
             <div className="flex justify-between">
-              <span className="text-gray-400 font-medium">Total:</span>
+              <span className="text-gray-400 font-medium">
+                {t('orderChannel.step3.total')}:
+              </span>
               <span className="text-white font-bold">
                 {formatBitcoinAmount(
                   currentPayment?.order_total_sat || 0,

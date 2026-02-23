@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { X, Info, Clock, Zap, Rocket, Settings } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { ClipLoader } from 'react-spinners'
 import { toast } from 'react-toastify'
 
@@ -86,6 +87,7 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
   onSuccess,
   preselectedAsset,
 }) => {
+  const { t } = useTranslation()
   const bitcoinUnit = useAppSelector((state) => state.settings.bitcoinUnit)
 
   const [step, setStep] = useState<1 | 2 | 3>(1)
@@ -275,7 +277,7 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
           }
         }
       } catch (error) {
-        toast.error('Error fetching LSP data. Please try again later.')
+        toast.error(t('buyChannel.lspFetchError'))
       } finally {
         setLoading(false)
       }
@@ -744,7 +746,7 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
 
         const orderId = channelResponse.data?.order_id
         if (!orderId) {
-          throw new Error('Could not get order id from server response')
+          throw new Error(t('buyChannel.orderIdMissing'))
         }
 
         setOrderId(orderId)
@@ -754,9 +756,9 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
         setStep(2)
       } catch (error) {
         toast.error(
-          error instanceof Error
+          error instanceof Error && error.message
             ? error.message
-            : 'An error occurred while creating the channel order'
+            : t('buyChannel.createOrderError')
         )
       } finally {
         setLoading(false)
@@ -794,10 +796,10 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
         const response = result.data as SendPaymentResponse
 
         if (response.status === 'Failed') {
-          throw new Error('Lightning payment failed')
+          throw new Error(t('buyChannel.lightningPaymentFailed'))
         }
 
-        toast.success('Lightning payment initiated successfully!')
+        toast.success(t('buyChannel.lightningPaymentSuccess'))
         setPaymentReceived(true)
         setIsProcessingPayment(true)
 
@@ -832,7 +834,7 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
           throw new Error(error.data.error)
         }
 
-        toast.success('On-chain payment sent successfully!')
+        toast.success(t('buyChannel.onchainPaymentSuccess'))
         setPaymentReceived(true)
         setIsProcessingPayment(true)
 
@@ -854,10 +856,11 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
 
       setShowWalletConfirmation(false)
     } catch (error) {
-      toast.error(
-        'Payment failed: ' +
-          (error instanceof Error ? error.message : 'Unknown error')
-      )
+      const errorMessage =
+        error instanceof Error && error.message
+          ? error.message
+          : t('buyChannel.unknownError')
+      toast.error(t('buyChannel.paymentFailed', { error: errorMessage }))
       setPaymentStatus('error')
     } finally {
       setIsProcessingWalletPayment(false)
@@ -902,23 +905,23 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
           <div>
             <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
               {showPreselectedConfirmation
-                ? 'Confirm Asset Purchase'
+                ? t('components.buyChannelModal.confirmAssetPurchase')
                 : step === 1
-                  ? 'Buy Channel with Asset'
+                  ? t('components.buyChannelModal.buyChannelWithAsset')
                   : step === 2
-                    ? 'Complete Payment'
-                    : 'Order Status'}
+                    ? t('components.buyChannelModal.completePayment')
+                    : t('components.buyChannelModal.orderStatus')}
             </h2>
             <p className="text-gray-400 mt-1">
               {showPreselectedConfirmation
-                ? 'Review and confirm or customize your purchase'
+                ? t('components.buyChannelModal.reviewAndConfirm')
                 : step === 1
-                  ? 'Configure your channel and asset parameters'
+                  ? t('components.buyChannelModal.configureChannel')
                   : step === 2
-                    ? 'Pay for your channel to complete the order'
+                    ? t('components.buyChannelModal.payForChannel')
                     : paymentStatus === 'success'
-                      ? 'Channel order completed successfully!'
-                      : 'Order status'}
+                      ? t('components.buyChannelModal.orderCompleted')
+                      : t('components.buyChannelModal.orderStatusSubtitle')}
             </p>
           </div>
           <button
@@ -941,17 +944,15 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                   <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
                   <div>
                     <h3 className="text-lg font-semibold text-blue-200 mb-1">
-                      Confirm Purchase
+                      {t('components.buyChannelModal.confirmPurchase')}
                     </h3>
                     <p className="text-blue-200/80 text-sm">
-                      You'll purchase{' '}
-                      <strong>
-                        {formatNumberWithCommas(
+                      {t('components.buyChannelModal.purchaseDescription', {
+                        amount: formatNumberWithCommas(
                           preselectedAsset.amount.toString()
-                        )}{' '}
-                        {assetMap[preselectedAsset.assetId].ticker}
-                      </strong>{' '}
-                      in a Lightning channel. Review and proceed or customize.
+                        ),
+                        ticker: assetMap[preselectedAsset.assetId].ticker,
+                      })}
                     </p>
                   </div>
                 </div>
@@ -969,7 +970,7 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
               {fees && quote && (
                 <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30 space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Asset Cost</span>
+                    <span className="text-gray-400">{t('components.buyChannelModal.assetCost')}</span>
                     <span className="text-emerald-300">
                       {formatNumberWithCommas(
                         (quote.from_amount / 1000).toString()
@@ -978,19 +979,19 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Your Liquidity</span>
+                    <span className="text-gray-400">{t('components.buyChannelModal.yourLiquidity')}</span>
                     <span className="text-gray-200">
                       {formatNumberWithCommas(clientBalanceSat)} sats
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Fees</span>
+                    <span className="text-gray-400">{t('components.buyChannelModal.fees')}</span>
                     <span className="text-gray-200">
                       {formatNumberWithCommas(fees.total_fee)} sats
                     </span>
                   </div>
                   <div className="flex justify-between pt-2 mt-2 border-t border-gray-700">
-                    <span className="text-white font-semibold">Total</span>
+                    <span className="text-white font-semibold">{t('components.buyChannelModal.total')}</span>
                     <span className="text-white font-semibold">
                       {formatNumberWithCommas(
                         quote.from_amount / 1000 +
@@ -1013,14 +1014,14 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                   onClick={handleClose}
                   type="button"
                 >
-                  Cancel
+                  {t('components.buyChannelModal.cancel')}
                 </button>
                 <button
                   className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
                   onClick={() => setShowPreselectedConfirmation(false)}
                   type="button"
                 >
-                  Customize
+                  {t('components.buyChannelModal.customize')}
                 </button>
                 <button
                   className="flex-1 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
@@ -1029,8 +1030,8 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                   type="button"
                 >
                   {quoteLoading || loading
-                    ? 'Loading...'
-                    : 'Proceed to Payment'}
+                    ? t('components.buyChannelModal.loading')
+                    : t('components.buyChannelModal.proceedToPayment')}
                 </button>
               </div>
             </div>
@@ -1223,7 +1224,7 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                                 {fees.applied_discount &&
                                   fees.applied_discount > 0 && (
                                     <div className="flex justify-between text-green-400">
-                                      <span>Discount</span>
+                                      <span>{t('components.buyChannelModal.discount')}</span>
                                       <span>
                                         -
                                         {formatNumberWithCommas(
@@ -1304,7 +1305,7 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                             }
                             onClick={() => setShowWalletConfirmation(true)}
                           >
-                            Pay with Wallet
+                            {t('components.buyChannelModal.payWithWallet')}
                           </button>
                         </>
                       )}
@@ -1355,7 +1356,7 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                   <div className="flex items-start gap-2">
                     <Clock className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
                     <p className="text-yellow-200/90 text-xs">
-                      <strong>Confirmation Time:</strong> The channel requires
+                      <strong>{t('components.buyChannelModal.confirmationTime')}</strong> The channel requires
                       ~6 on-chain confirmations (approximately 1 hour). Your
                       asset will be locked at today's rate and ready to trade
                       once confirmed.
@@ -1469,13 +1470,13 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                           {
                             amount: quote.from_amount / 1000,
                             className: 'text-emerald-300 font-medium',
-                            label: 'Asset Purchase',
+                            label: t('components.buyChannelModal.assetPurchase'),
                           },
                           {
                             amount: parseInt(
                               clientBalanceSat.replace(/[^0-9]/g, '') || '0'
                             ),
-                            label: 'Your Liquidity',
+                            label: t('components.buyChannelModal.yourLiquidity'),
                           },
                         ]
                       : []),

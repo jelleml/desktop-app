@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
@@ -31,6 +32,7 @@ interface Fields {
 }
 
 export const Component = () => {
+  const { t } = useTranslation()
   const nodeSettings = useAppSelector((state) => state.nodeSettings.data)
   const [unlock] = nodeApi.endpoints.unlock.useLazyQuery()
   const [nodeInfo] = nodeApi.endpoints.nodeInfo.useLazyQuery()
@@ -59,8 +61,7 @@ export const Component = () => {
         // as we expect connection errors when node is not running
         if (error?.status !== 'FETCH_ERROR') {
           toast.error(
-            'Failed to check node status: ' +
-              (error.message || 'Unknown error'),
+            t('walletUnlock.failedCheckStatus', { error: error.message || t('walletUnlock.unknownError') }),
             {
               autoClose: 5000,
               position: 'top-right',
@@ -106,13 +107,13 @@ export const Component = () => {
 
         const nodeInfoRes = await nodeInfo()
         if (nodeInfoRes.isSuccess) {
-          toast.success('Wallet unlocked successfully!', {
+          toast.success(t('walletUnlock.successMessage'), {
             autoClose: 3000,
             position: 'bottom-right',
           })
           navigate(WALLET_DASHBOARD_PATH)
         } else {
-          throw new Error('Failed to get node info after unlock')
+          throw new Error(t('walletUnlock.failedGetNodeInfo'))
         }
 
         shouldRetry = false
@@ -137,7 +138,7 @@ export const Component = () => {
         } else if (e instanceof Error) {
           errorMessage = e.message
         } else {
-          errorMessage = 'An unknown error occurred'
+          errorMessage = t('walletUnlock.unknownError')
         }
 
         // Handle network/connection errors - silently retry like timeouts
@@ -165,8 +166,8 @@ export const Component = () => {
         }
 
         if (error?.status === 401 && errorMessage === 'Invalid password') {
-          setUnlockError('Invalid password')
-          toast.error('Invalid password', {
+          setUnlockError(t('walletUnlock.invalidPassword'))
+          toast.error(t('walletUnlock.invalidPassword'), {
             autoClose: 5000,
             position: 'top-right',
           })
@@ -182,7 +183,7 @@ export const Component = () => {
           setShowInitModal(true)
           shouldRetry = false
         } else if (errorMessage === 'Node has already been unlocked') {
-          toast.info('Node is already unlocked', {
+          toast.info(t('walletUnlock.alreadyUnlocked'), {
             autoClose: 3000,
             position: 'bottom-right',
           })
@@ -210,7 +211,7 @@ export const Component = () => {
     if (nodeSettings.datapath) {
       try {
         await invoke('stop_node')
-        toast.info('Node stopped', {
+        toast.info(t('walletUnlock.nodeStopped'), {
           autoClose: 2000,
           position: 'bottom-right',
         })
@@ -224,7 +225,7 @@ export const Component = () => {
   const handleCancelUnlocking = () => {
     setIsUnlocking(false)
     setUnlockError(null)
-    toast.info('Unlocking process cancelled', {
+    toast.info(t('walletUnlock.unlockCancelled'), {
       autoClose: 3000,
       position: 'bottom-right',
     })
@@ -333,10 +334,10 @@ export const Component = () => {
         </div>
 
         <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent mb-3">
-          Unlock Your Wallet
+          {t('walletUnlock.title')}
         </h1>
         <p className="text-slate-400 text-lg">
-          Enter your password to securely access your wallet
+          {t('walletUnlock.subtitle')}
         </p>
       </div>
 
@@ -356,7 +357,7 @@ export const Component = () => {
                 className="block text-sm font-semibold text-slate-300 mb-2"
                 htmlFor="password"
               >
-                Wallet Password
+                {t('walletUnlock.walletPassword')}
               </label>
 
               <div className="relative group">
@@ -368,10 +369,10 @@ export const Component = () => {
                   <input
                     className="w-full pl-12 pr-12 py-4 bg-slate-800/50 backdrop-blur-sm border border-slate-600/50 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300 text-white placeholder-slate-500 font-medium"
                     id="password"
-                    placeholder="Enter your secure password"
+                    placeholder={t('walletUnlock.passwordPlaceholder')}
                     type={isPasswordVisible ? 'text' : 'password'}
                     {...unlockForm.register('password', {
-                      required: 'Password is required',
+                      required: t('walletUnlock.passwordRequired'),
                     })}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
@@ -427,7 +428,7 @@ export const Component = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                 <span className="relative flex items-center justify-center">
                   <Shield className="w-5 h-5 mr-2" />
-                  Unlock Wallet
+                  {t('walletUnlock.unlockButton')}
                 </span>
               </Button>
 
@@ -437,7 +438,7 @@ export const Component = () => {
                 type="button"
               >
                 <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
-                Back to Wallet Setup
+                {t('walletUnlock.backToSetup')}
               </button>
             </div>
           </form>
@@ -456,11 +457,10 @@ export const Component = () => {
                 <Shield className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-2">
-                Initialize Wallet
+                {t('walletUnlock.initializeWalletTitle')}
               </h3>
               <p className="text-slate-300 leading-relaxed">
-                Your wallet hasn't been initialized yet. Would you like to set
-                it up now?
+                {t('walletUnlock.initializeWalletMessage')}
               </p>
             </div>
 
@@ -470,7 +470,7 @@ export const Component = () => {
                 onClick={() => setShowInitModal(false)}
                 variant="outline"
               >
-                Cancel
+                {t('walletUnlock.cancel')}
               </Button>
               <Button
                 className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
@@ -479,7 +479,7 @@ export const Component = () => {
                   navigate(WALLET_SETUP_PATH)
                 }}
               >
-                Initialize
+                {t('walletUnlock.initialize')}
               </Button>
             </div>
           </div>
@@ -506,10 +506,10 @@ export const Component = () => {
                 </div>
               </div>
               <h2 className="text-2xl font-bold text-white mb-3">
-                Checking Wallet Status
+                {t('walletUnlock.checkingStatus')}
               </h2>
               <p className="text-slate-400">
-                Please wait while we verify your wallet...
+                {t('walletUnlock.checkingMessage')}
               </p>
             </div>
           </div>
@@ -520,7 +520,7 @@ export const Component = () => {
           className="flex items-center justify-center min-h-screen py-8"
           fullHeight
           maxWidth="2xl"
-          title="Wallet Access"
+          title={t('walletUnlock.walletAccess')}
         >
           <UnlockingProgress
             errorMessage={unlockError || undefined}

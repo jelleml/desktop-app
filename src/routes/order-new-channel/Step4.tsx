@@ -9,6 +9,7 @@ import {
   Clock,
 } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 
 import { CHANNELS_PATH } from '../../app/router/paths'
@@ -22,6 +23,7 @@ export const Step4 = ({
   orderId?: string
   onRestart?: () => void
 }) => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [copied, setCopied] = useState(false)
 
@@ -38,38 +40,37 @@ export const Step4 = ({
       bgColor: 'bg-red-500/10',
       borderColor: 'border-red-500/30',
       buttonAction: () => (onRestart ? onRestart() : navigate(CHANNELS_PATH)),
-      buttonText: 'Try Again',
+      buttonText: t('orderChannel.step4.errorButtonText'),
       icon: <XCircle className="text-red-500 mb-6" size={80} />,
-      message: 'There was an issue with your payment. Please try again.',
-      title: 'Payment Failed',
+      message: t('orderChannel.step4.errorMessage'),
+      title: t('orderChannel.step4.errorTitle'),
     },
     expired: {
       bgColor: 'bg-yellow-500/10',
       borderColor: 'border-yellow-500/30',
       buttonAction: () => (onRestart ? onRestart() : navigate(CHANNELS_PATH)),
-      buttonText: 'Create New Order',
+      buttonText: t('orderChannel.step4.expiredButtonText'),
       icon: <Clock className="text-yellow-500 mb-6" size={80} />,
-      message: 'The order has expired. Please create a new order to continue.',
-      title: 'Order Expired',
+      message: t('orderChannel.step4.expiredMessage'),
+      title: t('orderChannel.step4.expiredTitle'),
     },
     pending: {
       bgColor: 'bg-blue-500/10',
       borderColor: 'border-blue-500/30',
       buttonAction: () => window.location.reload(),
-      buttonText: 'Check Status',
+      buttonText: t('orderChannel.step4.pendingButtonText'),
       icon: <RefreshCcw className="text-blue-500 mb-6" size={80} />,
-      message: 'Your payment is being processed. This may take a few moments.',
-      title: 'Processing Payment',
+      message: t('orderChannel.step4.pendingMessage'),
+      title: t('orderChannel.step4.pendingTitle'),
     },
     success: {
       bgColor: 'bg-green-500/10',
       borderColor: 'border-green-500/30',
       buttonAction: () => navigate(CHANNELS_PATH),
-      buttonText: 'Go to Channels Page',
+      buttonText: t('orderChannel.step4.successButtonText'),
       icon: <CheckCircle className="text-green-500 mb-6" size={80} />,
-      message:
-        'Your payment has been received and the channel is being opened.',
-      title: 'Order Completed!',
+      message: t('orderChannel.step4.successMessage'),
+      title: t('orderChannel.step4.successTitle'),
     },
   }
 
@@ -88,7 +89,7 @@ export const Step4 = ({
           <div className="flex items-center justify-center space-x-3 mb-8 p-3 bg-green-500/20 rounded-lg">
             <div className="w-3 h-3 bg-green-500 rounded-full"></div>
             <p className="text-green-400 font-medium">
-              Channel opening in progress
+              {t('orderChannel.step4.channelProgress')}
             </p>
           </div>
         )}
@@ -103,17 +104,16 @@ export const Step4 = ({
                 />
                 <div>
                   <p className="text-amber-200 font-medium mb-2">
-                    About your payment:
+                    {t('orderChannel.step4.refundHeader')}
                   </p>
                   <p className="text-gray-300 text-sm mb-2">
                     <strong>
-                      An on-chain refund will be automatically processed
+                      {t('orderChannel.step4.refundProcess')}
                     </strong>{' '}
-                    and sent to your wallet soon.
+                    {t('orderChannel.step4.refundProcessSuffix')}
                   </p>
                   <p className="text-gray-300 text-sm">
-                    If you don't receive a refund within 24 hours, please
-                    contact the LSP for support using your order ID below.
+                    {t('orderChannel.step4.refundSupport')}
                   </p>
                 </div>
               </div>
@@ -123,7 +123,9 @@ export const Step4 = ({
             {orderId && (
               <div className="mb-8 p-4 bg-gray-700/50 border border-gray-600 rounded-lg">
                 <div className="flex flex-col items-center">
-                  <p className="text-gray-300 text-sm mb-2">Your Order ID:</p>
+                  <p className="text-gray-300 text-sm mb-2">
+                    {t('orderChannel.step4.orderIdLabel')}
+                  </p>
                   <div className="flex items-center justify-center w-full bg-gray-800 p-3 rounded-md mb-2">
                     <code className="text-sm font-mono text-white break-all">
                       {orderId}
@@ -131,7 +133,7 @@ export const Step4 = ({
                     <button
                       className="ml-2 p-1 hover:bg-gray-700 rounded transition-colors"
                       onClick={copyToClipboard}
-                      title="Copy to clipboard"
+                      title={t('orderChannel.step4.copyToClipboard')}
                     >
                       {copied ? (
                         <CheckCircle className="text-green-400" size={16} />
@@ -144,7 +146,7 @@ export const Step4 = ({
                     </button>
                   </div>
                   <p className="text-xs text-gray-400">
-                    Copy this ID when contacting support about your refund
+                    {t('orderChannel.step4.orderIdHelp')}
                   </p>
                 </div>
               </div>
@@ -161,10 +163,10 @@ export const Step4 = ({
               />
               <div>
                 <p className="text-yellow-200 font-medium mb-2">
-                  Order Expired:
+                  {t('orderChannel.step4.expiredSectionTitle')}
                 </p>
                 <p className="text-gray-300 text-sm">
-                  The order has expired. Please create a new order to continue.
+                  {t('orderChannel.step4.expiredSectionMessage')}
                 </p>
               </div>
             </div>
@@ -197,7 +199,7 @@ export const Step4 = ({
         onClick={() => navigate(CHANNELS_PATH)}
       >
         <Home size={18} />
-        Return to Channels
+        {t('orderChannel.step4.returnToChannels')}
       </button>
     </div>
   )

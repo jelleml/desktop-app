@@ -8,6 +8,7 @@ import {
   HelpCircle,
 } from 'lucide-react'
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { formatNumberWithCommas } from '../../helpers/number'
 
@@ -124,6 +125,7 @@ export const FeeBreakdown: React.FC<FeeBreakdownProps> = ({
   discount,
   isLoading = false,
 }) => {
+  const { t } = useTranslation()
   const [expandedFee, setExpandedFee] = useState<string | null>(null)
 
   const fees: Record<string, Fee & { icon: React.ReactNode; color: any }> = {
@@ -331,7 +333,7 @@ export const FeeBreakdown: React.FC<FeeBreakdownProps> = ({
             </p>
             <ul className="space-y-1 ml-4 list-disc">
               <li>
-                <strong>Channel Fees:</strong> Paid to the LSP for setting up
+                <strong>{t('components.feeBreakdown.channelFees')}</strong> Paid to the LSP for setting up
                 and maintaining your channel
               </li>
               <li>

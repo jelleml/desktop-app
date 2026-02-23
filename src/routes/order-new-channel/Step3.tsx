@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ClipLoader } from 'react-spinners'
 import { toast } from 'react-toastify'
 
@@ -54,6 +55,7 @@ export const Step3: React.FC<StepProps> = ({
   isProcessingPayment = false,
   detectedPaymentMethod = null,
 }) => {
+  const { t } = useTranslation()
   const [paymentMethod, setPaymentMethod] = useState<'lightning' | 'onchain'>(
     'lightning'
   )
@@ -217,10 +219,10 @@ export const Step3: React.FC<StepProps> = ({
         const response = result.data as SendPaymentResponse
 
         if (response.status === 'Failed') {
-          throw new Error('Lightning payment failed')
+          throw new Error(t('orderChannel.step3.lightningPaymentFailed'))
         }
 
-        toast.success('Lightning payment initiated successfully!')
+        toast.success(t('orderChannel.step3.lightningSuccess'))
         setLocalPaymentState('processing')
       } else if (paymentMethod === 'onchain' && order?.payment?.onchain) {
         const feeRate =
@@ -239,15 +241,19 @@ export const Step3: React.FC<StepProps> = ({
           throw new Error(error.data.error)
         }
 
-        toast.success('On-chain payment sent successfully!')
+        toast.success(t('orderChannel.step3.onchainSuccess'))
         setLocalPaymentState('processing')
       }
 
       setShowWalletConfirmation(false)
     } catch (error) {
       toast.error(
-        'Payment failed: ' +
-          (error instanceof Error ? error.message : 'Unknown error')
+        t('orderChannel.step3.paymentFailed', {
+          error:
+            error instanceof Error && error.message
+              ? error.message
+              : t('orderChannel.step3.unknownError'),
+        })
       )
       setLocalPaymentState('error')
     } finally {
@@ -256,8 +262,8 @@ export const Step3: React.FC<StepProps> = ({
   }
 
   const handleCopy = useCallback(() => {
-    toast.success('Payment details copied to clipboard!')
-  }, [])
+    toast.success(t('orderChannel.paymentCopied'))
+  }, [t])
 
   if (loading || !order) {
     return (
@@ -267,7 +273,7 @@ export const Step3: React.FC<StepProps> = ({
             <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-xl border border-gray-700/50">
               <ClipLoader color={'#3B82F6'} loading={true} size={50} />
               <span className="ml-4 text-gray-300">
-                Loading order details...
+                {t('orderChannel.step3.loadingOrder')}
               </span>
             </div>
           </div>
@@ -282,13 +288,13 @@ export const Step3: React.FC<StepProps> = ({
         <div className="max-w-4xl mx-auto">
           <div className="flex flex-col items-center justify-center h-64 text-white">
             <h3 className="text-2xl font-semibold mb-4">
-              Error: Invalid order data
+              {t('orderChannel.step3.errorInvalidOrder')}
             </h3>
             <button
               className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
               onClick={onBack}
             >
-              Back
+              {t('orderChannel.step3.backButton')}
             </button>
           </div>
         </div>
@@ -318,10 +324,10 @@ export const Step3: React.FC<StepProps> = ({
         {/* Header */}
         <div className="text-center mb-4">
           <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-            Complete Payment
+            {t('orderChannel.step3.title')}
           </h2>
           <p className="text-gray-400 mt-2">
-            Make your payment to open the channel
+            {t('orderChannel.step3.subtitle')}
           </p>
         </div>
 
@@ -332,8 +338,12 @@ export const Step3: React.FC<StepProps> = ({
               ✓
             </div>
             <div className="ml-2">
-              <p className="font-medium text-white text-sm">Connect LSP</p>
-              <p className="text-xs text-gray-400">Completed</p>
+              <p className="font-medium text-white text-sm">
+                {t('orderChannel.step1.connectLsp')}
+              </p>
+              <p className="text-xs text-gray-400">
+                {t('orderChannel.step1.completed')}
+              </p>
             </div>
           </div>
           <div className="flex-1 mx-2 mt-5">
@@ -346,8 +356,12 @@ export const Step3: React.FC<StepProps> = ({
               ✓
             </div>
             <div className="ml-2">
-              <p className="font-medium text-white text-sm">Configure</p>
-              <p className="text-xs text-gray-400">Completed</p>
+              <p className="font-medium text-white text-sm">
+                {t('orderChannel.step2.step2Label')}
+              </p>
+              <p className="text-xs text-gray-400">
+                {t('orderChannel.step1.completed')}
+              </p>
             </div>
           </div>
           <div className="flex-1 mx-2 mt-5">
@@ -360,8 +374,12 @@ export const Step3: React.FC<StepProps> = ({
               3
             </div>
             <div className="ml-2">
-              <p className="font-medium text-white text-sm">Payment</p>
-              <p className="text-xs text-gray-400">Current step</p>
+              <p className="font-medium text-white text-sm">
+                {t('orderChannel.step3.step3Label')}
+              </p>
+              <p className="text-xs text-gray-400">
+                {t('orderChannel.step1.currentStep')}
+              </p>
             </div>
           </div>
         </div>
@@ -522,7 +540,7 @@ export const Step3: React.FC<StepProps> = ({
                 className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
                 onClick={onBack}
               >
-                Back
+                {t('orderChannel.step3.backButton')}
               </button>
             </div>
           )}

@@ -1,5 +1,6 @@
 import { Clock, Rocket, Settings, Zap } from 'lucide-react'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface FeeSelectorProps {
   selectedFee: string
@@ -21,23 +22,24 @@ const getFeeIcon = (type: string) => {
   }
 }
 
-const feeRates = [
-  { label: 'Slow', rate: 1, value: 'slow' },
-  { label: 'Normal', rate: 2, value: 'normal' },
-  { label: 'Fast', rate: 3, value: 'fast' },
-  { label: 'Custom', rate: 0, value: 'custom' },
-]
-
 export const FeeSelector: React.FC<FeeSelectorProps> = ({
   selectedFee,
   customFee,
   onFeeChange,
   onCustomFeeChange,
 }) => {
+  const { t } = useTranslation()
+
+  const feeRates = [
+    { label: t('orderChannel.step3.feeSlow'), rate: 1, value: 'slow' },
+    { label: t('orderChannel.step3.feeNormal'), rate: 2, value: 'normal' },
+    { label: t('orderChannel.step3.feeFast'), rate: 3, value: 'fast' },
+    { label: t('orderChannel.step3.feeCustom'), rate: 0, value: 'custom' },
+  ]
   return (
     <div>
       <label className="text-sm font-medium text-gray-400 mb-3 block">
-        Fee Rate
+        {t('orderChannel.step3.feeRateLabel')}
       </label>
       <div className="grid grid-cols-2 gap-3">
         {feeRates.map((rate) => (
@@ -55,7 +57,7 @@ export const FeeSelector: React.FC<FeeSelectorProps> = ({
               {getFeeIcon(rate.value)}
               <span>{rate.label}</span>
             </div>
-            {rate.value !== 'custom' && <span>{rate.rate} sat/vB</span>}
+            {rate.value !== 'custom' && <span>{rate.rate} {t('orderChannel.feeUnit')}</span>}
           </button>
         ))}
       </div>
@@ -63,7 +65,7 @@ export const FeeSelector: React.FC<FeeSelectorProps> = ({
         <input
           className="mt-3 w-full px-4 py-3 bg-gray-800/50 rounded-xl border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white"
           onChange={(e) => onCustomFeeChange(parseFloat(e.target.value))}
-          placeholder="Custom fee rate (sat/vB)"
+          placeholder={t('orderChannel.step3.customFeePlaceholder')}
           step="0.1"
           type="number"
           value={customFee}

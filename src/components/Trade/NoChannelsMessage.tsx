@@ -11,6 +11,7 @@ import {
   Clock,
 } from 'lucide-react'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 import {
   CREATE_NEW_CHANNEL_PATH,
@@ -37,6 +38,7 @@ export const NoChannelsMessage: React.FC<NoChannelsMessageProps> = ({
   hasEnoughBalance = true,
 }) => {
   const dispatch = useAppDispatch()
+  const { t } = useTranslation()
 
   const handleShowDepositModal = () => {
     dispatch(uiSliceActions.setModal({ assetId: undefined, type: 'deposit' }))
@@ -50,21 +52,20 @@ export const NoChannelsMessage: React.FC<NoChannelsMessageProps> = ({
             <Wallet className="w-8 h-8 text-red-500" />
           </div>
           <h2 className="text-2xl font-bold text-white">
-            Insufficient Bitcoin Balance
+            {t('trade.noChannels.insufficientBalance')}
           </h2>
           <p className="text-slate-400 text-center text-base max-w-md">
-            You need some bitcoin to open a channel. Please deposit some BTC to
-            get started.
+            {t('trade.noChannels.insufficientBalanceMessage')}
           </p>
 
           <div className="flex gap-3 pt-4">
             <button
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl 
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl
                      font-medium transition-colors flex items-center gap-2 text-base"
               onClick={handleShowDepositModal}
             >
               <Wallet className="w-5 h-5" />
-              Deposit BTC
+              {t('trade.noChannels.depositBTC')}
             </button>
           </div>
         </div>
@@ -79,28 +80,28 @@ export const NoChannelsMessage: React.FC<NoChannelsMessageProps> = ({
           <Link className="w-8 h-8 text-blue-500" />
         </div>
         <h2 className="text-2xl font-bold text-white">
-          No RGB Channels Available
+          {t('trade.noChannels.noRGBChannels')}
         </h2>
         <p className="text-slate-400 text-center text-base max-w-md">
-          To start swapping, you need to a channel with some assets
+          {t('trade.noChannels.noRGBChannelsMessage')}
         </p>
 
         <div className="flex gap-4 pt-4">
           <button
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl 
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl
                      font-medium transition-colors flex items-center gap-2 text-base"
             onClick={() => onNavigate(CREATE_NEW_CHANNEL_PATH)}
           >
             <Plus className="w-5 h-5" />
-            Open Channel
+            {t('trade.noChannels.openChannel')}
           </button>
           <button
-            className="px-6 py-3 border border-blue-500/50 text-blue-500 rounded-xl 
+            className="px-6 py-3 border border-blue-500/50 text-blue-500 rounded-xl
                      hover:bg-blue-500/10 transition-colors flex items-center gap-2 text-base"
             onClick={() => onNavigate(ORDER_CHANNEL_PATH)}
           >
             <ShoppingCart className="w-5 h-5" />
-            Buy from LSP
+            {t('trade.noChannels.buyFromLSP')}
           </button>
         </div>
       </div>
@@ -139,6 +140,7 @@ export const NoTradingChannelsMessage: React.FC<
   const { recommendedAction, onNavigate, onMakerChange } = actions
 
   const dispatch = useAppDispatch()
+  const { t } = useTranslation()
 
   const handleShowDepositModal = () => {
     dispatch(uiSliceActions.setModal({ assetId: undefined, type: 'deposit' }))
@@ -152,19 +154,19 @@ export const NoTradingChannelsMessage: React.FC<
             <Wallet className="w-6 h-6 text-red-500" />
           </div>
           <h2 className="text-xl font-bold text-white">
-            Insufficient Bitcoin Balance
+            {t('trade.noChannels.insufficientBalance')}
           </h2>
           <p className="text-slate-400 text-center text-sm max-w-md">
-            You need bitcoin to open a trading channel.
+            {t('trade.noChannels.insufficientBalanceMessage')}
           </p>
 
           <button
-            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl 
+            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl
                    font-medium transition-colors flex items-center gap-2 text-sm mt-1"
             onClick={handleShowDepositModal}
           >
             <Wallet className="w-4 h-4" />
-            Deposit BTC
+            {t('trade.noChannels.depositBTC')}
           </button>
         </div>
       </div>
@@ -183,13 +185,13 @@ export const NoTradingChannelsMessage: React.FC<
 
   const getRecommendationMessage = () => {
     if (hasCompatibleAssets) {
-      return 'You already have assets compatible with this market maker. You can open a channel directly.'
+      return t('trade.noChannels.recommendationCompatible')
     } else if (recommendedAction === 'buy') {
-      return 'For the quickest start, we recommend buying a channel from an LSP with assets supported by this maker.'
+      return t('trade.noChannels.recommendationBuy')
     } else if (recommendedAction === 'open') {
-      return 'This market maker supports specific assets. You can open a channel with these assets.'
+      return t('trade.noChannels.recommendationOpen')
     }
-    return 'To trade with this market maker, you need a channel with one of its supported assets.'
+    return t('trade.noChannels.recommendationDefault')
   }
 
   return (
@@ -208,7 +210,9 @@ export const NoTradingChannelsMessage: React.FC<
               <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-cyan-400 rounded-full animate-pulse"></div>
-                  <h3 className="text-lg font-bold text-white">Market Maker</h3>
+                  <h3 className="text-lg font-bold text-white">
+                    {t('trade.noChannels.marketMaker')}
+                  </h3>
                 </div>
                 <div className="flex-shrink-0">
                   <MakerSelector onMakerChange={onMakerChange} />
@@ -231,7 +235,7 @@ export const NoTradingChannelsMessage: React.FC<
               </div>
 
               <h1 className="text-5xl lg:text-6xl font-bold bg-gradient-to-r from-white via-cyan-100 to-blue-100 bg-clip-text text-transparent leading-tight mb-4">
-                No Trading Channels Available
+                {t('trade.noChannels.noTradingChannels')}
               </h1>
 
               <p className="text-xl text-slate-300 leading-relaxed max-w-3xl mx-auto mb-8">
@@ -248,7 +252,9 @@ export const NoTradingChannelsMessage: React.FC<
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/10 to-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       <ShoppingCart className="w-6 h-6 relative z-10" />
-                      <span className="relative z-10">Buy Channel</span>
+                      <span className="relative z-10">
+                        {t('trade.noChannels.buyChannel')}
+                      </span>
                     </button>
                     {recommendedAction === 'both' && (
                       <button
@@ -256,7 +262,7 @@ export const NoTradingChannelsMessage: React.FC<
                         onClick={() => onNavigate(CREATE_NEW_CHANNEL_PATH)}
                       >
                         <Plus className="w-6 h-6" />
-                        Open Channel
+                        {t('trade.noChannels.openChannel')}
                       </button>
                     )}
                   </>
@@ -268,7 +274,9 @@ export const NoTradingChannelsMessage: React.FC<
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/10 to-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       <Plus className="w-6 h-6 relative z-10" />
-                      <span className="relative z-10">Open Channel</span>
+                      <span className="relative z-10">
+                        {t('trade.noChannels.openChannel')}
+                      </span>
                     </button>
                     {recommendedAction === 'both' && (
                       <button
@@ -276,7 +284,7 @@ export const NoTradingChannelsMessage: React.FC<
                         onClick={() => onNavigate(ORDER_CHANNEL_PATH)}
                       >
                         <ShoppingCart className="w-6 h-6" />
-                        Buy Channel
+                        {t('trade.noChannels.buyChannel')}
                       </button>
                     )}
                   </>
@@ -293,7 +301,7 @@ export const NoTradingChannelsMessage: React.FC<
                         <TradablePairsDisplay
                           maxPairsToShow={8}
                           pairs={tradingPairs}
-                          title="Available Trading Pairs"
+                          title={t('trade.noChannels.availableTradingPairs')}
                         />
                       </div>
                     </div>
@@ -303,7 +311,7 @@ export const NoTradingChannelsMessage: React.FC<
                       <div className="relative">
                         <SupportedAssetsDisplay
                           pairs={tradingPairs}
-                          title="Supported Assets"
+                          title={t('trade.noChannels.supportedAssets')}
                         />
                       </div>
                     </div>
@@ -318,10 +326,10 @@ export const NoTradingChannelsMessage: React.FC<
                             <HelpCircle className="w-8 h-8 text-blue-400" />
                           </div>
                           <h3 className="text-3xl font-bold text-white mb-3 bg-gradient-to-r from-white via-blue-100 to-cyan-100 bg-clip-text text-transparent">
-                            Quick Start Guide
+                            {t('trade.noChannels.quickStartGuide')}
                           </h3>
                           <p className="text-slate-400 text-lg leading-relaxed">
-                            Follow these steps to start trading with RGB assets
+                            {t('trade.noChannels.quickStartMessage')}
                           </p>
                         </div>
 
@@ -334,12 +342,11 @@ export const NoTradingChannelsMessage: React.FC<
                               className="text-blue-400 hover:text-blue-300 inline-flex items-center gap-2 font-semibold text-lg group-hover:scale-105 transition-all duration-300 mb-2"
                               onClick={() => openUrl(registryUrl)}
                             >
-                              Check supported assets
+                              {t('trade.noChannels.checkSupportedAssets')}
                               <ExternalLink className="w-4 h-4" />
                             </button>
                             <p className="text-slate-400 text-sm">
-                              Visit the registry to see what assets this maker
-                              supports
+                              {t('trade.noChannels.checkSupportedAssetsMessage')}
                             </p>
                           </div>
 
@@ -348,11 +355,10 @@ export const NoTradingChannelsMessage: React.FC<
                               2
                             </div>
                             <h4 className="font-semibold text-lg text-white mb-2">
-                              Create Your Channel
+                              {t('trade.noChannels.createYourChannel')}
                             </h4>
                             <p className="text-slate-400 text-sm">
-                              Buy a channel from an LSP or open one directly
-                              with your assets
+                              {t('trade.noChannels.createChannelMessage')}
                             </p>
                           </div>
 
@@ -361,11 +367,10 @@ export const NoTradingChannelsMessage: React.FC<
                               3
                             </div>
                             <h4 className="font-semibold text-lg text-white mb-2">
-                              Start Trading
+                              {t('trade.noChannels.startTrading')}
                             </h4>
                             <p className="text-slate-400 text-sm">
-                              Return here once your channel is active to begin
-                              trading
+                              {t('trade.noChannels.startTradingMessage')}
                             </p>
                           </div>
                         </div>
@@ -427,6 +432,8 @@ interface ChannelsNotReadyMessageProps {
 export const ChannelsNotReadyMessage: React.FC<
   ChannelsNotReadyMessageProps
 > = ({ onRefresh }) => {
+  const { t } = useTranslation()
+
   return (
     <div className="max-w-2xl w-full bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-slate-800/50 p-8">
       <div className="flex flex-col items-center space-y-4">
@@ -434,11 +441,10 @@ export const ChannelsNotReadyMessage: React.FC<
           <Clock className="w-8 h-8 text-yellow-500" />
         </div>
         <h2 className="text-2xl font-bold text-white">
-          Channels Not Ready Yet
+          {t('trade.channelsNotReady.title')}
         </h2>
         <p className="text-slate-400 text-center text-base max-w-md">
-          Your trading channels are being set up. This process usually takes a
-          few minutes. Please wait while we prepare everything for you.
+          {t('trade.channelsNotReady.message')}
         </p>
 
         <div className="w-full max-w-md bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 mt-4">
@@ -446,10 +452,12 @@ export const ChannelsNotReadyMessage: React.FC<
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
               <span className="text-yellow-400 font-medium">
-                Channel Status
+                {t('trade.channelsNotReady.channelStatus')}
               </span>
             </div>
-            <span className="text-slate-400 text-sm">Initializing...</span>
+            <span className="text-slate-400 text-sm">
+              {t('trade.channelsNotReady.initializing')}
+            </span>
           </div>
           <div className="mt-3 w-full bg-slate-700/30 rounded-full h-2 overflow-hidden">
             <div className="h-full bg-gradient-to-r from-yellow-500 to-yellow-400 w-3/4 animate-pulse rounded-full"></div>
@@ -458,13 +466,13 @@ export const ChannelsNotReadyMessage: React.FC<
 
         <div className="flex gap-4 pt-4">
           <button
-            className="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-xl 
+            className="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-xl
                      font-medium transition-colors flex items-center gap-2 text-base
                      shadow-lg hover:shadow-yellow-500/25"
             onClick={onRefresh}
           >
             <RefreshCcw className="w-5 h-5" />
-            Check Status
+            {t('trade.channelsNotReady.checkStatus')}
           </button>
         </div>
 
@@ -474,10 +482,10 @@ export const ChannelsNotReadyMessage: React.FC<
               <Clock className="w-5 h-5 text-blue-400" />
             </div>
             <h4 className="text-sm font-semibold text-blue-300 mb-1">
-              Setup Time
+              {t('trade.channelsNotReady.setupTime')}
             </h4>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Channel setup typically takes 3-5 minutes to complete
+              {t('trade.channelsNotReady.setupTimeMessage')}
             </p>
           </div>
 
@@ -486,10 +494,10 @@ export const ChannelsNotReadyMessage: React.FC<
               <RefreshCcw className="w-5 h-5 text-green-400" />
             </div>
             <h4 className="text-sm font-semibold text-green-300 mb-1">
-              Auto-Refresh
+              {t('trade.channelsNotReady.autoRefresh')}
             </h4>
             <p className="text-xs text-slate-400 leading-relaxed">
-              We'll automatically check the status every 30 seconds
+              {t('trade.channelsNotReady.autoRefreshMessage')}
             </p>
           </div>
         </div>
@@ -524,7 +532,7 @@ export const WebSocketDisconnectedMessage: React.FC<
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
             <h2 className="text-lg font-bold text-white">
-              Market Maker Connection Lost
+              {t('trade.connectionIssues.connectionLost')}
             </h2>
           </div>
         </div>
@@ -536,11 +544,10 @@ export const WebSocketDisconnectedMessage: React.FC<
           <div className="flex-1">
             <h3 className="text-sm font-semibold text-yellow-400 mb-1 flex items-center gap-2">
               <Globe className="w-4 h-4" />
-              MARKET MAKER
+              {t('trade.noChannels.marketMaker').toUpperCase()}
             </h3>
             <p className="text-xs text-slate-400">
-              If the current maker is unavailable, switch to another one to
-              continue trading
+              {t('trade.connectionIssues.marketMakerSelector')}
             </p>
           </div>
           <div className="flex-shrink-0">
@@ -562,13 +569,12 @@ export const WebSocketDisconnectedMessage: React.FC<
           </div>
 
           <div className="text-center space-y-3">
-            <h3 className="text-xl font-bold text-white">Connection Issue</h3>
+            <h3 className="text-xl font-bold text-white">{t('trade.connectionIssues.connectionIssue')}</h3>
             <p className="text-slate-300 text-center max-w-md leading-relaxed">
-              Your trading channels are available, but we're having trouble
-              maintaining a real-time connection to the market maker.
+              {t('trade.connectionIssues.connectionLostMessage')}
               <br />
               <span className="text-slate-400 text-sm">
-                This prevents live price updates and trading.
+                {t('trade.connectionIssues.preventsTradingMessage')}
               </span>
             </p>
           </div>
@@ -578,7 +584,7 @@ export const WebSocketDisconnectedMessage: React.FC<
             onClick={handleRefreshConnection}
           >
             <RefreshCcw className="w-5 h-5" />
-            Retry Connection
+            {t('trade.connectionIssues.retryConnection')}
           </button>
 
           {/* Troubleshooting Grid */}
@@ -588,10 +594,10 @@ export const WebSocketDisconnectedMessage: React.FC<
                 <Globe className="w-5 h-5 text-blue-400" />
               </div>
               <h4 className="text-sm font-semibold text-blue-300 mb-1">
-                Network
+                {t('trade.connectionIssues.network')}
               </h4>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Check your internet connection
+                {t('trade.connectionIssues.checkInternetMessage')}
               </p>
             </div>
 
@@ -600,10 +606,10 @@ export const WebSocketDisconnectedMessage: React.FC<
                 <RefreshCcw className="w-5 h-5 text-yellow-400" />
               </div>
               <h4 className="text-sm font-semibold text-yellow-300 mb-1">
-                Switch Maker
+                {t('trade.connectionIssues.switchMaker')}
               </h4>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Try a different market maker above
+                {t('trade.connectionIssues.tryDifferentMaker')}
               </p>
             </div>
 
@@ -612,10 +618,10 @@ export const WebSocketDisconnectedMessage: React.FC<
                 <Clock className="w-5 h-5 text-green-400" />
               </div>
               <h4 className="text-sm font-semibold text-green-300 mb-1">
-                Wait
+                {t('trade.connectionIssues.wait')}
               </h4>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Server may be temporarily busy
+                {t('trade.connectionIssues.serverBusy')}
               </p>
             </div>
           </div>
@@ -624,7 +630,7 @@ export const WebSocketDisconnectedMessage: React.FC<
             <div className="w-full pt-6 border-t border-slate-700/30">
               <div className="bg-slate-800/30 rounded-lg p-3 border border-slate-700/40">
                 <p className="text-xs text-slate-400 text-center">
-                  Current maker:{' '}
+                  {t('trade.connectionIssues.currentMaker')}{' '}
                   <span className="text-red-400 font-mono break-all">
                     {makerUrl}
                   </span>
@@ -665,13 +671,13 @@ export const ConnectionTimeoutMessage: React.FC<
             <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
             <h2 className="text-lg font-bold text-white">
               {isConnecting
-                ? 'Connecting to Market Maker'
-                : 'Connection Timeout'}
+                ? t('trade.connectionIssues.connectingToMaker')
+                : t('trade.connectionIssues.connectionTimeout')}
             </h2>
           </div>
           {isConnecting && (
             <span className="text-sm text-slate-400">
-              {elapsedSeconds}s elapsed
+              {t('trade.connectionIssues.elapsedTime', { seconds: elapsedSeconds })}
             </span>
           )}
         </div>
@@ -683,12 +689,12 @@ export const ConnectionTimeoutMessage: React.FC<
           <div className="flex-1">
             <h3 className="text-sm font-semibold text-yellow-400 mb-1 flex items-center gap-2">
               <Globe className="w-4 h-4" />
-              MARKET MAKER
+              {t('trade.noChannels.marketMaker').toUpperCase()}
             </h3>
             <p className="text-xs text-slate-400">
               {isConnecting
-                ? 'Currently attempting to connect. You can switch to try another maker.'
-                : 'Switch to a different maker if the current one is unavailable'}
+                ? t('trade.connectionIssues.tryingSwitchMessage')
+                : t('trade.connectionIssues.switchIfUnavailable')}
             </p>
           </div>
           <div className="flex-shrink-0">
@@ -721,30 +727,30 @@ export const ConnectionTimeoutMessage: React.FC<
 
           <div className="text-center space-y-3">
             <h3 className="text-xl font-bold text-white">
-              {isConnecting ? 'Establishing Connection' : 'Connection Timeout'}
+              {isConnecting ? t('trade.connectionIssues.establishingConnection') : t('trade.connectionIssues.connectionTimeout')}
             </h3>
             <p className="text-slate-300 text-center max-w-md leading-relaxed">
               {isConnecting ? (
                 <>
-                  Attempting to connect to the market maker...
+                  {t('trade.connectionIssues.connectingMessage')}
                   <br />
                   <span className="text-slate-400 text-sm">
-                    This usually takes just a few seconds.
+                    {t('trade.connectionIssues.usuallyFastMessage')}
                   </span>
                 </>
               ) : (
                 <>
-                  Unable to connect to the market maker within 30 seconds.
+                  {t('trade.connectionIssues.timeoutMessage')}
                   <br />
                   <span className="text-slate-400 text-sm">
-                    The server may be unreachable or experiencing issues.
+                    {t('trade.connectionIssues.serverUnreachableMessage')}
                   </span>
                 </>
               )}
             </p>
             {isConnecting && (
               <p className="text-slate-500 text-sm">
-                Connecting for {elapsedSeconds} seconds...
+                {t('trade.connectionIssues.connectingForSeconds', { seconds: elapsedSeconds })}
               </p>
             )}
           </div>
@@ -755,7 +761,7 @@ export const ConnectionTimeoutMessage: React.FC<
               onClick={onRetry}
             >
               <RefreshCcw className="w-5 h-5" />
-              {isConnecting ? 'Cancel & Retry' : 'Retry Connection'}
+              {isConnecting ? t('trade.connectionIssues.cancelAndRetry') : t('trade.connectionIssues.retryConnection')}
             </button>
           </div>
 
@@ -766,10 +772,10 @@ export const ConnectionTimeoutMessage: React.FC<
                 <Globe className="w-5 h-5 text-blue-400" />
               </div>
               <h4 className="text-sm font-semibold text-blue-300 mb-1">
-                Network
+                {t('trade.connectionIssues.network')}
               </h4>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Check your internet connection
+                {t('trade.connectionIssues.checkInternetMessage')}
               </p>
             </div>
 
@@ -778,10 +784,10 @@ export const ConnectionTimeoutMessage: React.FC<
                 <RefreshCcw className="w-5 h-5 text-yellow-400" />
               </div>
               <h4 className="text-sm font-semibold text-yellow-300 mb-1">
-                Switch Maker
+                {t('trade.connectionIssues.switchMaker')}
               </h4>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Try a different market maker above
+                {t('trade.connectionIssues.tryDifferentMaker')}
               </p>
             </div>
 
@@ -790,10 +796,10 @@ export const ConnectionTimeoutMessage: React.FC<
                 <Clock className="w-5 h-5 text-green-400" />
               </div>
               <h4 className="text-sm font-semibold text-green-300 mb-1">
-                Wait
+                {t('trade.connectionIssues.wait')}
               </h4>
               <p className="text-xs text-slate-400 leading-relaxed">
-                {isConnecting ? 'Connection in progress' : 'Server may be busy'}
+                {isConnecting ? t('trade.connectionIssues.connectionInProgress') : t('trade.connectionIssues.serverBusy')}
               </p>
             </div>
           </div>
@@ -802,7 +808,7 @@ export const ConnectionTimeoutMessage: React.FC<
             <div className="w-full pt-6 border-t border-slate-700/30">
               <div className="bg-slate-800/30 rounded-lg p-3 border border-slate-700/40">
                 <p className="text-xs text-slate-400 text-center">
-                  Current maker:{' '}
+                  {t('trade.connectionIssues.currentMaker')}{' '}
                   <span
                     className={`font-mono break-all ${isConnecting ? 'text-blue-400' : 'text-orange-400'}`}
                   >

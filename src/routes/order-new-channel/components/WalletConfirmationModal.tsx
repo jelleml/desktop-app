@@ -1,5 +1,6 @@
 import { AlertTriangle, Zap, Link as ChainIcon } from 'lucide-react'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { formatBitcoinAmount } from '../../../helpers/number'
 
@@ -34,6 +35,7 @@ export const WalletConfirmationModal: React.FC<
   onClose,
   onConfirm,
 }) => {
+  const { t } = useTranslation()
   if (!isOpen) return null
 
   return (
@@ -48,15 +50,15 @@ export const WalletConfirmationModal: React.FC<
             <div className="flex flex-col items-center py-6">
               <div className="w-16 h-16 mb-4">
                 <div
-                  className="w-full h-full border-4 border-blue-500/30 border-t-blue-500 
+                  className="w-full h-full border-4 border-blue-500/30 border-t-blue-500
                               rounded-full animate-spin"
                 />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">
-                Processing Payment
+                {t('orderChannel.step3.processingPayment')}
               </h3>
               <p className="text-slate-400 text-center">
-                Please wait while we process your payment...
+                {t('orderChannel.step3.processingWait')}
               </p>
             </div>
           ) : (
@@ -64,24 +66,26 @@ export const WalletConfirmationModal: React.FC<
               <div className="flex items-center gap-3 mb-4">
                 <AlertTriangle className="w-6 h-6 text-yellow-500" />
                 <h3 className="text-xl font-bold text-white">
-                  Confirm Payment
+                  {t('orderChannel.step3.confirmPayment')}
                 </h3>
               </div>
               <div className="space-y-4">
                 {/* Payment Details Section */}
                 <div className="bg-slate-800/50 rounded-xl p-4 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Payment Type:</span>
+                    <span className="text-slate-400">
+                      {t('orderChannel.step3.paymentType')}:
+                    </span>
                     <span className="text-white font-medium flex items-center gap-2">
                       {paymentMethod === 'lightning' ? (
                         <>
                           <Zap className="w-4 h-4 text-yellow-500" />
-                          Lightning
+                          {t('orderChannel.step3.lightning')}
                         </>
                       ) : (
                         <>
                           <ChainIcon className="w-4 h-4 text-blue-500" />
-                          On-chain
+                          {t('orderChannel.step3.onchain')}
                         </>
                       )}
                     </span>
@@ -93,8 +97,9 @@ export const WalletConfirmationModal: React.FC<
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-400">
                       {paymentMethod === 'lightning'
-                        ? 'Max Sendable:'
-                        : 'Available Balance:'}
+                        ? t('orderChannel.step3.maxSendable')
+                        : t('orderChannel.step3.availableBalance')}
+                      :
                     </span>
                     <span className="text-white font-medium">
                       {paymentMethod === 'lightning'
@@ -104,7 +109,9 @@ export const WalletConfirmationModal: React.FC<
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Amount to Pay:</span>
+                    <span className="text-slate-400">
+                      {t('orderChannel.step3.amountToPay')}:
+                    </span>
                     <span className="text-white font-medium">
                       {formatBitcoinAmount(
                         currentPayment?.order_total_sat || 0,
@@ -114,7 +121,9 @@ export const WalletConfirmationModal: React.FC<
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Remaining Balance:</span>
+                    <span className="text-slate-400">
+                      {t('orderChannel.step3.remainingBalance')}:
+                    </span>
                     <span className="text-white font-medium">
                       {formatBitcoinAmount(
                         paymentMethod === 'lightning'
@@ -133,11 +142,13 @@ export const WalletConfirmationModal: React.FC<
                 {paymentMethod === 'onchain' && (
                   <div className="bg-slate-800/50 rounded-xl p-4">
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Fee Rate:</span>
+                      <span className="text-slate-400">
+                        {t('orderChannel.step3.feeRate')}:
+                      </span>
                       <span className="text-white font-medium">
                         {selectedFee === 'custom'
-                          ? `${customFee} sat/vB`
-                          : `${feeRates.find((rate) => rate.value === selectedFee)?.rate} sat/vB`}
+                          ? `${customFee} ${t('orderChannel.feeUnit')}`
+                          : `${feeRates.find((rate) => rate.value === selectedFee)?.rate} ${t('orderChannel.feeUnit')}`}
                       </span>
                     </div>
                   </div>
@@ -145,8 +156,7 @@ export const WalletConfirmationModal: React.FC<
 
                 <div className="border-t border-slate-800 my-4" />
                 <p className="text-yellow-500/80 text-sm">
-                  Please verify all details before confirming. This action
-                  cannot be undone.
+                  {t('orderChannel.step3.verifyDetails')}
                 </p>
                 <div className="flex gap-3 mt-6">
                   <button
@@ -155,7 +165,7 @@ export const WalletConfirmationModal: React.FC<
                     onClick={onClose}
                     type="button"
                   >
-                    Cancel
+                    {t('orderChannel.step3.cancel')}
                   </button>
                   <button
                     className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700
@@ -163,7 +173,7 @@ export const WalletConfirmationModal: React.FC<
                     onClick={onConfirm}
                     type="button"
                   >
-                    Confirm Payment
+                    {t('orderChannel.step3.confirmPayment')}
                   </button>
                 </div>
               </div>
