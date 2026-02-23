@@ -96,10 +96,12 @@ export const waitForNodeState = async (
 /**
  * Enhanced node startup helper with better readiness detection
  */
-export const waitForNodeReady = async (options: {
-  timeoutMs?: number
-  onProgress?: (message: string) => void
-} = {}): Promise<void> => {
+export const waitForNodeReady = async (
+  options: {
+    timeoutMs?: number
+    onProgress?: (message: string) => void
+  } = {}
+): Promise<void> => {
   const { timeoutMs = 60000, onProgress } = options
 
   return new Promise((resolve, reject) => {

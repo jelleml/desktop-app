@@ -23,8 +23,8 @@ export type SwapLeg = ApiComponents['schemas']['SwapLeg']
 
 interface QuoteResponse {
   rfq_id: string
-  from_asset: SwapLeg  // Changed from string to SwapLeg
-  to_asset: SwapLeg    // Changed from string to SwapLeg
+  from_asset: SwapLeg // Changed from string to SwapLeg
+  to_asset: SwapLeg // Changed from string to SwapLeg
   price: number
   timestamp: number
   expires_at: number

@@ -93,10 +93,11 @@ const ConnectPopup: React.FC<{
           {t('orderChannel.step1.cancelButton')}
         </button>
         <button
-          className={`flex-1 px-6 py-3 text-white rounded-lg font-semibold transition-all duration-200 transform active:scale-95 ${isAlreadyConnected
-            ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 shadow-lg shadow-green-900/30'
-            : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 shadow-lg shadow-blue-900/30'
-            }`}
+          className={`flex-1 px-6 py-3 text-white rounded-lg font-semibold transition-all duration-200 transform active:scale-95 ${
+            isAlreadyConnected
+              ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 shadow-lg shadow-green-900/30'
+              : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 shadow-lg shadow-blue-900/30'
+          }`}
           onClick={onConfirm}
         >
           {isAlreadyConnected
@@ -316,13 +317,19 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
         .replace(/^\w/, (c: string) => c.toUpperCase())
 
       if (!NETWORK_DEFAULTS[network]) {
-        throw new Error(t('orderChannel.step1.unsupportedNetwork', { network: networkInfo.network }))
+        throw new Error(
+          t('orderChannel.step1.unsupportedNetwork', {
+            network: networkInfo.network,
+          })
+        )
       }
 
       const defaultLspUrl = NETWORK_DEFAULTS[network].default_lsp_url
       if (!defaultLspUrl) {
         throw new Error(
-          t('orderChannel.step1.noDefaultLspUrl', { network: networkInfo.network })
+          t('orderChannel.step1.noDefaultLspUrl', {
+            network: networkInfo.network,
+          })
         )
       }
 
@@ -501,10 +508,11 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
         {/* Connection Status Banner */}
         {connectionUrl && (
           <div
-            className={`mb-6 p-5 rounded-xl border-2 transition-all duration-300 ${isAlreadyConnected
-              ? 'bg-green-900/20 border-green-600/50 shadow-lg shadow-green-900/20'
-              : 'bg-blue-900/20 border-blue-600/50 shadow-lg shadow-blue-900/20'
-              }`}
+            className={`mb-6 p-5 rounded-xl border-2 transition-all duration-300 ${
+              isAlreadyConnected
+                ? 'bg-green-900/20 border-green-600/50 shadow-lg shadow-green-900/20'
+                : 'bg-blue-900/20 border-blue-600/50 shadow-lg shadow-blue-900/20'
+            }`}
           >
             <div className="flex items-center gap-4">
               {isAlreadyConnected ? (
@@ -516,18 +524,20 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
               )}
               <div className="flex-1">
                 <h3
-                  className={`text-lg font-semibold ${isAlreadyConnected ? 'text-green-300' : 'text-blue-300'
-                    }`}
+                  className={`text-lg font-semibold ${
+                    isAlreadyConnected ? 'text-green-300' : 'text-blue-300'
+                  }`}
                 >
                   {isAlreadyConnected
                     ? `✓ ${t('orderChannel.step1.alreadyConnectedMessage')}`
                     : t('orderChannel.step1.lspReadyConnect')}
                 </h3>
                 <p
-                  className={`text-sm mt-1 ${isAlreadyConnected
-                    ? 'text-green-200/80'
-                    : 'text-blue-200/80'
-                    }`}
+                  className={`text-sm mt-1 ${
+                    isAlreadyConnected
+                      ? 'text-green-200/80'
+                      : 'text-blue-200/80'
+                  }`}
                 >
                   {isAlreadyConnected
                     ? t('orderChannel.step1.alreadyConnectedInfo')
@@ -598,10 +608,11 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
               </div>
 
               <button
-                className={`w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${isLoading || !tempLspUrl.trim()
-                  ? 'opacity-50 cursor-not-allowed'
-                  : ''
-                  }`}
+                className={`w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
+                  isLoading || !tempLspUrl.trim()
+                    ? 'opacity-50 cursor-not-allowed'
+                    : ''
+                }`}
                 disabled={isLoading || !tempLspUrl.trim()}
                 onClick={handleFetchLspInfo}
               >
@@ -626,8 +637,9 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
             {/* Kaleidoswap LSP Button */}
             <div className="mt-4 pt-4 border-t border-gray-700/50">
               <button
-                className={`w-full bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 p-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
+                className={`w-full bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 p-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
                 disabled={isLoading}
                 onClick={handleKaleidoswapSelect}
                 title={t('orderChannel.step1.useDefaultKaleidoLsp')}
@@ -651,7 +663,9 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
             <div className="relative">
               <textarea
                 className="w-full bg-gray-900/50 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 focus:outline-none transition-all h-32 resize-none font-mono text-sm"
-                placeholder={t('orderChannel.step1.connectionStringPlaceholder')}
+                placeholder={t(
+                  'orderChannel.step1.connectionStringPlaceholder'
+                )}
                 readOnly
                 value={
                   connectionUrl ||

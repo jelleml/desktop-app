@@ -176,10 +176,10 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
   const outboundLiquidity =
     channels.length > 0
       ? Math.max(
-        ...channels.map(
-          (channel) => (channel.next_outbound_htlc_limit_msat || 0) / 1000
+          ...channels.map(
+            (channel) => (channel.next_outbound_htlc_limit_msat || 0) / 1000
+          )
         )
-      )
       : 0
   const vanillaChainBalance = btcBalanceResponse.data?.vanilla?.spendable || 0
   const coloredChainBalance = btcBalanceResponse.data?.colored?.spendable || 0
@@ -245,8 +245,6 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
 
         if (infoResponse.data) {
           if (infoResponse.data.options) {
-
-
             const lspMinCapacity =
               infoResponse.data.options.min_channel_balance_sat || 0
             const lspMaxCapacity =
@@ -350,9 +348,9 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
         if (response.error) {
           const errorMessage =
             typeof response.error === 'object' &&
-              response.error &&
-              'error' in response.error &&
-              typeof (response.error as any).error === 'string'
+            response.error &&
+            'error' in response.error &&
+            typeof (response.error as any).error === 'string'
               ? (response.error as any).error
               : 'Failed to get quote'
           setQuoteError(errorMessage)
@@ -422,9 +420,9 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
         if (response.error) {
           const errorMessage =
             typeof response.error === 'object' &&
-              response.error &&
-              'error' in response.error &&
-              typeof (response.error as any).error === 'string'
+            response.error &&
+            'error' in response.error &&
+            typeof (response.error as any).error === 'string'
               ? (response.error as any).error
               : 'Failed to refresh quote'
           setQuoteError(errorMessage)
@@ -966,8 +964,8 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
         {/* Content */}
         <div className="p-6">
           {showPreselectedConfirmation &&
-            preselectedAsset &&
-            assetMap[preselectedAsset.assetId] ? (
+          preselectedAsset &&
+          assetMap[preselectedAsset.assetId] ? (
             <div className="space-y-5">
               {/* Quick Confirmation */}
               <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-700/40 rounded-xl p-4">
@@ -1001,7 +999,9 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
               {fees && quote && (
                 <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30 space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">{t('components.buyChannelModal.assetCost')}</span>
+                    <span className="text-gray-400">
+                      {t('components.buyChannelModal.assetCost')}
+                    </span>
                     <span className="text-emerald-300">
                       {formatNumberWithCommas(
                         (
@@ -1014,30 +1014,36 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">{t('components.buyChannelModal.yourLiquidity')}</span>
+                    <span className="text-gray-400">
+                      {t('components.buyChannelModal.yourLiquidity')}
+                    </span>
                     <span className="text-gray-200">
                       {formatNumberWithCommas(clientBalanceSat)} sats
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">{t('components.buyChannelModal.fees')}</span>
+                    <span className="text-gray-400">
+                      {t('components.buyChannelModal.fees')}
+                    </span>
                     <span className="text-gray-200">
                       {formatNumberWithCommas(fees.total_fee)} sats
                     </span>
                   </div>
                   <div className="flex justify-between pt-2 mt-2 border-t border-gray-700">
-                    <span className="text-white font-semibold">{t('components.buyChannelModal.total')}</span>
+                    <span className="text-white font-semibold">
+                      {t('components.buyChannelModal.total')}
+                    </span>
                     <span className="text-white font-semibold">
                       {formatNumberWithCommas(
                         (quote.from_asset?.amount ||
                           (quote as any).from_amount ||
                           0) /
-                        1000 +
-                        parseInt(
-                          clientBalanceSat.replace(/[^0-9]/g, ''),
-                          10
-                        ) +
-                        fees.total_fee
+                          1000 +
+                          parseInt(
+                            clientBalanceSat.replace(/[^0-9]/g, ''),
+                            10
+                          ) +
+                          fees.total_fee
                       )}{' '}
                       sats
                     </span>
@@ -1104,19 +1110,21 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                     </h3>
                     <div className="flex gap-3">
                       <button
-                        className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${useWalletFunds
-                          ? 'bg-blue-600 text-white shadow-lg'
-                          : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700'
-                          }`}
+                        className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${
+                          useWalletFunds
+                            ? 'bg-blue-600 text-white shadow-lg'
+                            : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700'
+                        }`}
                         onClick={() => setUseWalletFunds(true)}
                       >
                         💰 Use Wallet Funds
                       </button>
                       <button
-                        className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${!useWalletFunds
-                          ? 'bg-blue-600 text-white shadow-lg'
-                          : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700'
-                          }`}
+                        className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${
+                          !useWalletFunds
+                            ? 'bg-blue-600 text-white shadow-lg'
+                            : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700'
+                        }`}
                         onClick={() => setUseWalletFunds(false)}
                       >
                         📱 External Wallet
@@ -1130,19 +1138,21 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                       {/* Lightning/On-chain tabs */}
                       <div className="flex gap-2">
                         <button
-                          className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${paymentMethodTab === 'lightning'
-                            ? 'bg-blue-600/20 text-blue-300 border border-blue-600/50'
-                            : 'bg-gray-800/50 text-gray-400 hover:bg-gray-800'
-                            }`}
+                          className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            paymentMethodTab === 'lightning'
+                              ? 'bg-blue-600/20 text-blue-300 border border-blue-600/50'
+                              : 'bg-gray-800/50 text-gray-400 hover:bg-gray-800'
+                          }`}
                           onClick={() => setPaymentMethodTab('lightning')}
                         >
                           ⚡ Lightning
                         </button>
                         <button
-                          className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${paymentMethodTab === 'onchain'
-                            ? 'bg-blue-600/20 text-blue-300 border border-blue-600/50'
-                            : 'bg-gray-800/50 text-gray-400 hover:bg-gray-800'
-                            }`}
+                          className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            paymentMethodTab === 'onchain'
+                              ? 'bg-blue-600/20 text-blue-300 border border-blue-600/50'
+                              : 'bg-gray-800/50 text-gray-400 hover:bg-gray-800'
+                          }`}
                           onClick={() => setPaymentMethodTab('onchain')}
                         >
                           ⛓️ On-chain
@@ -1183,9 +1193,9 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                                 {formatNumberWithCommas(
                                   paymentMethodTab === 'lightning'
                                     ? order.payment?.bolt11?.order_total_sat ||
-                                    0
+                                        0
                                     : order.payment?.onchain?.order_total_sat ||
-                                    0
+                                        0
                                 )}{' '}
                                 sats
                               </span>
@@ -1195,21 +1205,21 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                           {/* Insufficient Balance Warning */}
                           {((paymentMethodTab === 'lightning' &&
                             outboundLiquidity <
-                            (order.payment?.bolt11?.order_total_sat || 0)) ||
+                              (order.payment?.bolt11?.order_total_sat || 0)) ||
                             (paymentMethodTab === 'onchain' &&
                               onChainBalance <
-                              (order.payment?.onchain?.order_total_sat ||
-                                0))) && (
-                              <div className="bg-yellow-900/20 border border-yellow-700/40 rounded-xl p-3">
-                                <div className="flex items-start gap-2">
-                                  <Info className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
-                                  <p className="text-yellow-200/80 text-sm">
-                                    Insufficient balance. Please use external
-                                    wallet or add funds to your wallet.
-                                  </p>
-                                </div>
+                                (order.payment?.onchain?.order_total_sat ||
+                                  0))) && (
+                            <div className="bg-yellow-900/20 border border-yellow-700/40 rounded-xl p-3">
+                              <div className="flex items-start gap-2">
+                                <Info className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
+                                <p className="text-yellow-200/80 text-sm">
+                                  Insufficient balance. Please use external
+                                  wallet or add funds to your wallet.
+                                </p>
                               </div>
-                            )}
+                            </div>
+                          )}
 
                           {/* Channel Fees Breakdown */}
                           {fees && (
@@ -1258,7 +1268,11 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                                 {fees.applied_discount &&
                                   fees.applied_discount > 0 && (
                                     <div className="flex justify-between text-green-400">
-                                      <span>{t('components.buyChannelModal.discount')}</span>
+                                      <span>
+                                        {t(
+                                          'components.buyChannelModal.discount'
+                                        )}
+                                      </span>
                                       <span>
                                         -
                                         {formatNumberWithCommas(
@@ -1290,10 +1304,11 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                               <div className="grid grid-cols-2 gap-3">
                                 {feeRates.map((rate) => (
                                   <button
-                                    className={`p-3 rounded-xl border-2 transition-all duration-200 flex items-center justify-between text-sm ${selectedFee === rate.value
-                                      ? 'border-blue-500 bg-blue-500/10 text-blue-500'
-                                      : 'border-gray-700 text-gray-400 hover:border-blue-500/50'
-                                      }`}
+                                    className={`p-3 rounded-xl border-2 transition-all duration-200 flex items-center justify-between text-sm ${
+                                      selectedFee === rate.value
+                                        ? 'border-blue-500 bg-blue-500/10 text-blue-500'
+                                        : 'border-gray-700 text-gray-400 hover:border-blue-500/50'
+                                    }`}
                                     key={rate.value}
                                     onClick={() => setSelectedFee(rate.value)}
                                     type="button"
@@ -1329,12 +1344,12 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                             disabled={
                               (paymentMethodTab === 'lightning' &&
                                 outboundLiquidity <
-                                (order.payment?.bolt11?.order_total_sat ||
-                                  0)) ||
+                                  (order.payment?.bolt11?.order_total_sat ||
+                                    0)) ||
                               (paymentMethodTab === 'onchain' &&
                                 onChainBalance <
-                                (order.payment?.onchain?.order_total_sat ||
-                                  0))
+                                  (order.payment?.onchain?.order_total_sat ||
+                                    0))
                             }
                             onClick={() => setShowWalletConfirmation(true)}
                           >
@@ -1389,10 +1404,12 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                   <div className="flex items-start gap-2">
                     <Clock className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
                     <p className="text-yellow-200/90 text-xs">
-                      <strong>{t('components.buyChannelModal.confirmationTime')}</strong> The channel requires
-                      ~6 on-chain confirmations (approximately 1 hour). Your
-                      asset will be locked at today's rate and ready to trade
-                      once confirmed.
+                      <strong>
+                        {t('components.buyChannelModal.confirmationTime')}
+                      </strong>{' '}
+                      The channel requires ~6 on-chain confirmations
+                      (approximately 1 hour). Your asset will be locked at
+                      today's rate and ready to trade once confirmed.
                     </p>
                   </div>
                 </div>
@@ -1406,17 +1423,17 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                   clientBalance={
                     clientBalanceSat
                       ? parseInt(clientBalanceSat.replace(/[^0-9]/g, ''), 10) ||
-                      0
+                        0
                       : 0
                   }
                   maxCapacity={effectiveMaxCapacity}
                   maxClientBalance={
                     capacitySat
                       ? Math.min(
-                        parseInt(capacitySat.replace(/[^0-9]/g, ''), 10) || 0,
-                        lspOptions?.max_initial_client_balance_sat ||
-                        Number.MAX_SAFE_INTEGER
-                      )
+                          parseInt(capacitySat.replace(/[^0-9]/g, ''), 10) || 0,
+                          lspOptions?.max_initial_client_balance_sat ||
+                            Number.MAX_SAFE_INTEGER
+                        )
                       : 0
                   }
                   minCapacity={effectiveMinCapacity}
@@ -1497,24 +1514,28 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                 <FeeBreakdownDisplay
                   additionalCosts={[
                     ...(quote &&
-                      clientAssetAmount &&
-                      parseFloat(clientAssetAmount) > 0
+                    clientAssetAmount &&
+                    parseFloat(clientAssetAmount) > 0
                       ? [
-                        {
-                          amount:
-                            (quote.from_asset?.amount ||
-                              (quote as any).from_amount ||
-                              0) / 1000,
-                          className: 'text-emerald-300 font-medium',
-                          label: t('components.buyChannelModal.assetPurchase'),
-                        },
-                        {
-                          amount: parseInt(
-                            clientBalanceSat.replace(/[^0-9]/g, '') || '0'
-                          ),
-                          label: t('components.buyChannelModal.yourLiquidity'),
-                        },
-                      ]
+                          {
+                            amount:
+                              (quote.from_asset?.amount ||
+                                (quote as any).from_amount ||
+                                0) / 1000,
+                            className: 'text-emerald-300 font-medium',
+                            label: t(
+                              'components.buyChannelModal.assetPurchase'
+                            ),
+                          },
+                          {
+                            amount: parseInt(
+                              clientBalanceSat.replace(/[^0-9]/g, '') || '0'
+                            ),
+                            label: t(
+                              'components.buyChannelModal.yourLiquidity'
+                            ),
+                          },
+                        ]
                       : []),
                   ]}
                   fees={fees}
@@ -1543,8 +1564,8 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
                   type="submit"
                 >
                   {quoteLoading &&
-                    !!clientAssetAmount &&
-                    parseFloat(clientAssetAmount) > 0
+                  !!clientAssetAmount &&
+                  parseFloat(clientAssetAmount) > 0
                     ? 'Loading Quote...'
                     : 'Continue to Payment'}
                 </button>

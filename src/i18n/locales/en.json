@@ -1920,17 +1920,11 @@
       },
       "colored": {
         "title": "Colored UTXOs",
-        "bullets": [
-          "Open RGB Lightning channels",
-          "Send on-chain RGB assets"
-        ]
+        "bullets": ["Open RGB Lightning channels", "Send on-chain RGB assets"]
       },
       "normal": {
         "title": "Normal UTXOs",
-        "bullets": [
-          "Open Bitcoin Lightning channels",
-          "Regular transactions"
-        ]
+        "bullets": ["Open Bitcoin Lightning channels", "Regular transactions"]
       },
       "countLabel": "{{count}} UTXOs"
     },
@@ -2056,12 +2050,7 @@
     }
   },
   "updaterModal": {
-    "fileSizes": [
-      "Bytes",
-      "KB",
-      "MB",
-      "GB"
-    ],
+    "fileSizes": ["Bytes", "KB", "MB", "GB"],
     "fileSizeZero": "0 Bytes",
     "errors": {
       "timeout": "Update process timed out after 5 minutes. Please check your internet connection and try again.",

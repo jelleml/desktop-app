@@ -61,7 +61,9 @@ export const Component = () => {
         // as we expect connection errors when node is not running
         if (error?.status !== 'FETCH_ERROR') {
           toast.error(
-            t('walletUnlock.failedCheckStatus', { error: error.message || t('walletUnlock.unknownError') }),
+            t('walletUnlock.failedCheckStatus', {
+              error: error.message || t('walletUnlock.unknownError'),
+            }),
             {
               autoClose: 5000,
               position: 'top-right',
@@ -336,9 +338,7 @@ export const Component = () => {
         <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent mb-3">
           {t('walletUnlock.title')}
         </h1>
-        <p className="text-slate-400 text-lg">
-          {t('walletUnlock.subtitle')}
-        </p>
+        <p className="text-slate-400 text-lg">{t('walletUnlock.subtitle')}</p>
       </div>
 
       {/* Main Card */}

@@ -219,6 +219,7 @@ pub fn get_accounts() -> Result<Vec<Account>, rusqlite::Error> {
     Ok(accounts)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn insert_account(
     name: String,
     network: String,
@@ -255,6 +256,7 @@ pub fn insert_account(
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn update_account(
     name: String,
     network: String,

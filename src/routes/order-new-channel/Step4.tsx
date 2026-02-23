@@ -107,9 +107,7 @@ export const Step4 = ({
                     {t('orderChannel.step4.refundHeader')}
                   </p>
                   <p className="text-gray-300 text-sm mb-2">
-                    <strong>
-                      {t('orderChannel.step4.refundProcess')}
-                    </strong>{' '}
+                    <strong>{t('orderChannel.step4.refundProcess')}</strong>{' '}
                     {t('orderChannel.step4.refundProcessSuffix')}
                   </p>
                   <p className="text-gray-300 text-sm">

@@ -90,9 +90,9 @@ export const IssueAssetModal: React.FC<IssueAssetModalProps> = ({
       if (!wasHandled) {
         toast.error(
           error?.data?.error ||
-          (error instanceof Error
-            ? error.message
-            : t('issueAssetModal.failure'))
+            (error instanceof Error
+              ? error.message
+              : t('issueAssetModal.failure'))
         )
       }
     } finally {

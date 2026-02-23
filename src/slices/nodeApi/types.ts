@@ -1,45 +1,45 @@
-export type Channel = any;
+export type Channel = any
 
 // Alias Asset to NiaAsset for compatibility
-export type NiaAsset = any;
-export type Asset = any;
+export type NiaAsset = any
+export type Asset = any
 
 // Stub types for backwards compatibility (not in SDK)
 export const Network = {
-    Mainnet: 'mainnet',
-    Testnet: 'testnet',
-    Regtest: 'regtest',
-    Signet: 'signet',
-} as const;
-export type Network = typeof Network[keyof typeof Network];
+  Mainnet: 'mainnet',
+  Testnet: 'testnet',
+  Regtest: 'regtest',
+  Signet: 'signet',
+} as const
+export type Network = (typeof Network)[keyof typeof Network]
 
 // Local types for Maker/Taker (not in SDK types)
 export interface MakerInitRequest {
-    qty_from: number;
-    qty_to: number;
-    from_asset?: string;
-    to_asset?: string;
-    timeout_sec: number;
+  qty_from: number
+  qty_to: number
+  from_asset?: string
+  to_asset?: string
+  timeout_sec: number
 }
 export interface MakerInitResponse {
-    swapstring: string;
-    payment_secret: string;
+  swapstring: string
+  payment_secret: string
 }
 export interface MakerExecuteRequest {
-    payment_secret: string;
-    swapstring: string;
-    taker_pubkey: string;
+  payment_secret: string
+  swapstring: string
+  taker_pubkey: string
 }
 export interface TakerRequest {
-    swapstring: string;
+  swapstring: string
 }
 export interface AssignmentFungible {
-    type: 'Fungible';
-    value: number;
+  type: 'Fungible'
+  value: number
 }
 export interface Assignment {
-    type: 'Fungible' | 'InflationRight' | 'Any' | 'NonFungible' | 'ReplaceRight';
-    value?: number;
+  type: 'Fungible' | 'InflationRight' | 'Any' | 'NonFungible' | 'ReplaceRight'
+  value?: number
 }
 
 export interface SwapDetails {

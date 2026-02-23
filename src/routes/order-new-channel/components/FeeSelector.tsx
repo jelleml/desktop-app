@@ -57,7 +57,11 @@ export const FeeSelector: React.FC<FeeSelectorProps> = ({
               {getFeeIcon(rate.value)}
               <span>{rate.label}</span>
             </div>
-            {rate.value !== 'custom' && <span>{rate.rate} {t('orderChannel.feeUnit')}</span>}
+            {rate.value !== 'custom' && (
+              <span>
+                {rate.rate} {t('orderChannel.feeUnit')}
+              </span>
+            )}
           </button>
         ))}
       </div>

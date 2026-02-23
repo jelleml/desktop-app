@@ -77,7 +77,7 @@ export const CreateUTXOModal: React.FC<CreateUTXOModalProps> = ({
         const response = await estimateFee({ blocks: 6 }).unwrap()
         const feeRate = response?.fee_rate
         if (!feeRate) {
-          throw Error("Unable to calculate fee-rate")
+          throw Error('Unable to calculate fee-rate')
         }
         setFeeRate(feeRate)
       } catch (error) {
@@ -387,7 +387,7 @@ export const CreateUTXOModal: React.FC<CreateUTXOModalProps> = ({
                         style={{
                           backgroundColor:
                             numUtxos * utxoSize >
-                              (btcBalanceData?.vanilla?.spendable || 0)
+                            (btcBalanceData?.vanilla?.spendable || 0)
                               ? 'rgb(239, 68, 68)'
                               : undefined,
                           width: btcBalanceData?.vanilla?.spendable

@@ -177,15 +177,22 @@ export const Component: React.FC = () => {
           case 'private':
             return channel.public === false
           case 'balanced':
-            total = (channel.inbound_balance_msat ?? 0) + (channel.outbound_balance_msat ?? 0)
+            total =
+              (channel.inbound_balance_msat ?? 0) +
+              (channel.outbound_balance_msat ?? 0)
             localPercentage =
-              total === 0 ? 0 : ((channel.outbound_balance_msat ?? 0) / total) * 100
+              total === 0
+                ? 0
+                : ((channel.outbound_balance_msat ?? 0) / total) * 100
             remotePercentage =
-              total === 0 ? 0 : ((channel.inbound_balance_msat ?? 0) / total) * 100
+              total === 0
+                ? 0
+                : ((channel.inbound_balance_msat ?? 0) / total) * 100
             return localPercentage >= 20 && remotePercentage >= 20
           case 'unbalanced':
             totalBal =
-              (channel.inbound_balance_msat ?? 0) + (channel.outbound_balance_msat ?? 0)
+              (channel.inbound_balance_msat ?? 0) +
+              (channel.outbound_balance_msat ?? 0)
             localPct =
               totalBal === 0
                 ? 0
@@ -215,9 +222,15 @@ export const Component: React.FC = () => {
       case 'capacity':
         return ((a.capacity_sat ?? 0) - (b.capacity_sat ?? 0)) * direction
       case 'outbound':
-        return ((a.outbound_balance_msat ?? 0) - (b.outbound_balance_msat ?? 0)) * direction
+        return (
+          ((a.outbound_balance_msat ?? 0) - (b.outbound_balance_msat ?? 0)) *
+          direction
+        )
       case 'inbound':
-        return ((a.inbound_balance_msat ?? 0) - (b.inbound_balance_msat ?? 0)) * direction
+        return (
+          ((a.inbound_balance_msat ?? 0) - (b.inbound_balance_msat ?? 0)) *
+          direction
+        )
       case 'balance':
         totalA = (a.inbound_balance_msat ?? 0) + (a.outbound_balance_msat ?? 0)
         totalB = (b.inbound_balance_msat ?? 0) + (b.outbound_balance_msat ?? 0)
@@ -237,15 +250,18 @@ export const Component: React.FC = () => {
 
   // Calculate totals for all channels
   const totalBalance = channels.reduce(
-    (sum, channel) => sum + Math.floor((channel.outbound_balance_msat ?? 0) / 1000),
+    (sum, channel) =>
+      sum + Math.floor((channel.outbound_balance_msat ?? 0) / 1000),
     0
   )
   const totalInboundLiquidity = channels.reduce(
-    (sum, channel) => sum + Math.floor((channel.inbound_balance_msat ?? 0) / 1000),
+    (sum, channel) =>
+      sum + Math.floor((channel.inbound_balance_msat ?? 0) / 1000),
     0
   )
   const totalOutboundLiquidity = channels.reduce(
-    (sum, channel) => sum + Math.floor((channel.outbound_balance_msat ?? 0) / 1000),
+    (sum, channel) =>
+      sum + Math.floor((channel.outbound_balance_msat ?? 0) / 1000),
     0
   )
 
@@ -336,8 +352,9 @@ export const Component: React.FC = () => {
             {t('channels.buyChannel')}
           </button>
           <button
-            className={`px-4 py-2.5 rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 transition text-gray-200 font-medium flex items-center ${isLoading ? 'opacity-70 cursor-not-allowed' : ''
-              }`}
+            className={`px-4 py-2.5 rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 transition text-gray-200 font-medium flex items-center ${
+              isLoading ? 'opacity-70 cursor-not-allowed' : ''
+            }`}
             disabled={isLoading}
             onClick={refreshData}
           >
@@ -380,30 +397,33 @@ export const Component: React.FC = () => {
             {/* Channel type tabs */}
             <div className="bg-gray-900/80 rounded-lg p-1 flex shadow-inner">
               <button
-                className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-all ${activeTab === 'all'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-gray-300 hover:bg-gray-800'
-                  }`}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-all ${
+                  activeTab === 'all'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'text-gray-300 hover:bg-gray-800'
+                }`}
                 onClick={() => setActiveTab('all')}
               >
                 <Zap className="h-3.5 w-3.5 mr-1.5" />
                 {t('channels.all')} ({channels.length})
               </button>
               <button
-                className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-all ${activeTab === 'bitcoin'
-                  ? 'bg-yellow-500 text-gray-900 shadow-md'
-                  : 'text-gray-300 hover:bg-gray-800'
-                  }`}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-all ${
+                  activeTab === 'bitcoin'
+                    ? 'bg-yellow-500 text-gray-900 shadow-md'
+                    : 'text-gray-300 hover:bg-gray-800'
+                }`}
                 onClick={() => setActiveTab('bitcoin')}
               >
                 <Bolt className="h-3.5 w-3.5 mr-1.5" />
                 {t('channels.bitcoin')} ({bitcoinChannels.length})
               </button>
               <button
-                className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-all ${activeTab === 'rgb'
-                  ? 'bg-purple-600 text-white shadow-md'
-                  : 'text-gray-300 hover:bg-gray-800'
-                  }`}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-all ${
+                  activeTab === 'rgb'
+                    ? 'bg-purple-600 text-white shadow-md'
+                    : 'text-gray-300 hover:bg-gray-800'
+                }`}
                 onClick={() => setActiveTab('rgb')}
               >
                 <Layers className="h-3.5 w-3.5 mr-1.5" />
@@ -499,11 +519,12 @@ export const Component: React.FC = () => {
                   </div>
                   {sortOptions.map((option) => (
                     <div
-                      className={`flex items-center px-2 py-1.5 hover:bg-gray-700 rounded cursor-pointer ${sortBy.value === option.value &&
+                      className={`flex items-center px-2 py-1.5 hover:bg-gray-700 rounded cursor-pointer ${
+                        sortBy.value === option.value &&
                         sortBy.direction === option.direction
-                        ? 'bg-gray-700/50'
-                        : ''
-                        }`}
+                          ? 'bg-gray-700/50'
+                          : ''
+                      }`}
                       key={`${option.value}-${option.direction}`}
                       onClick={() => {
                         setSortBy(option)
@@ -522,7 +543,9 @@ export const Component: React.FC = () => {
         {displayedChannels.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {displayedChannels.map((channel) => {
-              const asset = channel.asset_id ? assets[channel.asset_id] : undefined
+              const asset = channel.asset_id
+                ? assets[channel.asset_id]
+                : undefined
               return (
                 <ChannelCard
                   asset={asset}

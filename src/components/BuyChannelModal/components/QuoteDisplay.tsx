@@ -65,8 +65,9 @@ export const QuoteDisplay: React.FC<QuoteDisplayProps> = ({
           <span className="text-white font-medium">
             {formatNumberWithCommas(
               (
-                ((quote as any).to_asset?.amount || (quote as any).to_amount || 0) /
-                Math.pow(10, assetInfo.precision)
+                ((quote as any).to_asset?.amount ||
+                  (quote as any).to_amount ||
+                  0) / Math.pow(10, assetInfo.precision)
               ).toFixed(assetInfo.precision)
             )}{' '}
             {assetInfo.ticker}

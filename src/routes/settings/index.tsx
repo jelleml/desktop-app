@@ -265,7 +265,7 @@ export const Component: React.FC = () => {
 
       // Then start the node with the updated settings
       toast.info('Starting node with new settings...')
-      
+
       await invoke('start_node', {
         accountName: currentAccount.name,
         daemonListeningPort: currentAccount.daemon_listening_port,
@@ -273,7 +273,7 @@ export const Component: React.FC = () => {
         ldkPeerListeningPort: currentAccount.ldk_peer_listening_port,
         network: currentAccount.network,
       })
-      
+
       // Wait for node to be ready
       await waitForNodeReady({
         timeoutMs: 60000,
@@ -537,10 +537,10 @@ export const Component: React.FC = () => {
         <div className="w-16 h-16 mb-8">
           <div className="w-full h-full border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">{t('settings.loadingSettings')}</h2>
-        <p className="text-gray-400">
-          {t('settings.pleaseWait')}
-        </p>
+        <h2 className="text-2xl font-bold text-white mb-2">
+          {t('settings.loadingSettings')}
+        </h2>
+        <p className="text-gray-400">{t('settings.pleaseWait')}</p>
       </div>
     )
   }
@@ -677,7 +677,10 @@ export const Component: React.FC = () => {
                                         newUrls[index] = e.target.value
                                         field.onChange(newUrls)
                                       }}
-                                      placeholder={t('settings.makerUrlPlaceholder') || 'Maker URL'}
+                                      placeholder={
+                                        t('settings.makerUrlPlaceholder') ||
+                                        'Maker URL'
+                                      }
                                       type="text"
                                       value={url}
                                     />
@@ -715,9 +718,9 @@ export const Component: React.FC = () => {
                                     <button
                                       className="p-3 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-colors"
                                       onClick={() => {
-                                        const newUrls = (field.value ?? []).filter(
-                                          (_, i) => i !== index
-                                        )
+                                        const newUrls = (
+                                          field.value ?? []
+                                        ).filter((_, i) => i !== index)
                                         field.onChange(newUrls)
                                         // If we're removing the default URL, clear it
                                         if (url === watch('defaultMakerUrl')) {
@@ -956,7 +959,9 @@ export const Component: React.FC = () => {
                         <Download className="w-5 h-5 text-blue-400" />
                       </div>
                       <div className="text-left">
-                        <div className="font-semibold">{t('settings.backupWallet')}</div>
+                        <div className="font-semibold">
+                          {t('settings.backupWallet')}
+                        </div>
                         <div className="text-sm text-gray-400">
                           {t('settings.exportBackup')}
                         </div>
@@ -1003,7 +1008,9 @@ export const Component: React.FC = () => {
                         isNodeRunning ? 'text-green-400' : 'text-red-400'
                       }`}
                     >
-                      {isNodeRunning ? t('settings.nodeRunning') : t('settings.nodeOffline')}
+                      {isNodeRunning
+                        ? t('settings.nodeRunning')
+                        : t('settings.nodeOffline')}
                     </span>
                   </div>
                 </div>
@@ -1012,10 +1019,14 @@ export const Component: React.FC = () => {
                 <div className="p-4 bg-gray-700/30 rounded-xl border border-gray-700">
                   <div className="flex items-center gap-2 text-gray-400 mb-1">
                     <Server className="w-4 h-4" />
-                    <span className="text-sm font-medium">{t('settings.connectionType')}</span>
+                    <span className="text-sm font-medium">
+                      {t('settings.connectionType')}
+                    </span>
                   </div>
                   <p className="text-white font-medium ml-6">
-                    {isLocalNode ? t('settings.localNode') : t('settings.remoteNode')}
+                    {isLocalNode
+                      ? t('settings.localNode')
+                      : t('settings.remoteNode')}
                   </p>
                 </div>
               </div>
@@ -1065,7 +1076,9 @@ export const Component: React.FC = () => {
                 <div className="flex items-center gap-3">
                   {/* Entry selector */}
                   <div className="flex items-center gap-2 bg-gray-700/30 px-2 py-1 rounded-lg border border-gray-600">
-                    <span className="text-sm text-gray-400">{t('settings.show')}</span>
+                    <span className="text-sm text-gray-400">
+                      {t('settings.show')}
+                    </span>
                     <select
                       className="bg-transparent text-white text-sm focus:outline-none focus:ring-0 border-0"
                       onChange={(e) => {
@@ -1079,7 +1092,9 @@ export const Component: React.FC = () => {
                       <option value="200">200</option>
                       <option value="500">500</option>
                     </select>
-                    <span className="text-sm text-gray-400">{t('settings.entries')}</span>
+                    <span className="text-sm text-gray-400">
+                      {t('settings.entries')}
+                    </span>
                   </div>
 
                   {/* Action buttons */}

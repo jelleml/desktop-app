@@ -2,7 +2,10 @@ import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { TFunction } from 'i18next'
 import { toast } from 'react-toastify'
 
-import { TradingPair, getAssetId } from '../../../slices/makerApi/makerApi.slice'
+import {
+  TradingPair,
+  getAssetId,
+} from '../../../slices/makerApi/makerApi.slice'
 import { Asset as NiaAsset } from 'kaleidoswap-sdk'
 import { logger } from '../../../utils/logger'
 
@@ -163,13 +166,19 @@ export const createSwapExecutor = (
 
       // Use asset_id from form (which was set from quote response) if available
       // This ensures we use the protocol ID that the maker returned in the quote
-      const fromAssetId = data.fromAssetId ||
+      const fromAssetId =
+        data.fromAssetId ||
         (assets.find((asset) => asset.ticker === data.fromAsset)
-          ? getAssetId(assets.find((asset) => asset.ticker === data.fromAsset)! as any)
+          ? getAssetId(
+              assets.find((asset) => asset.ticker === data.fromAsset)! as any
+            )
           : 'btc')
-      const toAssetId = data.toAssetId ||
+      const toAssetId =
+        data.toAssetId ||
         (assets.find((asset) => asset.ticker === data.toAsset)
-          ? getAssetId(assets.find((asset) => asset.ticker === data.toAsset)! as any)
+          ? getAssetId(
+              assets.find((asset) => asset.ticker === data.toAsset)! as any
+            )
           : 'btc')
 
       if (!fromAssetId || !toAssetId) {

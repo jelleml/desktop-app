@@ -12,10 +12,7 @@ import {
   renderStatusBadge,
 } from '../../../components/ui/Table'
 import { formatDate } from '../../../helpers/date'
-import {
-  nodeApi,
-  Transfer,
-} from '../../../slices/nodeApi/nodeApi.slice'
+import { nodeApi, Transfer } from '../../../slices/nodeApi/nodeApi.slice'
 import { getAssignmentAmount } from '../../../utils/rgbUtils'
 
 export const Component = () => {
@@ -59,7 +56,9 @@ export const Component = () => {
         if (assetExists) {
           setSelectedAssetId(urlAssetId)
         } else if (!selectedAssetId && (assetsResponse?.data?.nia || [])[0]) {
-          setSelectedAssetId((assetsResponse.data?.nia || [])[0].asset_id || null)
+          setSelectedAssetId(
+            (assetsResponse.data?.nia || [])[0].asset_id || null
+          )
         }
       } else if (!selectedAssetId && (assetsResponse?.data?.nia || [])[0]) {
         setSelectedAssetId((assetsResponse.data?.nia || [])[0].asset_id || null)
@@ -172,7 +171,9 @@ export const Component = () => {
       // Apply search filter
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase()
-        const matchesTxid = (transfer.txid || '').toLowerCase().includes(searchLower)
+        const matchesTxid = (transfer.txid || '')
+          .toLowerCase()
+          .includes(searchLower)
         const matchesType = (getKindLabel(transfer.kind) || '')
           .toLowerCase()
           .includes(searchLower)
@@ -227,7 +228,9 @@ export const Component = () => {
 
   // Get unique statuses for filter dropdown
   const uniqueStatuses = Array.from(
-    new Set((transfersResponse.data?.transfers || []).map((t: any) => t.status) || [])
+    new Set(
+      (transfersResponse.data?.transfers || []).map((t: any) => t.status) || []
+    )
   )
 
   return (
@@ -417,7 +420,9 @@ export const Component = () => {
                     >
                       {transfer.kind === 'Send' ? '-' : '+'}
                       {formatAmount(
-                        transfer.requested_assignment ? getAssignmentAmount(transfer.requested_assignment) : 0
+                        transfer.requested_assignment
+                          ? getAssignmentAmount(transfer.requested_assignment)
+                          : 0
                       )}
                     </span>
                   ),
@@ -460,19 +465,19 @@ export const Component = () => {
                   {(searchTerm ||
                     statusFilter !== 'all' ||
                     typeFilter !== 'all') && (
-                      <Button
-                        className="mt-4"
-                        onClick={() => {
-                          setSearchTerm('')
-                          setStatusFilter('all')
-                          setTypeFilter('all')
-                        }}
-                        size="sm"
-                        variant="outline"
-                      >
-                        {t('assets.clearFilters')}
-                      </Button>
-                    )}
+                    <Button
+                      className="mt-4"
+                      onClick={() => {
+                        setSearchTerm('')
+                        setStatusFilter('all')
+                        setTypeFilter('all')
+                      }}
+                      size="sm"
+                      variant="outline"
+                    >
+                      {t('assets.clearFilters')}
+                    </Button>
+                  )}
                 </div>
               }
               gridClassName="grid-cols-5"
@@ -497,19 +502,19 @@ export const Component = () => {
               {(searchTerm ||
                 statusFilter !== 'all' ||
                 typeFilter !== 'all') && (
-                  <Button
-                    className="mt-4"
-                    onClick={() => {
-                      setSearchTerm('')
-                      setStatusFilter('all')
-                      setTypeFilter('all')
-                    }}
-                    size="sm"
-                    variant="outline"
-                  >
-                    {t('assets.clearFilters')}
-                  </Button>
-                )}
+                <Button
+                  className="mt-4"
+                  onClick={() => {
+                    setSearchTerm('')
+                    setStatusFilter('all')
+                    setTypeFilter('all')
+                  }}
+                  size="sm"
+                  variant="outline"
+                >
+                  {t('assets.clearFilters')}
+                </Button>
+              )}
             </div>
           )}
 
@@ -559,7 +564,9 @@ export const Component = () => {
                       >
                         {transfer.kind === 'Send' ? '-' : '+'}
                         {formatAmount(
-                          transfer.requested_assignment ? getAssignmentAmount(transfer.requested_assignment) : 0
+                          transfer.requested_assignment
+                            ? getAssignmentAmount(transfer.requested_assignment)
+                            : 0
                         )}{' '}
                         {getSelectedAsset()?.ticker}
                       </span>

@@ -104,7 +104,8 @@ export const Component = () => {
         const response = await getBtcBalance()
         if (response.data) {
           const totalSpendable =
-            (response.data.vanilla?.spendable ?? 0) + (response.data.colored?.spendable ?? 0)
+            (response.data.vanilla?.spendable ?? 0) +
+            (response.data.colored?.spendable ?? 0)
 
           setInsufficientBalance(totalSpendable < MIN_CHANNEL_CAPACITY)
         } else {
@@ -193,7 +194,7 @@ export const Component = () => {
       if (!wasHandled) {
         setChannelOpeningError(
           error?.data?.error ||
-          (error instanceof Error ? error.message : 'Failed to open channel')
+            (error instanceof Error ? error.message : 'Failed to open channel')
         )
         setStep(4)
       }

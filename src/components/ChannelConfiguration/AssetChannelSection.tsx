@@ -62,9 +62,7 @@ export const AssetChannelSection: React.FC<AssetChannelSectionProps> = ({
                 {t('channelConfiguration.assetSection.noAssetsTitle')}
               </h3>
               <div className="mt-2 text-sm text-yellow-300">
-                <p>
-                  {t('channelConfiguration.assetSection.noAssetsMessage')}
-                </p>
+                <p>{t('channelConfiguration.assetSection.noAssetsMessage')}</p>
               </div>
             </div>
           </div>
@@ -87,7 +85,9 @@ export const AssetChannelSection: React.FC<AssetChannelSectionProps> = ({
               render={({ field }) => (
                 <AssetSelectWithModal
                   className="w-full"
-                  fieldLabel={t('channelConfiguration.assetSection.chooseAsset')}
+                  fieldLabel={t(
+                    'channelConfiguration.assetSection.chooseAsset'
+                  )}
                   onChange={field.onChange}
                   options={Object.entries(assetMap).map(
                     ([assetId, assetInfo]) => ({
@@ -102,7 +102,9 @@ export const AssetChannelSection: React.FC<AssetChannelSectionProps> = ({
                   searchPlaceholder={t(
                     'channelConfiguration.assetSection.searchPlaceholder'
                   )}
-                  title={t('channelConfiguration.assetSection.selectAssetTitle')}
+                  title={t(
+                    'channelConfiguration.assetSection.selectAssetTitle'
+                  )}
                   value={field.value}
                 />
               )}

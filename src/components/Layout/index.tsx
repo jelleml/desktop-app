@@ -124,13 +124,17 @@ const SidebarNavItem = ({ item, isCollapsed }: NavItemProps) => {
   }
 
   return (
-    <div className="relative group" title={isCollapsed ? item.label : undefined}>
+    <div
+      className="relative group"
+      title={isCollapsed ? item.label : undefined}
+    >
       <NavLink
         className={({ isActive }) => `
           flex items-center py-3.5 px-4 rounded-xl transition-all duration-300
-          ${isActive
-            ? 'bg-cyan/10 text-white font-semibold border-l-2 border-cyan'
-            : 'text-gray-400 hover:text-white hover:bg-blue-darker/80 hover:shadow-md'
+          ${
+            isActive
+              ? 'bg-cyan/10 text-white font-semibold border-l-2 border-cyan'
+              : 'text-gray-400 hover:text-white hover:bg-blue-darker/80 hover:shadow-md'
           }
           ${isCollapsed ? 'justify-center' : hasSubMenu ? 'justify-between' : 'justify-start space-x-4'}
           transform hover:translate-x-1 active:scale-[0.98]
@@ -142,7 +146,9 @@ const SidebarNavItem = ({ item, isCollapsed }: NavItemProps) => {
           <div className="transition-transform duration-300 group-hover:scale-110">
             {item.icon}
           </div>
-          {!isCollapsed && <span className="font-semibold text-base">{item.label}</span>}
+          {!isCollapsed && (
+            <span className="font-semibold text-base">{item.label}</span>
+          )}
         </div>
         {hasSubMenu && !isCollapsed && (
           <ChevronRight
@@ -165,7 +171,9 @@ const SidebarNavItem = ({ item, isCollapsed }: NavItemProps) => {
                 key={index}
                 onClick={() => handleSubMenuClick(subItem)}
               >
-                <div className="transition-transform duration-200 hover:scale-110">{subItem.icon}</div>
+                <div className="transition-transform duration-200 hover:scale-110">
+                  {subItem.icon}
+                </div>
                 <span className="font-medium">{subItem.label}</span>
                 {subItem.disabled && (
                   <span className="text-[0.6rem] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full ml-auto font-semibold">
@@ -225,7 +233,9 @@ const DropdownMenu = ({
                   transform hover:scale-[1.02] active:scale-[0.98]"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <div className="text-cyan transition-transform duration-300 hover:scale-110">{icon}</div>
+        <div className="text-cyan transition-transform duration-300 hover:scale-110">
+          {icon}
+        </div>
         <span className="font-medium">{title}</span>
         <ChevronRight
           className={`w-4 h-4 transition-all duration-300 ${isOpen ? 'rotate-90 text-cyan' : ''}`}
@@ -246,8 +256,12 @@ const DropdownMenu = ({
                 key={item.label || index}
                 onClick={() => handleItemClick(item)}
               >
-                <div className="text-cyan transition-transform duration-200 group-hover:scale-110">{item.icon}</div>
-                <span className="text-sm font-medium group-hover:text-white">{item.label}</span>
+                <div className="text-cyan transition-transform duration-200 group-hover:scale-110">
+                  {item.icon}
+                </div>
+                <span className="text-sm font-medium group-hover:text-white">
+                  {item.label}
+                </span>
               </div>
             ))}
           </div>
@@ -296,9 +310,11 @@ const UserProfile = ({
       >
         <div className={`flex items-center ${!isCollapsed && 'space-x-2'}`}>
           <div className="relative flex-shrink-0">
-            <div className="w-8 h-8 bg-gradient-to-br from-purple via-purple/80 to-cyan/50 rounded-full flex items-center justify-center
+            <div
+              className="w-8 h-8 bg-gradient-to-br from-purple via-purple/80 to-cyan/50 rounded-full flex items-center justify-center
                           shadow-lg shadow-purple/20 ring-2 ring-purple/10 transition-all duration-300
-                          group-hover:shadow-xl group-hover:shadow-purple/30 group-hover:ring-purple/20">
+                          group-hover:shadow-xl group-hover:shadow-purple/30 group-hover:ring-purple/20"
+            >
               <User className="w-4 h-4 text-white" />
             </div>
             <div
@@ -335,8 +351,10 @@ const UserProfile = ({
         >
           <div className="p-3 border-b border-divider/20 bg-gradient-to-br from-blue-darker/50 to-transparent">
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple via-purple/80 to-cyan/50 rounded-full flex items-center justify-center
-                            shadow-lg shadow-purple/30 ring-2 ring-purple/20">
+              <div
+                className="w-10 h-10 bg-gradient-to-br from-purple via-purple/80 to-cyan/50 rounded-full flex items-center justify-center
+                            shadow-lg shadow-purple/30 ring-2 ring-purple/20"
+              >
                 <User className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -366,8 +384,12 @@ const UserProfile = ({
                 key={item.label}
                 onClick={() => handleMenuItemClick(item)}
               >
-                <div className="text-cyan transition-transform duration-200 group-hover:scale-110">{item.icon}</div>
-                <span className="text-sm font-medium group-hover:text-white">{item.label}</span>
+                <div className="text-cyan transition-transform duration-200 group-hover:scale-110">
+                  {item.icon}
+                </div>
+                <span className="text-sm font-medium group-hover:text-white">
+                  {item.label}
+                </span>
               </div>
             ))}
 
@@ -492,7 +514,9 @@ export const Layout = (props: Props) => {
               new Decimal(tx.received ?? 0).minus(tx.sent ?? 0).gt(0)
           )
           .map((tx) => ({
-            amount: new Decimal(tx.received ?? 0).minus(tx.sent ?? 0).toString(),
+            amount: new Decimal(tx.received ?? 0)
+              .minus(tx.sent ?? 0)
+              .toString(),
             asset: 'BTC',
             confirmation_time: tx.confirmation_time,
             txId: tx.txid ?? '',
@@ -502,11 +526,11 @@ export const Layout = (props: Props) => {
       const highestBlockDeposit =
         filteredTransactions && filteredTransactions.length > 0
           ? filteredTransactions?.reduce((prev, current) =>
-            (prev?.confirmation_time?.height ?? 0) >
+              (prev?.confirmation_time?.height ?? 0) >
               (current?.confirmation_time?.height ?? 0)
-              ? prev
-              : current
-          )
+                ? prev
+                : current
+            )
           : undefined
 
       if (lastDeposit === undefined) {
@@ -661,8 +685,10 @@ export const Layout = (props: Props) => {
                                    transform hover:scale-[1.02] active:scale-[0.98]"
                         onClick={() => handleTransactionAction('deposit')}
                       >
-                        <div className="p-1.5 rounded-full bg-cyan/10 text-cyan group-hover:bg-cyan/20
-                                      transition-all duration-300 group-hover:scale-110 shadow-lg shadow-cyan/20">
+                        <div
+                          className="p-1.5 rounded-full bg-cyan/10 text-cyan group-hover:bg-cyan/20
+                                      transition-all duration-300 group-hover:scale-110 shadow-lg shadow-cyan/20"
+                        >
                           <ArrowDownLeft className="w-4 h-4" />
                         </div>
                         <span className="font-semibold text-sm group-hover:text-cyan transition-colors duration-300">
@@ -678,8 +704,10 @@ export const Layout = (props: Props) => {
                                    transform hover:scale-[1.02] active:scale-[0.98]"
                         onClick={() => handleTransactionAction('withdraw')}
                       >
-                        <div className="p-1.5 rounded-full bg-purple/10 text-purple group-hover:bg-purple/20
-                                      transition-all duration-300 group-hover:scale-110 shadow-lg shadow-purple/20">
+                        <div
+                          className="p-1.5 rounded-full bg-purple/10 text-purple group-hover:bg-purple/20
+                                      transition-all duration-300 group-hover:scale-110 shadow-lg shadow-purple/20"
+                        >
                           <ArrowUpRight className="w-4 h-4" />
                         </div>
                         <span className="font-semibold text-sm group-hover:text-purple transition-colors duration-300">
@@ -699,16 +727,19 @@ export const Layout = (props: Props) => {
                         <NavLink
                           className={({ isActive }) => `
                               flex items-center space-x-4 px-4 py-3 rounded-xl text-sm group
-                              ${isActive
-                              ? 'bg-gradient-to-r from-cyan/15 to-transparent text-cyan font-semibold border-l-2 border-cyan shadow-lg shadow-cyan/5'
-                              : 'text-gray-400 hover:text-white hover:bg-blue-darker/80 hover:translate-x-1'
-                            }
+                              ${
+                                isActive
+                                  ? 'bg-gradient-to-r from-cyan/15 to-transparent text-cyan font-semibold border-l-2 border-cyan shadow-lg shadow-cyan/5'
+                                  : 'text-gray-400 hover:text-white hover:bg-blue-darker/80 hover:translate-x-1'
+                              }
                               transition-all duration-300 transform active:scale-[0.98]
                             `}
                           key={item.to}
                           to={item.to}
                         >
-                          <div className="transition-transform duration-300 group-hover:scale-110">{item.icon}</div>
+                          <div className="transition-transform duration-300 group-hover:scale-110">
+                            {item.icon}
+                          </div>
                           <span className="font-medium">{item.label}</span>
                         </NavLink>
                       ))}
@@ -742,8 +773,10 @@ export const Layout = (props: Props) => {
                         ${isSidebarCollapsed ? 'ml-20' : 'ml-72'}`}
           >
             {/* Top bar with page title and notifications */}
-            <div className="sticky top-0 z-30 bg-blue-darkest backdrop-blur-xl border-b border-divider/20 px-6 py-4
-                          shadow-lg shadow-black/20">
+            <div
+              className="sticky top-0 z-30 bg-blue-darkest backdrop-blur-xl border-b border-divider/20 px-6 py-4
+                          shadow-lg shadow-black/20"
+            >
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4 animate-fadeInUp">
                   {(() => {
@@ -759,8 +792,10 @@ export const Layout = (props: Props) => {
 
                     return (
                       <>
-                        <div className="p-3 bg-gradient-to-br from-cyan/20 to-cyan/5 rounded-xl text-cyan
-                                      shadow-lg shadow-cyan/10 ring-1 ring-cyan/20">
+                        <div
+                          className="p-3 bg-gradient-to-br from-cyan/20 to-cyan/5 rounded-xl text-cyan
+                                      shadow-lg shadow-cyan/10 ring-1 ring-cyan/20"
+                        >
                           {icon}
                         </div>
                         <h1 className="text-2xl font-bold text-white tracking-tight">
@@ -827,9 +862,11 @@ export const Layout = (props: Props) => {
                   >
                     <Bell className="w-5 h-5" />
                     {notifications.length > 0 && (
-                      <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-gradient-to-br from-cyan to-cyan/80
+                      <span
+                        className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-gradient-to-br from-cyan to-cyan/80
                                    text-white text-xs font-bold flex items-center justify-center rounded-full
-                                   shadow-lg shadow-cyan/30 animate-pulse ring-2 ring-blue-darkest">
+                                   shadow-lg shadow-cyan/30 animate-pulse ring-2 ring-blue-darkest"
+                      >
                         {notifications.length}
                       </span>
                     )}
@@ -842,7 +879,7 @@ export const Layout = (props: Props) => {
                       isOpen={isChannelMenuOpen}
                       items={CHANNEL_MENU_ITEMS}
                       menuRef={channelMenuRef}
-                      onItemClick={() => { }} // Add empty function to satisfy the type
+                      onItemClick={() => {}} // Add empty function to satisfy the type
                       setIsOpen={setIsChannelMenuOpen}
                       title={t('navigation.channels')}
                     />
@@ -893,9 +930,7 @@ export const Layout = (props: Props) => {
             </div>
 
             {/* Main content area */}
-            <div className="p-6">
-              {props.children}
-            </div>
+            <div className="p-6">{props.children}</div>
           </main>
         </div>
       ) : (

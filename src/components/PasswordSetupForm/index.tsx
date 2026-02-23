@@ -79,11 +79,15 @@ export const PasswordSetupForm = ({
                           disabled:opacity-50 disabled:cursor-not-allowed
                           hover:border-slate-600/70"
                 disabled={isDisabled}
-                placeholder={t('components.passwordSetupForm.createPasswordPlaceholder')}
+                placeholder={t(
+                  'components.passwordSetupForm.createPasswordPlaceholder'
+                )}
                 type={isPasswordVisible ? 'text' : 'password'}
                 {...form.register('password', {
                   minLength: {
-                    message: t('components.passwordSetupForm.passwordMinLength'),
+                    message: t(
+                      'components.passwordSetupForm.passwordMinLength'
+                    ),
                     value: 8,
                   },
                   required: t('components.passwordSetupForm.passwordRequired'),
@@ -137,14 +141,20 @@ export const PasswordSetupForm = ({
                           disabled:opacity-50 disabled:cursor-not-allowed
                           hover:border-slate-600/70"
                 disabled={isDisabled}
-                placeholder={t('components.passwordSetupForm.confirmPasswordPlaceholder')}
+                placeholder={t(
+                  'components.passwordSetupForm.confirmPasswordPlaceholder'
+                )}
                 type={isPasswordVisible ? 'text' : 'password'}
                 {...form.register('confirmPassword', {
                   minLength: {
-                    message: t('components.passwordSetupForm.passwordMinLength'),
+                    message: t(
+                      'components.passwordSetupForm.passwordMinLength'
+                    ),
                     value: 8,
                   },
-                  required: t('components.passwordSetupForm.passwordConfirmRequired'),
+                  required: t(
+                    'components.passwordSetupForm.passwordConfirmRequired'
+                  ),
                   validate: (value) =>
                     value === form.getValues('password') ||
                     t('components.passwordSetupForm.passwordsDoNotMatch'),
@@ -308,7 +318,9 @@ export const PasswordSetupForm = ({
               type="submit"
               variant="primary"
             >
-              {isDisabled ? t('components.passwordSetupForm.initializingButton') : t('components.passwordSetupForm.initializeButton')}
+              {isDisabled
+                ? t('components.passwordSetupForm.initializingButton')
+                : t('components.passwordSetupForm.initializeButton')}
             </Button>
             {isDisabled && (
               <div

@@ -177,18 +177,18 @@ export const Component = () => {
     <div className="w-full bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-slate-800/50 p-6">
       {(networkInfoResponse.data?.network as unknown as BitcoinNetwork) !==
         'Mainnet' && (
-          <div className="mb-6">
-            <NetworkWarningAlert
-              faucetUrl={
-                (networkInfoResponse.data
-                  ?.network as unknown as BitcoinNetwork) === 'Signet'
-                  ? 'https://faucet.mutinynet.com/'
-                  : undefined
-              }
-              network={networkInfoResponse.data?.network || 'Testnet'}
-            />
-          </div>
-        )}
+        <div className="mb-6">
+          <NetworkWarningAlert
+            faucetUrl={
+              (networkInfoResponse.data
+                ?.network as unknown as BitcoinNetwork) === 'Signet'
+                ? 'https://faucet.mutinynet.com/'
+                : undefined
+            }
+            network={networkInfoResponse.data?.network || 'Testnet'}
+          />
+        </div>
+      )}
 
       {onChainBalance === 0 && offChainBalance === 0 && !isLoading && (
         <div className="mb-6">
@@ -471,8 +471,12 @@ export const Component = () => {
             <AssetRow
               asset={asset as NiaAsset}
               key={asset.asset_id}
-              offChainBalance={(assetBalances[asset.asset_id || ''] || {}).offChain || 0}
-              onChainBalance={(assetBalances[asset.asset_id || ''] || {}).onChain || 0}
+              offChainBalance={
+                (assetBalances[asset.asset_id || ''] || {}).offChain || 0
+              }
+              onChainBalance={
+                (assetBalances[asset.asset_id || ''] || {}).onChain || 0
+              }
             />
           ))}
         </div>

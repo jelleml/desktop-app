@@ -82,9 +82,9 @@ export const RootRoute = () => {
 
               <p className="text-gray-400 mb-6">
                 {nodeInfoResponse.error &&
-                  typeof nodeInfoResponse.error === 'object' &&
-                  'status' in nodeInfoResponse.error &&
-                  (nodeInfoResponse.error as any).status === 400
+                typeof nodeInfoResponse.error === 'object' &&
+                'status' in nodeInfoResponse.error &&
+                (nodeInfoResponse.error as any).status === 400
                   ? t('rootRoute.noWalletFound')
                   : t('rootRoute.nodeNotRunning')}
               </p>

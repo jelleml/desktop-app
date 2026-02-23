@@ -114,17 +114,17 @@ export const Component: React.FC = () => {
   const uniqueAssets = useMemo(() => {
     const assets = new Set<string>(['BTC'])
 
-      // Add assets from off-chain deposits
-      ; (paymentsData?.payments || [])
-        .filter((payment) => payment.inbound)
-        .forEach((payment) => {
-          if (payment.asset_id) {
-            const ticker = (listAssetsData?.nia || []).find(
-              (a) => a.asset_id === payment.asset_id
-            )?.ticker
-            if (ticker) assets.add(ticker)
-          }
-        })
+    // Add assets from off-chain deposits
+    ;(paymentsData?.payments || [])
+      .filter((payment) => payment.inbound)
+      .forEach((payment) => {
+        if (payment.asset_id) {
+          const ticker = (listAssetsData?.nia || []).find(
+            (a) => a.asset_id === payment.asset_id
+          )?.ticker
+          if (ticker) assets.add(ticker)
+        }
+      })
 
     return Array.from(assets).sort()
   }, [paymentsData, listAssetsData])
@@ -178,8 +178,9 @@ export const Component: React.FC = () => {
           ? (payment.asset_amount ?? 0).toString()
           : ((payment.amt_msat ?? 0) / 1000).toString(),
         asset:
-          (listAssetsData?.nia || []).find((a) => a.asset_id === payment.asset_id)
-            ?.ticker || 'BTC',
+          (listAssetsData?.nia || []).find(
+            (a) => a.asset_id === payment.asset_id
+          )?.ticker || 'BTC',
         txId: payment.payment_hash ?? '',
         type: 'off-chain' as const,
         timestamp: undefined as number | undefined,
@@ -435,7 +436,9 @@ export const Component: React.FC = () => {
             <div className="text-center py-8 text-slate-400 bg-slate-800/30 rounded-lg border border-slate-700">
               {searchTerm || typeFilter !== 'all' || assetFilter !== 'all' ? (
                 <>
-                  <p>{t('components.walletHistory.deposits.noDepositsFiltered')}</p>
+                  <p>
+                    {t('components.walletHistory.deposits.noDepositsFiltered')}
+                  </p>
                   <Button
                     className="mt-4"
                     onClick={() => {

@@ -116,9 +116,9 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
       if (fromAsset === 'BTC' || toAsset === 'BTC') {
         const channels = await listChannels()
         const maxHtlc = Math.max(
-          ...(channels.data?.channels ?? []).map(
+          ...((channels.data?.channels ?? []).map(
             (c) => c.next_outbound_htlc_limit_msat || 0
-          ) || [0]
+          ) || [0])
         )
         setMaxOutboundHtlc(maxHtlc || 0)
 
@@ -503,13 +503,17 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
 
   // Get the appropriate balance label based on direction
   const getBalanceLabel = (isFromAsset: boolean) => {
-    return isFromAsset ? t('tradeManual.makerForm.balance.available') + ':' : t('tradeManual.makerForm.info.canReceiveUpTo') + ':'
+    return isFromAsset
+      ? t('tradeManual.makerForm.balance.available') + ':'
+      : t('tradeManual.makerForm.info.canReceiveUpTo') + ':'
   }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-1 mb-4">
-        <h2 className="text-xl font-semibold text-white">{t('tradeManual.makerForm.title')}</h2>
+        <h2 className="text-xl font-semibold text-white">
+          {t('tradeManual.makerForm.title')}
+        </h2>
         <p className="text-sm text-slate-400">
           {t('tradeManual.makerForm.description')}
         </p>
@@ -738,9 +742,7 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
 
           <div className="flex items-center gap-2 text-xs text-slate-400 p-3 bg-slate-800/30 rounded-xl border border-slate-700">
             <Info className="h-4 w-4 text-blue-500 flex-shrink-0" />
-            <p>
-              {t('tradeManual.makerForm.info.sufficientBalanceWarning')}
-            </p>
+            <p>{t('tradeManual.makerForm.info.sufficientBalanceWarning')}</p>
           </div>
 
           <button
@@ -777,7 +779,9 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
             <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold text-white step-indicator">
               2
             </div>
-            <h3 className="text-md font-medium text-white">{t('tradeManual.makerForm.buttons.shareWithTaker')}</h3>
+            <h3 className="text-md font-medium text-white">
+              {t('tradeManual.makerForm.buttons.shareWithTaker')}
+            </h3>
           </div>
           <p className="text-sm text-slate-400 ml-8 mb-4">
             {t('tradeManual.makerForm.info.swapInitiated')}
@@ -806,7 +810,9 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
             <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold text-white step-indicator">
               3
             </div>
-            <h3 className="text-md font-medium text-white">{t('tradeManual.makerForm.buttons.executeSwap')}</h3>
+            <h3 className="text-md font-medium text-white">
+              {t('tradeManual.makerForm.buttons.executeSwap')}
+            </h3>
           </div>
           <p className="text-sm text-slate-400 ml-8 mb-4">
             {t('tradeManual.makerForm.info.executeInfo')}

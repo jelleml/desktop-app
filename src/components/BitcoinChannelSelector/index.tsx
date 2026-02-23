@@ -289,10 +289,14 @@ export const BitcoinChannelSelector: React.FC<BitcoinChannelSelectorProps> = ({
           <div className="flex justify-between text-xs text-gray-500 px-1">
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-sm shadow-purple-500/50" />
-              <span>{t('channelConfiguration.bitcoinChannel.zeroSpending')}</span>
+              <span>
+                {t('channelConfiguration.bitcoinChannel.zeroSpending')}
+              </span>
             </span>
             <span className="flex items-center gap-1.5">
-              <span>{t('channelConfiguration.bitcoinChannel.fullSpending')}</span>
+              <span>
+                {t('channelConfiguration.bitcoinChannel.fullSpending')}
+              </span>
               <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50" />
             </span>
           </div>

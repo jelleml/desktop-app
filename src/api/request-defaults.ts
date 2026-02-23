@@ -1,6 +1,6 @@
 /**
  * Request Defaults and Interceptors
- * 
+ *
  * Centralized handling of default request parameters
  */
 
@@ -10,12 +10,12 @@ import type {
   CreateUtxosRequest,
   RefreshTransfersRequest as RefreshRequest,
   FailTransfersRequest,
-} from 'kaleidoswap-sdk';
+} from 'kaleidoswap-sdk'
 
 /**
  * Default values for common request parameters
  */
-export const DEFAULT_SKIP_SYNC = false;
+export const DEFAULT_SKIP_SYNC = false
 
 /**
  * Request types that require skip_sync field
@@ -25,7 +25,7 @@ export type SkipSyncRequest =
   | SendRgbRequest
   | CreateUtxosRequest
   | RefreshRequest
-  | FailTransfersRequest;
+  | FailTransfersRequest
 
 /**
  * Ensure skip_sync is present in requests that require it
@@ -36,15 +36,15 @@ export function ensureSkipSync<T extends Partial<SkipSyncRequest>>(
   return {
     skip_sync: DEFAULT_SKIP_SYNC,
     ...request,
-  };
+  }
 }
 
 /**
  * Request options for node API calls
  */
 export interface NodeRequestOptions {
-  skipSync?: boolean;
-  skipValidation?: boolean;
+  skipSync?: boolean
+  skipValidation?: boolean
 }
 
 /**
@@ -54,14 +54,14 @@ export function applyRequestDefaults<T>(
   request: T,
   options?: NodeRequestOptions
 ): T & Partial<SkipSyncRequest> {
-  const defaults: Partial<SkipSyncRequest> = {};
+  const defaults: Partial<SkipSyncRequest> = {}
 
   if (options?.skipSync !== undefined) {
-    defaults.skip_sync = options.skipSync;
+    defaults.skip_sync = options.skipSync
   }
 
   return {
     ...request,
     ...defaults,
-  };
+  }
 }

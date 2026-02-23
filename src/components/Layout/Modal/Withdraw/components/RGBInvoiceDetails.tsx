@@ -24,11 +24,11 @@ const RGBInvoiceDetails: React.FC<RGBInvoiceDetailsProps> = ({
   // Format the asset balance with proper precision
   const formattedBalance = assetInfo
     ? formatAssetAmountWithPrecision(
-      assetInfo?.balance?.spendable || 0,
-      ticker,
-      bitcoinUnit,
-      assets.data?.nia
-    )
+        assetInfo?.balance?.spendable || 0,
+        ticker,
+        bitcoinUnit,
+        assets.data?.nia
+      )
     : '0'
 
   // Get amount from assignment and format for display
@@ -41,11 +41,11 @@ const RGBInvoiceDetails: React.FC<RGBInvoiceDetailsProps> = ({
 
   const formattedAmount = assignmentAmount
     ? formatAssetAmountWithPrecision(
-      assignmentAmount,
-      ticker,
-      bitcoinUnit,
-      assets.data?.nia
-    )
+        assignmentAmount,
+        ticker,
+        bitcoinUnit,
+        assets.data?.nia
+      )
     : null
 
   return (

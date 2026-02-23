@@ -333,7 +333,7 @@ export const Component = () => {
             rpc_connection_url: data.rpc_connection_url,
           })
         )
-        try {          
+        try {
           await invoke('start_node', {
             accountName: data.name,
             daemonListeningPort: data.daemon_listening_port,
@@ -341,7 +341,7 @@ export const Component = () => {
             ldkPeerListeningPort: data.ldk_peer_listening_port,
             network: data.network,
           })
-          
+
           // Wait for node to be ready with improved detection
           await waitForNodeReady({
             timeoutMs: 60000,
@@ -349,7 +349,7 @@ export const Component = () => {
               console.log('Node startup:', message)
             },
           })
-          
+
           toast.success(t('walletRestore.nodeStartedSuccess'))
         } catch (error) {
           toast.error(t('walletRestore.couldNotStartNode', { error }))
@@ -388,8 +388,8 @@ export const Component = () => {
             t('walletRestore.errorTitle'),
             restoreResponse.error
               ? t('walletRestore.errorRestoringWallet', {
-                error: JSON.stringify(restoreResponse.error),
-              })
+                  error: JSON.stringify(restoreResponse.error),
+                })
               : t('walletRestore.failedToRestore')
           )
           await invoke('stop_node')

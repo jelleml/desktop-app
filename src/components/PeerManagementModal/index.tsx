@@ -52,7 +52,9 @@ export const PeerManagementModal = ({ onClose }: PeerManagementModalProps) => {
       toast.success(t('peerManagement.success.disconnected'))
       getPeers()
     } catch (error: any) {
-      toast.error(error.data?.error || t('peerManagement.errors.disconnectFailed'))
+      toast.error(
+        error.data?.error || t('peerManagement.errors.disconnectFailed')
+      )
     }
   }
 
@@ -71,7 +73,9 @@ export const PeerManagementModal = ({ onClose }: PeerManagementModalProps) => {
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
             <Users className="w-6 h-6 text-blue-500" />
-            <h2 className="text-2xl font-bold text-white">{t('peerManagement.title')}</h2>
+            <h2 className="text-2xl font-bold text-white">
+              {t('peerManagement.title')}
+            </h2>
           </div>
           <button
             className="text-slate-400 hover:text-white transition-colors"

@@ -1,8 +1,8 @@
-import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { getNodeApiWrapper, MinimalState } from '../../api/client';
-import type { NodeApiWrapper } from '../../api/node-api-wrapper';
-import type { ApiResult } from '../../api/node-api-wrapper';
+import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react'
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { getNodeApiWrapper, MinimalState } from '../../api/client'
+import type { NodeApiWrapper } from '../../api/node-api-wrapper'
+import type { ApiResult } from '../../api/node-api-wrapper'
 import type {
   AddressResponse,
   AssetBalanceResponse,
@@ -59,7 +59,7 @@ import type {
   ListPeersResponse,
   ListSwapsResponse,
   WhitelistTradeRequest,
-} from 'kaleidoswap-sdk';
+} from 'kaleidoswap-sdk'
 
 export type {
   Assignment,
@@ -68,38 +68,38 @@ export type {
   NiaAsset,
   SwapDetails,
   Transfer,
-} from './types';
+} from './types'
 
-export { SwapStatus } from './types';
+export { SwapStatus } from './types'
 
 export type {
   MakerExecuteRequest,
   MakerInitRequest,
   MakerInitResponse,
-} from 'kaleidoswap-sdk';
+} from 'kaleidoswap-sdk'
 
 // TakerRequest kept as local type for backward compatibility
-export type { TakerRequest } from './types';
+export type { TakerRequest } from './types'
 
 export const Network = {
   Mainnet: 'mainnet',
   Testnet: 'testnet',
   Regtest: 'regtest',
   Signet: 'signet',
-} as const;
-export type Network = typeof Network[keyof typeof Network];
+} as const
+export type Network = (typeof Network)[keyof typeof Network]
 
 // Re-export types for backwards compatibility
-export type { SendPaymentResponse, InitResponse };
+export type { SendPaymentResponse, InitResponse }
 
 export interface NodeApiError {
-  status: number;
+  status: number
   data: {
-    error: string;
-  };
+    error: string
+  }
 }
 
-type ApiState = { getState: () => unknown };
+type ApiState = { getState: () => unknown }
 
 /**
  * Unified query function factory.
@@ -109,25 +109,27 @@ type ApiState = { getState: () => unknown };
 function queryFn<TArgs, TResult>(
   call: (wrapper: NodeApiWrapper, args: TArgs) => Promise<ApiResult<TResult>>
 ) {
-  return async (args: TArgs, api: ApiState): Promise<{ data: TResult } | { error: FetchBaseQueryError }> => {
+  return async (
+    args: TArgs,
+    api: ApiState
+  ): Promise<{ data: TResult } | { error: FetchBaseQueryError }> => {
     try {
-      const wrapper = await getNodeApiWrapper(api.getState() as MinimalState);
-      const result = await call(wrapper, args);
-      if ('error' in result && result.error) return { error: result.error };
-      return { data: result.data as TResult };
+      const wrapper = await getNodeApiWrapper(api.getState() as MinimalState)
+      const result = await call(wrapper, args)
+      if ('error' in result && result.error) return { error: result.error }
+      return { data: result.data as TResult }
     } catch (error) {
-      return { error: { status: 500, data: { error: String(error) } } };
+      return { error: { status: 500, data: { error: String(error) } } }
     }
-  };
+  }
 }
 
-import { TakerRequest } from './types';
+import { TakerRequest } from './types'
 
 export const nodeApi = createApi({
   reducerPath: 'nodeApi',
   baseQuery: fakeBaseQuery(),
   endpoints: (builder) => ({
-
     // ============================================================================
     // Wallet Management
     // ============================================================================
@@ -209,7 +211,10 @@ export const nodeApi = createApi({
       queryFn: queryFn((w, args) => w.getAssetBalance(args)),
     }),
 
-    issueNiaAsset: builder.mutation<IssueAssetNIAResponse, IssueAssetNIARequest>({
+    issueNiaAsset: builder.mutation<
+      IssueAssetNIAResponse,
+      IssueAssetNIARequest
+    >({
       queryFn: queryFn((w, args) => w.issueAssetNIA(args)),
     }),
 
@@ -269,11 +274,17 @@ export const nodeApi = createApi({
       queryFn: queryFn((w, args) => w.createRgbInvoice(args)),
     }),
 
-    decodeInvoice: builder.query<DecodeLNInvoiceResponse, DecodeLNInvoiceRequest>({
+    decodeInvoice: builder.query<
+      DecodeLNInvoiceResponse,
+      DecodeLNInvoiceRequest
+    >({
       queryFn: queryFn((w, args) => w.decodeLNInvoice(args)),
     }),
 
-    decodeRgbInvoice: builder.query<DecodeRGBInvoiceResponse, DecodeRGBInvoiceRequest>({
+    decodeRgbInvoice: builder.query<
+      DecodeRGBInvoiceResponse,
+      DecodeRGBInvoiceRequest
+    >({
       queryFn: queryFn((w, args) => w.decodeRgbInvoice(args)),
     }),
 
@@ -325,7 +336,7 @@ export const nodeApi = createApi({
       queryFn: queryFn((w, args) => w.signMessage(args)),
     }),
   }),
-});
+})
 
 export const {
   useAddressQuery,
@@ -369,4 +380,4 @@ export const {
   useWhitelistTradeMutation,
   useShutdownMutation,
   useLockMutation,
-} = nodeApi;
+} = nodeApi

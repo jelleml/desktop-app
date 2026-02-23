@@ -103,7 +103,7 @@ export const Component = () => {
             <img
               alt="KaleidoSwap"
               className="h-8 cursor-pointer"
-              onClick={() => { }}
+              onClick={() => {}}
               src={logoFull}
             />
           </div>

@@ -87,14 +87,14 @@ impl NodeProcess {
         // Try up to 10 port numbers after the base ports
         for i in 0..10 {
             if Self::is_port_available(daemon_port + i) {
-                daemon_port = daemon_port + i;
+                daemon_port += i;
                 break;
             }
         }
 
         for i in 0..10 {
             if Self::is_port_available(ldk_port + i) {
-                ldk_port = ldk_port + i;
+                ldk_port += i;
                 break;
             }
         }
@@ -165,21 +165,21 @@ impl NodeProcess {
         
         // First try graceful termination using process group
         let _ = Command::new("kill")
-            .args(&["-TERM", &format!("-{}", pid)])
+            .args(["-TERM", &format!("-{}", pid)])
             .output();
-        
+
         thread::sleep(Duration::from_secs(2));
-        
+
         // Check if process is still running and force kill if needed
         let check = Command::new("ps")
-            .args(&["-p", &pid.to_string()])
+            .args(["-p", &pid.to_string()])
             .output();
-            
+
         if let Ok(output) = check {
             if output.status.success() && !output.stdout.is_empty() {
                 println!("Process still running, sending SIGKILL");
                 let _ = Command::new("kill")
-                    .args(&["-KILL", &format!("-{}", pid)])
+                    .args(["-KILL", &format!("-{}", pid)])
                     .output();
             }
         }
@@ -431,21 +431,19 @@ impl NodeProcess {
                         let window_clone = Arc::clone(&window_for_thread);
                         std::thread::spawn(move || {
                             let reader = BufReader::new(stdout);
-                            for line in reader.lines() {
-                                if let Ok(line) = line {
-                                    println!("Node stdout: {}", line);
-                                    // Use add_log method with rotation
-                                    if let Ok(mut logs) = logs_clone.lock() {
-                                        logs.push(line.clone());
-                                        if logs.len() > MAX_LOGS_IN_MEMORY {
-                                            let drain_count = logs.len() - MAX_LOGS_IN_MEMORY;
-                                            logs.drain(0..drain_count);
-                                        }
+                            for line in reader.lines().map_while(Result::ok) {
+                                println!("Node stdout: {}", line);
+                                // Use add_log method with rotation
+                                if let Ok(mut logs) = logs_clone.lock() {
+                                    logs.push(line.clone());
+                                    if logs.len() > MAX_LOGS_IN_MEMORY {
+                                        let drain_count = logs.len() - MAX_LOGS_IN_MEMORY;
+                                        logs.drain(0..drain_count);
                                     }
-                                    if let Ok(window_guard) = window_clone.lock() {
-                                        if let Some(win) = window_guard.as_ref() {
-                                            let _ = win.emit("node-log", line);
-                                        }
+                                }
+                                if let Ok(window_guard) = window_clone.lock() {
+                                    if let Some(win) = window_guard.as_ref() {
+                                        let _ = win.emit("node-log", line);
                                     }
                                 }
                             }
@@ -457,21 +455,19 @@ impl NodeProcess {
                         let window_clone = Arc::clone(&window_for_thread);
                         std::thread::spawn(move || {
                             let reader = BufReader::new(stderr);
-                            for line in reader.lines() {
-                                if let Ok(line) = line {
-                                    println!("Node stderr: {}", line);
-                                    // Use add_log method with rotation
-                                    if let Ok(mut logs) = logs_clone.lock() {
-                                        logs.push(format!("Error: {}", line));
-                                        if logs.len() > MAX_LOGS_IN_MEMORY {
-                                            let drain_count = logs.len() - MAX_LOGS_IN_MEMORY;
-                                            logs.drain(0..drain_count);
-                                        }
+                            for line in reader.lines().map_while(Result::ok) {
+                                println!("Node stderr: {}", line);
+                                // Use add_log method with rotation
+                                if let Ok(mut logs) = logs_clone.lock() {
+                                    logs.push(format!("Error: {}", line));
+                                    if logs.len() > MAX_LOGS_IN_MEMORY {
+                                        let drain_count = logs.len() - MAX_LOGS_IN_MEMORY;
+                                        logs.drain(0..drain_count);
                                     }
-                                    if let Ok(window_guard) = window_clone.lock() {
-                                        if let Some(win) = window_guard.as_ref() {
-                                            let _ = win.emit("node-error", line);
-                                        }
+                                }
+                                if let Ok(window_guard) = window_clone.lock() {
+                                    if let Some(win) = window_guard.as_ref() {
+                                        let _ = win.emit("node-error", line);
                                     }
                                 }
                             }
@@ -695,25 +691,23 @@ impl NodeProcess {
     fn get_log_file_path(&self) -> Result<PathBuf, String> {
         let log_dir = if cfg!(debug_assertions) {
             PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("logs")
+        } else if cfg!(target_os = "macos") {
+            // macOS: ~/Library/Logs/com.kaleidoswap.dev/
+            let home =
+                env::var("HOME").map_err(|e| format!("Failed to get HOME directory: {}", e))?;
+            PathBuf::from(home).join("Library/Logs/com.kaleidoswap.dev")
+        } else if cfg!(target_os = "windows") {
+            // Windows: %APPDATA%\com.kaleidoswap.dev\logs
+            let app_data = env::var("APPDATA")
+                .map_err(|e| format!("Failed to get APPDATA directory: {}", e))?;
+            PathBuf::from(app_data)
+                .join("com.kaleidoswap.dev")
+                .join("logs")
         } else {
-            if cfg!(target_os = "macos") {
-                // macOS: ~/Library/Logs/com.kaleidoswap.dev/
-                let home =
-                    env::var("HOME").map_err(|e| format!("Failed to get HOME directory: {}", e))?;
-                PathBuf::from(home).join("Library/Logs/com.kaleidoswap.dev")
-            } else if cfg!(target_os = "windows") {
-                // Windows: %APPDATA%\com.kaleidoswap.dev\logs
-                let app_data = env::var("APPDATA")
-                    .map_err(|e| format!("Failed to get APPDATA directory: {}", e))?;
-                PathBuf::from(app_data)
-                    .join("com.kaleidoswap.dev")
-                    .join("logs")
-            } else {
-                // Linux: ~/.local/share/com.kaleidoswap.dev/logs
-                let home =
-                    env::var("HOME").map_err(|e| format!("Failed to get HOME directory: {}", e))?;
-                PathBuf::from(home).join(".local/share/com.kaleidoswap.dev/logs")
-            }
+            // Linux: ~/.local/share/com.kaleidoswap.dev/logs
+            let home =
+                env::var("HOME").map_err(|e| format!("Failed to get HOME directory: {}", e))?;
+            PathBuf::from(home).join(".local/share/com.kaleidoswap.dev/logs")
         };
 
         Ok(log_dir.join("rgb-lightning-node.log"))
@@ -732,10 +726,8 @@ impl NodeProcess {
         if let Ok(log_path) = self.get_log_file_path() {
             if let Ok(file) = File::open(log_path) {
                 let reader = BufReader::new(file);
-                for line in reader.lines() {
-                    if let Ok(line) = line {
-                        logs.push(line);
-                    }
+                for line in reader.lines().map_while(Result::ok) {
+                    logs.push(line);
                 }
             }
         }
@@ -810,7 +802,7 @@ impl NodeProcess {
             let resource_dir = app_handle
                 .path()
                 .resource_dir()
-                .or_else(|_| Err("Failed to get resource directory".to_string()))?;
+                .map_err(|_| "Failed to get resource directory".to_string())?;
 
             // Platform-specific binary path resolution
             let binary_path = if cfg!(target_os = "macos") {
@@ -846,10 +838,8 @@ impl NodeProcess {
             if let Some(parent) = executable_path.parent() {
                 if let Ok(entries) = std::fs::read_dir(parent) {
                     println!("Contents of {:?}:", parent);
-                    for entry in entries {
-                        if let Ok(entry) = entry {
-                            println!("  {:?}", entry.path());
-                        }
+                    for entry in entries.flatten() {
+                        println!("  {:?}", entry.path());
                     }
                 }
             }
@@ -862,25 +852,23 @@ impl NodeProcess {
         // Set up logging directory
         let log_dir = if cfg!(debug_assertions) {
             PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("logs")
+        } else if cfg!(target_os = "macos") {
+            // macOS: ~/Library/Logs/com.kaleidoswap.dev/
+            let home =
+                env::var("HOME").map_err(|e| format!("Failed to get HOME directory: {}", e))?;
+            PathBuf::from(home).join("Library/Logs/com.kaleidoswap.dev")
+        } else if cfg!(target_os = "windows") {
+            // Windows: %APPDATA%\com.kaleidoswap.dev\logs
+            let app_data = env::var("APPDATA")
+                .map_err(|e| format!("Failed to get APPDATA directory: {}", e))?;
+            PathBuf::from(app_data)
+                .join("com.kaleidoswap.dev")
+                .join("logs")
         } else {
-            if cfg!(target_os = "macos") {
-                // macOS: ~/Library/Logs/com.kaleidoswap.dev/
-                let home =
-                    env::var("HOME").map_err(|e| format!("Failed to get HOME directory: {}", e))?;
-                PathBuf::from(home).join("Library/Logs/com.kaleidoswap.dev")
-            } else if cfg!(target_os = "windows") {
-                // Windows: %APPDATA%\com.kaleidoswap.dev\logs
-                let app_data = env::var("APPDATA")
-                    .map_err(|e| format!("Failed to get APPDATA directory: {}", e))?;
-                PathBuf::from(app_data)
-                    .join("com.kaleidoswap.dev")
-                    .join("logs")
-            } else {
-                // Linux: ~/.local/share/com.kaleidoswap.dev/logs
-                let home =
-                    env::var("HOME").map_err(|e| format!("Failed to get HOME directory: {}", e))?;
-                PathBuf::from(home).join(".local/share/com.kaleidoswap.dev/logs")
-            }
+            // Linux: ~/.local/share/com.kaleidoswap.dev/logs
+            let home =
+                env::var("HOME").map_err(|e| format!("Failed to get HOME directory: {}", e))?;
+            PathBuf::from(home).join(".local/share/com.kaleidoswap.dev/logs")
         };
 
         // Ensure log directory exists

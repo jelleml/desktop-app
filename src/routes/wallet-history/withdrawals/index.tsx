@@ -99,17 +99,17 @@ export const Component: React.FC = () => {
   const uniqueAssets = useMemo(() => {
     const assets = new Set<string>(['BTC'])
 
-      // Add assets from off-chain withdrawals
-      ; (paymentsData?.payments || [])
-        .filter((payment) => !payment.inbound)
-        .forEach((payment) => {
-          if (payment.asset_id) {
-            const ticker = (listAssetsData?.nia || []).find(
-              (a) => a.asset_id === payment.asset_id
-            )?.ticker
-            if (ticker) assets.add(ticker)
-          }
-        })
+    // Add assets from off-chain withdrawals
+    ;(paymentsData?.payments || [])
+      .filter((payment) => !payment.inbound)
+      .forEach((payment) => {
+        if (payment.asset_id) {
+          const ticker = (listAssetsData?.nia || []).find(
+            (a) => a.asset_id === payment.asset_id
+          )?.ticker
+          if (ticker) assets.add(ticker)
+        }
+      })
 
     return Array.from(assets).sort()
   }, [paymentsData, listAssetsData])
@@ -163,8 +163,9 @@ export const Component: React.FC = () => {
           ? (payment.asset_amount ?? 0).toString()
           : ((payment.amt_msat ?? 0) / 1000).toString(),
         asset:
-          (listAssetsData?.nia || []).find((a) => a.asset_id === payment.asset_id)
-            ?.ticker || 'BTC',
+          (listAssetsData?.nia || []).find(
+            (a) => a.asset_id === payment.asset_id
+          )?.ticker || 'BTC',
         txId: payment.payment_hash ?? '',
         type: 'off-chain' as const,
         timestamp: undefined, // Explicitly undefined to match Withdrawal type
@@ -179,19 +180,20 @@ export const Component: React.FC = () => {
     timestamp?: number
   }
 
-  const allWithdrawals: Withdrawal[] = [...onChainWithdrawals, ...offChainWithdrawals].sort(
-    (a, b) => {
-      // Sort by timestamp if available, otherwise by amount
-      if (a.timestamp && b.timestamp) {
-        return b.timestamp - a.timestamp
-      } else if (a.timestamp) {
-        return -1
-      } else if (b.timestamp) {
-        return 1
-      }
-      return new Decimal(b.amount).comparedTo(new Decimal(a.amount))
+  const allWithdrawals: Withdrawal[] = [
+    ...onChainWithdrawals,
+    ...offChainWithdrawals,
+  ].sort((a, b) => {
+    // Sort by timestamp if available, otherwise by amount
+    if (a.timestamp && b.timestamp) {
+      return b.timestamp - a.timestamp
+    } else if (a.timestamp) {
+      return -1
+    } else if (b.timestamp) {
+      return 1
     }
-  )
+    return new Decimal(b.amount).comparedTo(new Decimal(a.amount))
+  })
 
   // Apply filters
   const filteredWithdrawals = allWithdrawals.filter((withdrawal) => {
@@ -426,7 +428,11 @@ export const Component: React.FC = () => {
             <div className="text-center py-8 text-slate-400 bg-slate-800/30 rounded-lg border border-slate-700">
               {searchTerm || typeFilter !== 'all' || assetFilter !== 'all' ? (
                 <>
-                  <p>{t('components.walletHistory.withdrawals.noWithdrawalsFiltered')}</p>
+                  <p>
+                    {t(
+                      'components.walletHistory.withdrawals.noWithdrawalsFiltered'
+                    )}
+                  </p>
                   <Button
                     className="mt-4"
                     onClick={() => {

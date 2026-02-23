@@ -9,11 +9,11 @@ export interface Channel {
 export interface Fields {
   rfq_id: string
   from: string
-  fromAsset: string  // ticker
-  fromAssetId?: string  // asset_id (protocol ID for RGB assets)
+  fromAsset: string // ticker
+  fromAssetId?: string // asset_id (protocol ID for RGB assets)
   to: string
-  toAsset: string  // ticker
-  toAssetId?: string  // asset_id (protocol ID for RGB assets)
+  toAsset: string // ticker
+  toAssetId?: string // asset_id (protocol ID for RGB assets)
 }
 
 export interface SwapExecutionParams {

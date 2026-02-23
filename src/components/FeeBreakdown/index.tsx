@@ -333,8 +333,8 @@ export const FeeBreakdown: React.FC<FeeBreakdownProps> = ({
             </p>
             <ul className="space-y-1 ml-4 list-disc">
               <li>
-                <strong>{t('components.feeBreakdown.channelFees')}</strong> Paid to the LSP for setting up
-                and maintaining your channel
+                <strong>{t('components.feeBreakdown.channelFees')}</strong> Paid
+                to the LSP for setting up and maintaining your channel
               </li>
               <li>
                 <strong>Asset Purchase:</strong> Cost to buy RGB assets at

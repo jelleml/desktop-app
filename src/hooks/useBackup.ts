@@ -50,8 +50,7 @@ export const useBackup = ({
       },
     })
 
-  const [backup, { isLoading: isBackupLoading }] =
-    nodeApi.useBackupMutation()
+  const [backup, { isLoading: isBackupLoading }] = nodeApi.useBackupMutation()
   const [lock] = nodeApi.endpoints.lock.useMutation()
   const [unlock] = nodeApi.endpoints.unlock.useMutation()
 

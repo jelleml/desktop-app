@@ -377,9 +377,9 @@ export const Component: React.FC = () => {
       {filteredSwaps.length === 0 ? (
         <div className="text-center py-8 text-slate-400 bg-slate-800/30 rounded-lg border border-slate-700">
           {searchTerm ||
-            statusFilter !== 'all' ||
-            typeFilter !== 'all' ||
-            assetFilter !== 'all' ? (
+          statusFilter !== 'all' ||
+          typeFilter !== 'all' ||
+          assetFilter !== 'all' ? (
             <>
               <p>{t('swaps.noSwapsFiltered')}</p>
               <Button
@@ -496,7 +496,9 @@ export const Component: React.FC = () => {
               accessor: (swap: SwapDetails & { type: 'maker' | 'taker' }) =>
                 renderStatusBadge(
                   swap.status || '',
-                  getStatusBadgeVariant((swap.status || 'Pending') as SwapStatus)
+                  getStatusBadgeVariant(
+                    (swap.status || 'Pending') as SwapStatus
+                  )
                 ),
               className: 'col-span-1',
               header: 'Status',
@@ -506,9 +508,9 @@ export const Component: React.FC = () => {
           emptyState={
             <div className="text-center py-8 text-slate-400 bg-slate-800/30 rounded-lg border border-slate-700">
               {searchTerm ||
-                statusFilter !== 'all' ||
-                typeFilter !== 'all' ||
-                assetFilter !== 'all' ? (
+              statusFilter !== 'all' ||
+              typeFilter !== 'all' ||
+              assetFilter !== 'all' ? (
                 <>
                   <p>{t('components.walletHistory.swaps.noSwapsFiltered')}</p>
                   <Button

@@ -485,46 +485,46 @@ export const Step3: React.FC<StepProps> = ({
                   {/* Countdown Timer - Always visible */}
                   {(order?.payment?.bolt11?.expires_at ||
                     order?.payment?.onchain?.expires_at) && (
-                      <div className="mb-6">
-                        <CountdownTimer
-                          expiresAt={
-                            order?.payment?.bolt11?.expires_at ||
-                            order?.payment?.onchain?.expires_at ||
-                            ''
-                          }
-                          onExpiry={handleCountdownExpiry}
-                        />
-                      </div>
-                    )}
+                    <div className="mb-6">
+                      <CountdownTimer
+                        expiresAt={
+                          order?.payment?.bolt11?.expires_at ||
+                          order?.payment?.onchain?.expires_at ||
+                          ''
+                        }
+                        onExpiry={handleCountdownExpiry}
+                      />
+                    </div>
+                  )}
 
                   {/* QR Code Payment */}
                   {(!useWalletFunds ||
                     (paymentMethod === 'lightning' &&
                       outboundLiquidity <= 0)) && (
-                      <div className="text-center">
-                        {localPaymentState === 'waiting' ? (
-                          <PaymentWaiting
+                    <div className="text-center">
+                      {localPaymentState === 'waiting' ? (
+                        <PaymentWaiting
+                          bitcoinUnit={bitcoinUnit}
+                          currentPayment={currentPayment}
+                          handleCopy={handleCopy}
+                          order={order}
+                          paymentMethod={paymentMethod}
+                          paymentURI={paymentURI}
+                        />
+                      ) : (
+                        order && (
+                          <QRCodePayment
                             bitcoinUnit={bitcoinUnit}
                             currentPayment={currentPayment}
-                            handleCopy={handleCopy}
+                            onCopy={handleCopy}
                             order={order}
                             paymentMethod={paymentMethod}
                             paymentURI={paymentURI}
                           />
-                        ) : (
-                          order && (
-                            <QRCodePayment
-                              bitcoinUnit={bitcoinUnit}
-                              currentPayment={currentPayment}
-                              onCopy={handleCopy}
-                              order={order}
-                              paymentMethod={paymentMethod}
-                              paymentURI={paymentURI}
-                            />
-                          )
-                        )}
-                      </div>
-                    )}
+                        )
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

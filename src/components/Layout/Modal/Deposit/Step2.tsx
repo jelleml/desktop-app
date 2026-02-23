@@ -294,8 +294,8 @@ export const Step2 = ({ assetId, onBack, onNext }: Props) => {
     const formattedValue =
       value.split('.').length === 2
         ? value.split('.')[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',') +
-        '.' +
-        value.split('.')[1]
+          '.' +
+          value.split('.')[1]
         : value.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 
     setAmount(formattedValue)
@@ -345,9 +345,7 @@ export const Step2 = ({ assetId, onBack, onNext }: Props) => {
       if ('error' in res && res.error) {
         const err = res.error as any
         const errorMessage =
-          err.data && err.data.error
-            ? err.data.error
-            : 'Unknown error'
+          err.data && err.data.error ? err.data.error : 'Unknown error'
 
         // Check if this is a UTXO-related error
         const wasHandled = handleApiError(res.error, 'issuance', 0, () =>
@@ -399,15 +397,15 @@ export const Step2 = ({ assetId, onBack, onNext }: Props) => {
           res = await lnInvoice(
             assetId === BTC_ASSET_ID
               ? {
-                amt_msat:
-                  bitcoinUnit === 'SAT'
-                    ? numericAmount * 1000
-                    : numericAmount * Math.pow(10, 8) * 1000,
-              }
+                  amt_msat:
+                    bitcoinUnit === 'SAT'
+                      ? numericAmount * 1000
+                      : numericAmount * Math.pow(10, 8) * 1000,
+                }
               : {
-                asset_amount: parseAmount(cleanAmount, assetTicker),
-                asset_id: assetId,
-              }
+                  asset_amount: parseAmount(cleanAmount, assetTicker),
+                  asset_id: assetId,
+                }
           )
         } else {
           // Generate zero-amount invoice
@@ -415,8 +413,8 @@ export const Step2 = ({ assetId, onBack, onNext }: Props) => {
             assetId === BTC_ASSET_ID
               ? {}
               : {
-                asset_id: assetId,
-              }
+                  asset_id: assetId,
+                }
           )
         }
 
@@ -473,9 +471,10 @@ export const Step2 = ({ assetId, onBack, onNext }: Props) => {
           flex-1 py-3 px-4 flex flex-col items-center justify-center gap-1.5
           rounded-xl transition-all duration-200 border-2
           ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
-          ${network === type
-            ? 'bg-blue-500/10 border-blue-500 text-blue-500'
-            : 'border-slate-700 hover:border-blue-500/50 text-slate-400 hover:text-blue-500/80'
+          ${
+            network === type
+              ? 'bg-blue-500/10 border-blue-500 text-blue-500'
+              : 'border-slate-700 hover:border-blue-500/50 text-slate-400 hover:text-blue-500/80'
           }
         `}
         disabled={isDisabled}
@@ -754,9 +753,9 @@ export const Step2 = ({ assetId, onBack, onNext }: Props) => {
                     amount:
                       maxDepositAmount > 0
                         ? formatAmount(
-                          maxDepositAmount,
-                          assetId === BTC_ASSET_ID ? 'BTC' : assetTicker
-                        )
+                            maxDepositAmount,
+                            assetId === BTC_ASSET_ID ? 'BTC' : assetTicker
+                          )
                         : t('depositModal.step2.amount.notAvailable'),
                   })}
                   type="text"
@@ -790,21 +789,21 @@ export const Step2 = ({ assetId, onBack, onNext }: Props) => {
                     amount,
                     assetId === BTC_ASSET_ID ? 'BTC' : assetTicker
                   ) > maxDepositAmount && (
-                      <div className="p-2 bg-red-500/10 rounded-lg border border-red-500/20">
-                        <p className="text-xs text-red-400">
-                          {t('depositModal.step2.amount.exceeds', {
-                            amount: formatAmount(
-                              maxDepositAmount,
-                              assetId === BTC_ASSET_ID ? 'BTC' : assetTicker
-                            ),
-                            asset: getDisplayAsset(
-                              assetId === BTC_ASSET_ID ? 'BTC' : assetTicker,
-                              bitcoinUnit
-                            ),
-                          })}
-                        </p>
-                      </div>
-                    )}
+                    <div className="p-2 bg-red-500/10 rounded-lg border border-red-500/20">
+                      <p className="text-xs text-red-400">
+                        {t('depositModal.step2.amount.exceeds', {
+                          amount: formatAmount(
+                            maxDepositAmount,
+                            assetId === BTC_ASSET_ID ? 'BTC' : assetTicker
+                          ),
+                          asset: getDisplayAsset(
+                            assetId === BTC_ASSET_ID ? 'BTC' : assetTicker,
+                            bitcoinUnit
+                          ),
+                        })}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -916,10 +915,11 @@ export const Step2 = ({ assetId, onBack, onNext }: Props) => {
                 <span
                   className={`
                   px-1.5 py-0.5 rounded-md text-xs font-medium
-                  ${assetId === BTC_ASSET_ID
+                  ${
+                    assetId === BTC_ASSET_ID
                       ? 'bg-orange-500/20 text-orange-400 border border-orange-500/20'
                       : 'bg-purple-500/20 text-purple-400 border border-purple-500/20'
-                    }
+                  }
                 `}
                 >
                   {addressLabel}

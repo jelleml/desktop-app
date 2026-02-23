@@ -154,8 +154,9 @@ export const Component = () => {
                   max={
                     btcBalanceResponse.data
                       ? Math.floor(
-                        (btcBalanceResponse.data?.vanilla?.spendable ?? 0) / num
-                      )
+                          (btcBalanceResponse.data?.vanilla?.spendable ?? 0) /
+                            num
+                        )
                       : 0
                   }
                   min={0}
@@ -171,8 +172,8 @@ export const Component = () => {
                 max={
                   btcBalanceResponse.data
                     ? Math.floor(
-                      (btcBalanceResponse.data?.vanilla?.spendable ?? 0) / num
-                    )
+                        (btcBalanceResponse.data?.vanilla?.spendable ?? 0) / num
+                      )
                     : 0
                 }
                 min={0}
@@ -231,7 +232,9 @@ export const Component = () => {
               <span>
                 {t('createUtxos.availableBalance', {
                   amount: btcBalanceResponse.data
-                    ? (btcBalanceResponse.data?.vanilla?.spendable ?? 0).toLocaleString()
+                    ? (
+                        btcBalanceResponse.data?.vanilla?.spendable ?? 0
+                      ).toLocaleString()
                     : '0',
                 })}
               </span>

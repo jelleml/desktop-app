@@ -38,7 +38,9 @@ export const WalletAction: React.FC<WalletActionProps> = ({
             className={`${IconWrapper}
             ${primary ? 'bg-blue-dark/80 text-cyan scale-105' : 'bg-blue-dark/80 text-white'}`}
           >
-            {React.cloneElement(icon as React.ReactElement, { strokeWidth: 2.5 })}
+            {React.cloneElement(icon as React.ReactElement, {
+              strokeWidth: 2.5,
+            })}
           </div>
           <h2
             className={`text-2xl font-bold ${primary ? 'text-cyan' : 'text-white'}`}

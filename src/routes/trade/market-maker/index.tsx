@@ -40,9 +40,7 @@ import {
   setTradingPairs,
   clearQuoteError,
 } from '../../../slices/makerApi/pairs.slice'
-import {
-  nodeApi,
-} from '../../../slices/nodeApi/nodeApi.slice'
+import { nodeApi } from '../../../slices/nodeApi/nodeApi.slice'
 import { Asset, NodeComponents } from 'kaleidoswap-sdk'
 
 // Define types from SDK components
@@ -529,7 +527,8 @@ export const Component = () => {
     // Check if this is a new quote that's different from the last one
     const isNewQuote =
       !lastQuoteResponseRef.current ||
-      quoteResponse.to_asset.amount !== lastQuoteResponseRef.current.to_asset.amount ||
+      quoteResponse.to_asset.amount !==
+        lastQuoteResponseRef.current.to_asset.amount ||
       quoteResponse.timestamp !== lastQuoteResponseRef.current.timestamp
 
     if (isNewQuote) {
@@ -587,7 +586,8 @@ export const Component = () => {
             // Store precision by ticker for display
             setQuoteAssetPrecision((prev) => ({
               ...prev,
-              [quoteResponse.to_asset.ticker]: quoteResponse.fee.fee_asset_precision,
+              [quoteResponse.to_asset.ticker]:
+                quoteResponse.fee.fee_asset_precision,
             }))
             logger.debug(
               `Stored precision ${quoteResponse.fee.fee_asset_precision} for asset ${quoteResponse.to_asset.ticker}`
@@ -604,7 +604,10 @@ export const Component = () => {
 
         // If to_asset is BTC, convert from millisats to sats
         let displayToAmount = quoteResponse.to_asset.amount
-        if (quoteResponse.to_asset.ticker === 'BTC' || toTickerForUI === 'BTC') {
+        if (
+          quoteResponse.to_asset.ticker === 'BTC' ||
+          toTickerForUI === 'BTC'
+        ) {
           displayToAmount = Math.round(displayToAmount / MSATS_PER_SAT)
         }
 
@@ -639,7 +642,7 @@ export const Component = () => {
         if (quoteResponse.rfq_id) {
           form.setValue('rfq_id', quoteResponse.rfq_id)
         }
-        
+
         // Store the asset_id (protocol IDs) for validation
         if (quoteResponse.from_asset?.asset_id) {
           form.setValue('fromAssetId', quoteResponse.from_asset.asset_id)
@@ -709,7 +712,22 @@ export const Component = () => {
   useEffect(() => {
     if (assetsData && assetsData.nia) {
       // Set assets immediately and mark as loaded
-      setAssets(assetsData.nia.map(a => ({ ...a, is_active: true, ticker: a.ticker ?? '', name: a.name ?? '', precision: a.precision ?? 8, media: a.media ? { file_path: a.media.file_path ?? '', digest: '', mime: a.media.mime ?? '' } as any : undefined })))
+      setAssets(
+        assetsData.nia.map((a) => ({
+          ...a,
+          is_active: true,
+          ticker: a.ticker ?? '',
+          name: a.name ?? '',
+          precision: a.precision ?? 8,
+          media: a.media
+            ? ({
+                file_path: a.media.file_path ?? '',
+                digest: '',
+                mime: a.media.mime ?? '',
+              } as any)
+            : undefined,
+        }))
+      )
       setIsAssetsLoaded(true)
     } else if (assetsData === undefined) {
       // Reset loading state if assets data becomes unavailable
@@ -1520,7 +1538,20 @@ export const Component = () => {
         dispatch,
         channels,
         // Use RTK Query data directly to ensure we have the latest assets
-        (assetsData?.nia || []).map(a => ({ ...a, is_active: true, ticker: a.ticker ?? '', name: a.name ?? '', precision: a.precision ?? 8, media: a.media ? { file_path: a.media.file_path ?? '', digest: '', mime: a.media.mime ?? '' } as any : undefined })),
+        (assetsData?.nia || []).map((a) => ({
+          ...a,
+          is_active: true,
+          ticker: a.ticker ?? '',
+          name: a.name ?? '',
+          precision: a.precision ?? 8,
+          media: a.media
+            ? ({
+                file_path: a.media.file_path ?? '',
+                digest: '',
+                mime: a.media.mime ?? '',
+              } as any)
+            : undefined,
+        })),
         form,
         formatAmount,
         setTradingPairs,
@@ -1560,7 +1591,6 @@ export const Component = () => {
         t
       )(),
     [
-
       dispatch,
       form,
       formatAmount,
@@ -1920,7 +1950,8 @@ export const Component = () => {
         const channelsList = channelsResponse.data.channels
 
         const { vanilla, colored } = balanceResponse.data
-        const totalOnchainBalance = (vanilla?.spendable ?? 0) + (colored?.spendable ?? 0)
+        const totalOnchainBalance =
+          (vanilla?.spendable ?? 0) + (colored?.spendable ?? 0)
         setOnchainBtcBalance(totalOnchainBalance)
         logger.info(`💰 Onchain BTC balance: ${totalOnchainBalance} sats`)
 
@@ -1987,7 +2018,22 @@ export const Component = () => {
         // Update state with fresh data
         setChannels(channelsList ?? [])
         setIsChannelsLoaded(true)
-        setAssets(assetsData.nia.map(a => ({ ...a, is_active: true, ticker: a.ticker ?? '', name: a.name ?? '', precision: a.precision ?? 8, media: a.media ? { file_path: a.media.file_path ?? '', digest: '', mime: a.media.mime ?? '' } as any : undefined })))
+        setAssets(
+          assetsData.nia.map((a) => ({
+            ...a,
+            is_active: true,
+            ticker: a.ticker ?? '',
+            name: a.name ?? '',
+            precision: a.precision ?? 8,
+            media: a.media
+              ? ({
+                  file_path: a.media.file_path ?? '',
+                  digest: '',
+                  mime: a.media.mime ?? '',
+                } as any)
+              : undefined,
+          }))
+        )
         setIsAssetsLoaded(true)
 
         // Check if we have channels but none are ready - if so, set ready phase to show channels not ready message
@@ -2012,7 +2058,20 @@ export const Component = () => {
         // Fetch pairs using fresh data instead of waiting for state to update
         const pairsFound = await fetchAndSetPairsWithData(
           channelsList ?? [],
-          assetsData.nia.map(a => ({ ...a, is_active: true, ticker: a.ticker ?? '', name: a.name ?? '', precision: a.precision ?? 8, media: a.media ? { file_path: a.media.file_path ?? '', digest: '', mime: a.media.mime ?? '' } as any : undefined }))
+          assetsData.nia.map((a) => ({
+            ...a,
+            is_active: true,
+            ticker: a.ticker ?? '',
+            name: a.name ?? '',
+            precision: a.precision ?? 8,
+            media: a.media
+              ? ({
+                  file_path: a.media.file_path ?? '',
+                  digest: '',
+                  mime: a.media.mime ?? '',
+                } as any)
+              : undefined,
+          }))
         )
 
         logger.info(
@@ -2884,23 +2943,27 @@ export const Component = () => {
 
                   {/* Integrated Maker Status */}
                   <div className="flex items-center space-x-2 text-xs">
-                    <span className="text-slate-400">{t('tradeMarketMaker.header.via')}</span>
+                    <span className="text-slate-400">
+                      {t('tradeMarketMaker.header.via')}
+                    </span>
                     <div className="flex items-center space-x-1.5">
                       <div
-                        className={`w-1.5 h-1.5 rounded-full ${wsConnected
-                          ? hasTradablePairs
-                            ? 'bg-emerald-400'
-                            : 'bg-amber-400'
-                          : 'bg-red-400 animate-pulse'
-                          }`}
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          wsConnected
+                            ? hasTradablePairs
+                              ? 'bg-emerald-400'
+                              : 'bg-amber-400'
+                            : 'bg-red-400 animate-pulse'
+                        }`}
                       ></div>
                       <span
-                        className={`font-medium ${wsConnected
-                          ? hasTradablePairs
-                            ? 'text-emerald-300'
-                            : 'text-amber-300'
-                          : 'text-red-300'
-                          }`}
+                        className={`font-medium ${
+                          wsConnected
+                            ? hasTradablePairs
+                              ? 'text-emerald-300'
+                              : 'text-amber-300'
+                            : 'text-red-300'
+                        }`}
                       >
                         {makerConnectionUrl
                           ? new URL(makerConnectionUrl).hostname
@@ -2908,12 +2971,15 @@ export const Component = () => {
                       </span>
                       {wsConnected && (
                         <span
-                          className={`px-1.5 py-0.5 rounded text-xs font-medium ${hasTradablePairs
-                            ? 'bg-emerald-500/20 text-emerald-300'
-                            : 'bg-amber-500/20 text-amber-300'
-                            }`}
+                          className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                            hasTradablePairs
+                              ? 'bg-emerald-500/20 text-emerald-300'
+                              : 'bg-amber-500/20 text-amber-300'
+                          }`}
                         >
-                          {hasTradablePairs ? t('tradeMarketMaker.header.ready') : t('tradeMarketMaker.header.noPairs')}
+                          {hasTradablePairs
+                            ? t('tradeMarketMaker.header.ready')
+                            : t('tradeMarketMaker.header.noPairs')}
                         </span>
                       )}
                     </div>
@@ -2998,23 +3064,35 @@ export const Component = () => {
                           <div className="flex-1">
                             <p className="text-yellow-300 text-sm font-medium">
                               {unconfirmedAssets.length > 1
-                                ? t('tradeMarketMaker.banners.channelsNotReady', {
-                                  assets: assetText,
-                                })
-                                : t('tradeMarketMaker.banners.channelNotReady', {
-                                  asset: assetText,
-                                })}
+                                ? t(
+                                    'tradeMarketMaker.banners.channelsNotReady',
+                                    {
+                                      assets: assetText,
+                                    }
+                                  )
+                                : t(
+                                    'tradeMarketMaker.banners.channelNotReady',
+                                    {
+                                      asset: assetText,
+                                    }
+                                  )}
                             </p>
                             <p className="text-yellow-200/80 text-xs mt-1">
                               {unconfirmedAssets.length > 1
-                                ? t('tradeMarketMaker.banners.channelsAwaiting', {
-                                  assets: assetText,
-                                  channelText,
-                                  confirmText,
-                                })
-                                : t('tradeMarketMaker.banners.channelAwaiting', {
-                                  asset: assetText,
-                                })}
+                                ? t(
+                                    'tradeMarketMaker.banners.channelsAwaiting',
+                                    {
+                                      assets: assetText,
+                                      channelText,
+                                      confirmText,
+                                    }
+                                  )
+                                : t(
+                                    'tradeMarketMaker.banners.channelAwaiting',
+                                    {
+                                      asset: assetText,
+                                    }
+                                  )}
                             </p>
                           </div>
                         </div>
@@ -3043,7 +3121,6 @@ export const Component = () => {
                       )
 
                     if (unconfirmedTickers.length > 0) {
-
                       return (
                         <div className="mb-2 p-2 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/30 rounded-xl backdrop-blur-sm">
                           <div className="flex items-start gap-2">
@@ -3142,10 +3219,11 @@ export const Component = () => {
                     <div className="relative group">
                       <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/30 via-blue-500/25 to-purple-600/30 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                       <button
-                        className={`relative p-3 rounded-2xl bg-gradient-to-br from-slate-800/90 via-slate-700/80 to-slate-800/90 backdrop-blur-xl border-2 transition-all transform hover:scale-110 hover:rotate-180 duration-800 shadow-xl ${hasChannels && hasTradablePairs && !isSwapInProgress
-                          ? 'border-cyan-500/60 hover:border-cyan-400/80 hover:shadow-cyan-500/40 cursor-pointer'
-                          : 'border-slate-600/50 opacity-50 cursor-not-allowed'
-                          }`}
+                        className={`relative p-3 rounded-2xl bg-gradient-to-br from-slate-800/90 via-slate-700/80 to-slate-800/90 backdrop-blur-xl border-2 transition-all transform hover:scale-110 hover:rotate-180 duration-800 shadow-xl ${
+                          hasChannels && hasTradablePairs && !isSwapInProgress
+                            ? 'border-cyan-500/60 hover:border-cyan-400/80 hover:shadow-cyan-500/40 cursor-pointer'
+                            : 'border-slate-600/50 opacity-50 cursor-not-allowed'
+                        }`}
                         onClick={() =>
                           hasChannels &&
                           hasTradablePairs &&
@@ -3228,13 +3306,16 @@ export const Component = () => {
                             </h4>
                             <p className="text-blue-200/90 text-sm leading-relaxed">
                               {missingChannelAsset.isFromAsset
-                                ? t('tradeMarketMaker.channelWarning.sendMessage', {
-                                  asset: missingChannelAsset.asset,
-                                })
+                                ? t(
+                                    'tradeMarketMaker.channelWarning.sendMessage',
+                                    {
+                                      asset: missingChannelAsset.asset,
+                                    }
+                                  )
                                 : t(
-                                  'tradeMarketMaker.channelWarning.receiveMessage',
-                                  { asset: missingChannelAsset.asset }
-                                )}
+                                    'tradeMarketMaker.channelWarning.receiveMessage',
+                                    { asset: missingChannelAsset.asset }
+                                  )}
                             </p>
                           </div>
                         </div>
@@ -3573,96 +3654,96 @@ export const Component = () => {
           </div>
         </div>
       ) : /* Handle no channels with action buttons */
-        shouldShowNoChannels ? (
-          <div className="flex justify-center items-center min-h-[60vh]">
-            <div className="max-w-2xl w-full bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-slate-800/50 p-8">
-              <div className="flex flex-col items-center space-y-6">
-                <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center">
-                  <Link className="w-8 h-8 text-blue-500" />
-                </div>
-                <h2 className="text-2xl font-bold text-white">
-                  {t('tradeMarketMaker.noChannels.noChannelsAvailable')}
-                </h2>
-                <p className="text-slate-400 text-center text-base max-w-md">
-                  {t('tradeMarketMaker.noChannels.noChannelsMessage')}
-                </p>
+      shouldShowNoChannels ? (
+        <div className="flex justify-center items-center min-h-[60vh]">
+          <div className="max-w-2xl w-full bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-slate-800/50 p-8">
+            <div className="flex flex-col items-center space-y-6">
+              <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center">
+                <Link className="w-8 h-8 text-blue-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-white">
+                {t('tradeMarketMaker.noChannels.noChannelsAvailable')}
+              </h2>
+              <p className="text-slate-400 text-center text-base max-w-md">
+                {t('tradeMarketMaker.noChannels.noChannelsMessage')}
+              </p>
 
-                <div className="flex gap-4 pt-4">
-                  <button
-                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl
+              <div className="flex gap-4 pt-4">
+                <button
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl
                            font-medium transition-colors flex items-center gap-2 text-base
                            shadow-lg hover:shadow-blue-500/25 hover:scale-105"
-                    onClick={handleCreateChannelAction}
-                  >
-                    <Plus className="w-5 h-5" />
-                    {t('tradeMarketMaker.noChannels.createChannel')}
-                  </button>
-                  <button
-                    className="px-6 py-3 border border-blue-500/50 text-blue-500 rounded-xl
+                  onClick={handleCreateChannelAction}
+                >
+                  <Plus className="w-5 h-5" />
+                  {t('tradeMarketMaker.noChannels.createChannel')}
+                </button>
+                <button
+                  className="px-6 py-3 border border-blue-500/50 text-blue-500 rounded-xl
                            hover:bg-blue-500/10 transition-colors flex items-center gap-2 text-base
                            shadow-lg hover:shadow-blue-500/25 hover:scale-105"
-                    onClick={handleBuyChannelAction}
-                  >
-                    <ShoppingCart className="w-5 h-5" />
-                    {t('tradeMarketMaker.noChannels.buyFromLSP')}
-                  </button>
-                </div>
+                  onClick={handleBuyChannelAction}
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  {t('tradeMarketMaker.noChannels.buyFromLSP')}
+                </button>
               </div>
             </div>
           </div>
-        ) : /* Show existing NoTradingChannelsMessage for maker compatibility issues */
-          shouldShowNoChannelsMessage ? (
-            <NoTradingChannelsMessage
-              {...createTradingChannelsMessageProps(
-                assets,
-                tradablePairs,
-                hasEnoughBalance,
-                navigate,
-                refreshAmounts
-              )}
-            />
-          ) : (
-            <div className="w-full min-h-full relative flex items-center justify-center">
-              <div className="w-full max-w-screen-xl mx-auto px-4 py-6">
-                {isStillLoading ? (
-                  <div className="flex flex-col justify-center items-center min-h-[60vh] gap-6">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/30 via-blue-500/25 to-purple-600/30 rounded-full blur-2xl"></div>
-                      <div className="relative bg-gradient-to-br from-slate-900/90 via-slate-800/80 to-slate-900/90 backdrop-blur-2xl rounded-3xl p-6 border border-slate-600/50 shadow-2xl">
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/8 via-cyan-400/3 to-transparent rounded-3xl"></div>
-                        <div className="w-10 h-10 border-4 border-cyan-500/50 border-t-cyan-400 rounded-full animate-spin"></div>
-                      </div>
-                    </div>
-                    <div className="text-center space-y-4 max-w-lg">
-                      <p className="text-white font-bold text-xl bg-gradient-to-r from-white via-cyan-100 to-blue-100 bg-clip-text text-transparent">
-                        {loadingPhase === 'connecting-maker'
-                          ? t('tradeMarketMaker.loading.connectingToMaker')
-                          : t('tradeMarketMaker.loading.initializingInterface')}
-                      </p>
-                      <p className="text-slate-300 text-base leading-relaxed">
-                        {getLoadingMessage()}
-                      </p>
-                      <div className="w-80 h-2 bg-slate-800/60 rounded-full overflow-hidden backdrop-blur-sm border border-slate-600/40 shadow-inner">
-                        <div className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 rounded-full animate-pulse shadow-lg"></div>
-                      </div>
-                    </div>
-                  </div>
-                ) : shouldShowWSDisconnectedMessage ? (
-                  <div className="flex justify-center items-center min-h-[60vh]">
-                    <WebSocketDisconnectedMessage
-                      makerUrl={makerConnectionUrl}
-                      onMakerChange={refreshAmounts}
-                      onRetryConnection={handleReconnectToMaker}
-                    />
-                  </div>
-                ) : (
-                  <div className="flex justify-center items-start min-h-[60vh]">
-                    {renderSwapForm()}
-                  </div>
-                )}
-              </div>
-            </div>
+        </div>
+      ) : /* Show existing NoTradingChannelsMessage for maker compatibility issues */
+      shouldShowNoChannelsMessage ? (
+        <NoTradingChannelsMessage
+          {...createTradingChannelsMessageProps(
+            assets,
+            tradablePairs,
+            hasEnoughBalance,
+            navigate,
+            refreshAmounts
           )}
+        />
+      ) : (
+        <div className="w-full min-h-full relative flex items-center justify-center">
+          <div className="w-full max-w-screen-xl mx-auto px-4 py-6">
+            {isStillLoading ? (
+              <div className="flex flex-col justify-center items-center min-h-[60vh] gap-6">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/30 via-blue-500/25 to-purple-600/30 rounded-full blur-2xl"></div>
+                  <div className="relative bg-gradient-to-br from-slate-900/90 via-slate-800/80 to-slate-900/90 backdrop-blur-2xl rounded-3xl p-6 border border-slate-600/50 shadow-2xl">
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/8 via-cyan-400/3 to-transparent rounded-3xl"></div>
+                    <div className="w-10 h-10 border-4 border-cyan-500/50 border-t-cyan-400 rounded-full animate-spin"></div>
+                  </div>
+                </div>
+                <div className="text-center space-y-4 max-w-lg">
+                  <p className="text-white font-bold text-xl bg-gradient-to-r from-white via-cyan-100 to-blue-100 bg-clip-text text-transparent">
+                    {loadingPhase === 'connecting-maker'
+                      ? t('tradeMarketMaker.loading.connectingToMaker')
+                      : t('tradeMarketMaker.loading.initializingInterface')}
+                  </p>
+                  <p className="text-slate-300 text-base leading-relaxed">
+                    {getLoadingMessage()}
+                  </p>
+                  <div className="w-80 h-2 bg-slate-800/60 rounded-full overflow-hidden backdrop-blur-sm border border-slate-600/40 shadow-inner">
+                    <div className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 rounded-full animate-pulse shadow-lg"></div>
+                  </div>
+                </div>
+              </div>
+            ) : shouldShowWSDisconnectedMessage ? (
+              <div className="flex justify-center items-center min-h-[60vh]">
+                <WebSocketDisconnectedMessage
+                  makerUrl={makerConnectionUrl}
+                  onMakerChange={refreshAmounts}
+                  onRetryConnection={handleReconnectToMaker}
+                />
+              </div>
+            ) : (
+              <div className="flex justify-center items-start min-h-[60vh]">
+                {renderSwapForm()}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <SwapConfirmation
         bitcoinUnit={bitcoinUnit}

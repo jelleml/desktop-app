@@ -112,7 +112,9 @@ export const AppVersion: React.FC<AppVersionProps> = ({
               </div>
               {versionInfo.commit && (
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400">{t('components.appVersion.commit')}</span>
+                  <span className="text-gray-400">
+                    {t('components.appVersion.commit')}
+                  </span>
                   <span className="font-mono text-xs">
                     {formatCommit(versionInfo.commit)}
                   </span>
@@ -120,7 +122,9 @@ export const AppVersion: React.FC<AppVersionProps> = ({
               )}
               {versionInfo.buildDate && (
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400">{t('components.appVersion.built')}</span>
+                  <span className="text-gray-400">
+                    {t('components.appVersion.built')}
+                  </span>
                   <span className="text-xs">
                     {formatDate(versionInfo.buildDate)}
                   </span>

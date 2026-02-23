@@ -336,7 +336,9 @@ export const getAvailableAssets = (
     validChannels
       .filter(
         (c) =>
-          (c.ready === true) && ((c.outbound_balance_msat ?? 0) > 0 || (c.inbound_balance_msat ?? 0) > 0)
+          c.ready === true &&
+          ((c.outbound_balance_msat ?? 0) > 0 ||
+            (c.inbound_balance_msat ?? 0) > 0)
       )
       .map((c) => c.asset_id)
       .filter((assetId): assetId is string => assetId !== null) // Filter out null values
@@ -364,7 +366,8 @@ export const getUnconfirmedAssets = (
   const unconfirmedAssetIds = new Set<string>(
     validChannels
       .filter(
-        (c) => (c.ready !== true) && c.asset_id !== null && c.asset_id !== undefined
+        (c) =>
+          c.ready !== true && c.asset_id !== null && c.asset_id !== undefined
       )
       .map((c) => c.asset_id)
       .filter((assetId): assetId is string => assetId !== null)
@@ -386,14 +389,16 @@ export const getAvailableAssetTickers = (
     channels
       .filter(
         (c) =>
-          (c.ready === true) && ((c.outbound_balance_msat ?? 0) > 0 || (c.inbound_balance_msat ?? 0) > 0)
+          c.ready === true &&
+          ((c.outbound_balance_msat ?? 0) > 0 ||
+            (c.inbound_balance_msat ?? 0) > 0)
       )
       .map(
         (c) =>
           assets.find(
             (a) =>
-            (a.protocol_ids?.['RGB'] === c.asset_id ||
-              a.protocol_ids?.['BTC'] === c.asset_id)
+              a.protocol_ids?.['RGB'] === c.asset_id ||
+              a.protocol_ids?.['BTC'] === c.asset_id
           )?.ticker
       )
       .filter((ticker): ticker is string => ticker !== undefined) // Type guard to filter out undefined values
@@ -472,16 +477,16 @@ export const validateTradingPairs = (
 
   tickerToAssetIds.forEach((assetIds, ticker) => {
     if (assetIds.size > 1) {
-      const conflictingPairs = pairs.filter(
-        (pair) => {
-          const baseTicker = pair.base_asset ?? pair.base.ticker
-          const quoteTicker = pair.quote_asset ?? pair.quote.ticker
-          const baseAssetId = pair.base_asset_id ?? pair.base.ticker
-          const quoteAssetId = pair.quote_asset_id ?? pair.quote.ticker
-          return (baseTicker === ticker && assetIds.has(baseAssetId)) ||
-            (quoteTicker === ticker && assetIds.has(quoteAssetId))
-        }
-      )
+      const conflictingPairs = pairs.filter((pair) => {
+        const baseTicker = pair.base_asset ?? pair.base.ticker
+        const quoteTicker = pair.quote_asset ?? pair.quote.ticker
+        const baseAssetId = pair.base_asset_id ?? pair.base.ticker
+        const quoteAssetId = pair.quote_asset_id ?? pair.quote.ticker
+        return (
+          (baseTicker === ticker && assetIds.has(baseAssetId)) ||
+          (quoteTicker === ticker && assetIds.has(quoteAssetId))
+        )
+      })
 
       conflicts.push({
         assetIds: Array.from(assetIds),
@@ -493,25 +498,25 @@ export const validateTradingPairs = (
 
       logger.warn(
         `Ticker conflict detected for "${ticker}": multiple asset IDs found [${Array.from(assetIds).join(', ')}]. ` +
-        `${conflictingPairs.length} pairs affected.`
+          `${conflictingPairs.length} pairs affected.`
       )
     }
   })
 
   // Filter out pairs that involve conflicting tickers
-  const validPairs = pairs.filter(
-    (pair) => {
-      const baseTicker = pair.base_asset ?? pair.base.ticker
-      const quoteTicker = pair.quote_asset ?? pair.quote.ticker
-      return !conflictingTickers.has(baseTicker) &&
-        !conflictingTickers.has(quoteTicker)
-    }
-  )
+  const validPairs = pairs.filter((pair) => {
+    const baseTicker = pair.base_asset ?? pair.base.ticker
+    const quoteTicker = pair.quote_asset ?? pair.quote.ticker
+    return (
+      !conflictingTickers.has(baseTicker) &&
+      !conflictingTickers.has(quoteTicker)
+    )
+  })
 
   if (conflicts.length > 0) {
     logger.warn(
       `Found ${conflicts.length} ticker conflicts. Filtered out ${pairs.length - validPairs.length} pairs. ` +
-      `${validPairs.length} valid pairs remaining.`
+        `${validPairs.length} valid pairs remaining.`
     )
   }
 
@@ -591,7 +596,7 @@ export const getAssetConflictsForTicker = (
  * Creates a handler for fetching and setting trading pairs using the SDK
  */
 export const createFetchAndSetPairsHandler = (
-  getClient: () => any, // Returns KaleidoClient  
+  getClient: () => any, // Returns KaleidoClient
   dispatch: (action: any) => void,
   channels: any[], // TODO: Type this properly
   assets: Asset[],
@@ -783,7 +788,12 @@ export const mapAssetIdToTicker = (
   }
 
   // Try to find the asset in the assets list first
-  const asset = assets.find((a) => (a.protocol_ids?.['RGB'] === assetId || a.protocol_ids?.['BTC'] === assetId || a.ticker === assetId))
+  const asset = assets.find(
+    (a) =>
+      a.protocol_ids?.['RGB'] === assetId ||
+      a.protocol_ids?.['BTC'] === assetId ||
+      a.ticker === assetId
+  )
   if (asset && asset.ticker) {
     return asset.ticker
   }
@@ -791,12 +801,15 @@ export const mapAssetIdToTicker = (
   // If not found in user assets, check trading pairs
   if (tradingPairs) {
     const pairWithAsset = tradingPairs.find(
-      (p) => (p.base_asset_id ?? p.base.ticker) === assetId ||
+      (p) =>
+        (p.base_asset_id ?? p.base.ticker) === assetId ||
         (p.quote_asset_id ?? p.quote.ticker) === assetId
     )
     if (pairWithAsset) {
-      const baseAssetId = pairWithAsset.base_asset_id ?? pairWithAsset.base.ticker
-      const quoteAssetId = pairWithAsset.quote_asset_id ?? pairWithAsset.quote.ticker
+      const baseAssetId =
+        pairWithAsset.base_asset_id ?? pairWithAsset.base.ticker
+      const quoteAssetId =
+        pairWithAsset.quote_asset_id ?? pairWithAsset.quote.ticker
       if (baseAssetId === assetId) {
         return pairWithAsset.base_asset ?? pairWithAsset.base.ticker
       }

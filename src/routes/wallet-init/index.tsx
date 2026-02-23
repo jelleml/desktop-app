@@ -376,18 +376,17 @@ export const Component = () => {
           if (!recheckPorts.available) {
             throw new Error(
               `Ports ${recheckPorts.conflictingPorts.join(', ')} are still in use by other processes. ` +
-              'Please choose different ports or stop the conflicting processes.'
+                'Please choose different ports or stop the conflicting processes.'
             )
           }
         } else {
           // Ports are in use by external processes
           throw new Error(
             `Ports ${portCheck.conflictingPorts.join(', ')} are in use by other applications. ` +
-            'Please choose different ports or stop the conflicting applications.'
+              'Please choose different ports or stop the conflicting applications.'
           )
         }
       }
-
 
       // Start the node
       await invoke('start_node', {
@@ -413,9 +412,9 @@ export const Component = () => {
 
       throw new Error(
         `Failed to start node: ${error}\n` +
-        `Suggested alternative ports:\n` +
-        `- Daemon port: ${suggestedPorts.daemon}\n` +
-        `- LDK peer port: ${suggestedPorts.ldk}`
+          `Suggested alternative ports:\n` +
+          `- Daemon port: ${suggestedPorts.daemon}\n` +
+          `- LDK peer port: ${suggestedPorts.ldk}`
       )
     }
   }
@@ -426,7 +425,12 @@ export const Component = () => {
     if ('error' in initResult) {
       const error = initResult.error
       // Handle 403 status case
-      if (typeof error === 'object' && error !== null && 'status' in error && error.status === 403) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'status' in error &&
+        error.status === 403
+      ) {
         throw new Error('NODE_ALREADY_INITIALIZED')
       }
       // Extract message from error data if available
@@ -898,7 +902,9 @@ export const Component = () => {
 
       case 'unlock':
         return renderStepLayout(
-          isNodeError ? t('walletInit.unlockStep.errorTitle') : t('walletInit.unlockStep.title'),
+          isNodeError
+            ? t('walletInit.unlockStep.errorTitle')
+            : t('walletInit.unlockStep.title'),
           isNodeError
             ? t('walletInit.unlockStep.errorSubtitle')
             : t('walletInit.unlockStep.subtitle'),

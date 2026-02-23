@@ -33,10 +33,7 @@ export const UTXOManagementModal = ({
 
   useEffect(() => {
     listUnspents()
-    const intervalId = setInterval(
-      () => listUnspents(),
-      10000
-    )
+    const intervalId = setInterval(() => listUnspents(), 10000)
     return () => clearInterval(intervalId)
   }, [listUnspents])
 
@@ -79,9 +76,18 @@ export const UTXOManagementModal = ({
       colorableCount: colorable.length,
       coloredCount: colored.length,
       normalCount: normal.length,
-      totalColorable: colorable.reduce((sum, u) => sum + (u.utxo?.btc_amount || 0), 0),
-      totalColored: colored.reduce((sum, u) => sum + (u.utxo?.btc_amount || 0), 0),
-      totalNormal: normal.reduce((sum, u) => sum + (u.utxo?.btc_amount || 0), 0),
+      totalColorable: colorable.reduce(
+        (sum, u) => sum + (u.utxo?.btc_amount || 0),
+        0
+      ),
+      totalColored: colored.reduce(
+        (sum, u) => sum + (u.utxo?.btc_amount || 0),
+        0
+      ),
+      totalNormal: normal.reduce(
+        (sum, u) => sum + (u.utxo?.btc_amount || 0),
+        0
+      ),
     }
 
     return {
@@ -133,7 +139,10 @@ export const UTXOManagementModal = ({
         </div>
       </div>
       <div className="text-lg font-medium text-white">
-        {formatBitcoinAmount(parseInt(unspent.utxo?.btc_amount || '0'), bitcoinUnit)}{' '}
+        {formatBitcoinAmount(
+          parseInt(unspent.utxo?.btc_amount || '0'),
+          bitcoinUnit
+        )}{' '}
         {bitcoinUnit}
       </div>
       {unspent.rgb_allocations && unspent.rgb_allocations.length > 0 && (

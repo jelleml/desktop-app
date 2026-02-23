@@ -35,7 +35,6 @@ import {
 } from './types'
 import { getAssignmentAmount } from '../../../../utils/rgbUtils'
 
-
 const isLightningAddress = (input: string): boolean => {
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
   return emailRegex.test(input)
@@ -250,9 +249,11 @@ export const WithdrawModalContent: React.FC = () => {
           if (channel.asset_id && (channel.asset_local_amount || 0) > 0) {
             if (
               !assetCapacities[channel.asset_id] ||
-              (channel.asset_local_amount || 0) > assetCapacities[channel.asset_id]
+              (channel.asset_local_amount || 0) >
+                assetCapacities[channel.asset_id]
             ) {
-              assetCapacities[channel.asset_id] = channel.asset_local_amount || 0
+              assetCapacities[channel.asset_id] =
+                channel.asset_local_amount || 0
             }
           }
         })
@@ -759,8 +760,8 @@ export const WithdrawModalContent: React.FC = () => {
           data.asset_id === BTC_ASSET_ID
             ? null
             : (assets.data?.nia || []).find(
-              (a: any) => a.asset_id === data.asset_id
-            )
+                (a: any) => a.asset_id === data.asset_id
+              )
         const ticker =
           assetInfo?.ticker ||
           (data.asset_id === BTC_ASSET_ID
@@ -879,10 +880,7 @@ export const WithdrawModalContent: React.FC = () => {
     if (pendingData.network === 'lightning' && pendingData.decodedInvoice) {
       // Check channel capacity for BTC invoices
       const pendingAmtMsat = pendingData.decodedInvoice.amt_msat || 0
-      if (
-        pendingAmtMsat > 0 &&
-        !pendingData.decodedInvoice.asset_id
-      ) {
+      if (pendingAmtMsat > 0 && !pendingData.decodedInvoice.asset_id) {
         const invoiceAmountSats = pendingAmtMsat / 1000
         const maxCapacitySats = maxLightningCapacity / 1000
 
@@ -920,7 +918,11 @@ export const WithdrawModalContent: React.FC = () => {
           }
 
           // If zero-amount invoice, add the amount from user input
-          if (pendingData.decodedInvoice && (!pendingData.decodedInvoice.amt_msat || pendingData.decodedInvoice.amt_msat === 0)) {
+          if (
+            pendingData.decodedInvoice &&
+            (!pendingData.decodedInvoice.amt_msat ||
+              pendingData.decodedInvoice.amt_msat === 0)
+          ) {
             // Convert user-entered amount to msat
             const userAmount = Number(pendingData.amount)
             if (bitcoinUnit === 'SAT') {
@@ -1030,8 +1032,8 @@ export const WithdrawModalContent: React.FC = () => {
             fee_rate:
               pendingData.fee_rate !== 'custom'
                 ? feeEstimations[
-                pendingData.fee_rate as keyof typeof feeEstimations
-                ]
+                    pendingData.fee_rate as keyof typeof feeEstimations
+                  ]
                 : customFee,
           }).unwrap()
 
@@ -1104,14 +1106,15 @@ export const WithdrawModalContent: React.FC = () => {
               }
             }
 
-            const targetAssetId = decodedRgbInvoice.asset_id || pendingData.asset_id;
+            const targetAssetId =
+              decodedRgbInvoice.asset_id || pendingData.asset_id
             res = await sendRgb({
               donation: pendingData.donation || false,
               fee_rate:
                 pendingData.fee_rate !== 'custom'
                   ? feeEstimations[
-                  pendingData.fee_rate as keyof typeof feeEstimations
-                  ]
+                      pendingData.fee_rate as keyof typeof feeEstimations
+                    ]
                   : customFee,
               recipient_map: {
                 [targetAssetId]: [
@@ -1135,8 +1138,8 @@ export const WithdrawModalContent: React.FC = () => {
               fee_rate:
                 pendingData.fee_rate !== 'custom'
                   ? feeEstimations[
-                  pendingData.fee_rate as keyof typeof feeEstimations
-                  ]
+                      pendingData.fee_rate as keyof typeof feeEstimations
+                    ]
                   : customFee,
               recipient_map: {
                 [pendingData.asset_id]: [
@@ -1153,7 +1156,7 @@ export const WithdrawModalContent: React.FC = () => {
           if ('error' in res) {
             throw new Error(
               (res.error as ApiError)?.data?.error ||
-              t('withdrawModal.main.errors.rgbPaymentFailed')
+                t('withdrawModal.main.errors.rgbPaymentFailed')
             )
           }
           toast.success(t('withdrawModal.main.toasts.rgbSuccess'), {
