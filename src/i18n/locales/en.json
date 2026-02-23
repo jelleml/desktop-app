@@ -234,6 +234,24 @@
   "labels": {
     "soon": "Soon"
   },
+  "peerManagement": {
+    "title": "Peer Management",
+    "peerPlaceholder": "Enter peer pubkey or connection string",
+    "connect": "Connect",
+    "cancel": "Cancel",
+    "connectToPeer": "Connect to Peer",
+    "disconnectTooltip": "Disconnect from peer",
+    "disconnect": "Disconnect",
+    "noPeers": "No peers connected",
+    "success": {
+      "connected": "Successfully connected to peer",
+      "disconnected": "Successfully disconnected from peer"
+    },
+    "errors": {
+      "connectFailed": "Failed to connect to peer",
+      "disconnectFailed": "Failed to disconnect from peer"
+    }
+  },
   "dashboard": {
     "title": "Wallet Dashboard",
     "openChannel": "Open Channel",
