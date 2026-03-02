@@ -1285,7 +1285,7 @@ export const WithdrawModalContent: React.FC = () => {
               ? t('withdrawModal.main.title.confirm')
               : t('withdrawModal.main.title.form')}
           </h3>
-          <p className="text-slate-400 text-center text-sm mb-4">
+          <p className="text-content-secondary text-center text-sm mb-4">
             {showConfirmation
               ? t('withdrawModal.main.subtitle.confirm')
               : t('withdrawModal.main.subtitle.form')}
@@ -1293,7 +1293,7 @@ export const WithdrawModalContent: React.FC = () => {
         </div>
 
         <div className="overflow-y-auto flex-1 pr-1 custom-scrollbar">
-          <div className="bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-slate-800/50 p-6">
+          <div className="bg-surface-base/50 backdrop-blur-sm rounded-2xl border border-border-subtle/50 p-6">
             {showConfirmation ? (
               <ConfirmationModal
                 assets={assets}
@@ -1360,8 +1360,8 @@ export const WithdrawModalContent: React.FC = () => {
         {!showConfirmation && (
           <div className="flex justify-between pt-4">
             <button
-              className="px-3 py-2 text-slate-400 hover:text-white transition-colors 
-                       flex items-center gap-1.5 hover:bg-slate-800/50 rounded-lg text-sm"
+              className="px-3 py-2 text-content-secondary hover:text-white transition-colors 
+                       flex items-center gap-1.5 hover:bg-surface-overlay/50 rounded-lg text-sm"
               onClick={() => {
                 // Reset all states
                 setShowConfirmation(false)

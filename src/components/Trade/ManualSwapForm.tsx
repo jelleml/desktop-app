@@ -514,15 +514,15 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
         <h2 className="text-xl font-semibold text-white">
           {t('tradeManual.makerForm.title')}
         </h2>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-content-secondary">
           {t('tradeManual.makerForm.description')}
         </p>
       </div>
 
-      <div className="bg-slate-800/50 rounded-lg p-4 mb-6 border border-slate-700/50 swap-card">
+      <div className="bg-surface-overlay/50 rounded-lg p-4 mb-6 border border-border-default/50 swap-card">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold text-white step-indicator">
+            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground step-indicator">
               1
             </div>
             <h3 className="text-md font-medium text-white">
@@ -530,17 +530,17 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
             </h3>
           </div>
           <button
-            className="p-2 rounded-lg hover:bg-slate-700 transition-colors"
+            className="p-2 rounded-lg hover:bg-surface-high transition-colors"
             disabled={isRefreshing}
             onClick={fetchAssetBalances}
             title="Refresh balances"
           >
             <RefreshCw
-              className={`w-4 h-4 text-slate-400 ${isRefreshing ? 'animate-spin' : ''}`}
+              className={`w-4 h-4 text-content-secondary ${isRefreshing ? 'animate-spin' : ''}`}
             />
           </button>
         </div>
-        <p className="text-sm text-slate-400 ml-8 mb-4">
+        <p className="text-sm text-content-secondary ml-8 mb-4">
           {t('tradeManual.makerForm.info.initiateDescription')}
         </p>
 
@@ -550,14 +550,14 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
             <div className="space-y-4">
               <div className="flex flex-col gap-1.5">
                 <div className="flex justify-between items-center">
-                  <label className="text-sm font-medium text-slate-300">
+                  <label className="text-sm font-medium text-content-secondary">
                     {t('tradeManual.makerForm.labels.fromAsset')}
                   </label>
                   {fromAsset && (
-                    <div className="flex items-center gap-1 text-xs text-slate-400 asset-balance">
+                    <div className="flex items-center gap-1 text-xs text-content-secondary asset-balance">
                       <Wallet className="w-3 h-3" />
                       <span>{getBalanceLabel(true)} </span>
-                      <span className="font-medium text-slate-300">
+                      <span className="font-medium text-content-secondary">
                         {isLoadingBalances
                           ? 'Loading...'
                           : assetBalances[fromAsset] !== undefined
@@ -582,12 +582,12 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium text-content-secondary">
                   {t('tradeManual.makerForm.labels.amountToSend')}
                 </label>
                 <div className="relative h-[50px]">
                   <input
-                    className="w-full h-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500 input-animate"
+                    className="w-full h-full px-4 py-3 bg-surface-overlay border border-border-default rounded-lg text-white focus:outline-none focus:border-blue-500 input-animate"
                     placeholder="0.00"
                     type="text"
                     {...register('fromAmount', { required: true })}
@@ -604,7 +604,7 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
                         MAX
                       </button>
                     )}
-                    <span className="text-slate-400">
+                    <span className="text-content-secondary">
                       {getAssetTicker(fromAsset)}
                     </span>
                   </div>
@@ -622,7 +622,7 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
                     </p>
                   )}
                 {fromAsset === 'BTC' && maxOutboundHtlc !== null && (
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-content-secondary">
                     Max HTLC size:{' '}
                     {formatBitcoinAmount(
                       msatToSat(maxOutboundHtlc),
@@ -638,14 +638,14 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
             <div className="space-y-4">
               <div className="flex flex-col gap-1.5">
                 <div className="flex justify-between items-center">
-                  <label className="text-sm font-medium text-slate-300">
+                  <label className="text-sm font-medium text-content-secondary">
                     {t('tradeManual.makerForm.labels.toAsset')}
                   </label>
                   {toAsset && (
-                    <div className="flex items-center gap-1 text-xs text-slate-400 asset-balance">
+                    <div className="flex items-center gap-1 text-xs text-content-secondary asset-balance">
                       <Wallet className="w-3 h-3" />
                       <span>{getBalanceLabel(false)} </span>
-                      <span className="font-medium text-slate-300">
+                      <span className="font-medium text-content-secondary">
                         {isLoadingBalances
                           ? 'Loading...'
                           : assetBalances[toAsset] !== undefined
@@ -673,12 +673,12 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium text-content-secondary">
                   {t('tradeManual.makerForm.labels.amountToReceive')}
                 </label>
                 <div className="relative h-[50px]">
                   <input
-                    className="w-full h-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500 input-animate"
+                    className="w-full h-full px-4 py-3 bg-surface-overlay border border-border-default rounded-lg text-white focus:outline-none focus:border-blue-500 input-animate"
                     placeholder="0.00"
                     type="text"
                     {...register('toAmount', { required: true })}
@@ -695,7 +695,7 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
                         MAX
                       </button>
                     )}
-                    <span className="text-slate-400">
+                    <span className="text-content-secondary">
                       {getAssetTicker(toAsset)}
                     </span>
                   </div>
@@ -710,11 +710,11 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-slate-300">
+            <label className="text-sm font-medium text-content-secondary">
               {t('tradeManual.makerForm.labels.timeout')}
             </label>
             <input
-              className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500 input-animate"
+              className="w-full px-4 py-3 bg-surface-overlay border border-border-default rounded-lg text-white focus:outline-none focus:border-blue-500 input-animate"
               placeholder="3600"
               type="number"
               {...register('timeoutSec', {
@@ -724,7 +724,7 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
               })}
             />
             <div className="flex justify-between">
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-content-tertiary">
                 {t('tradeManual.makerForm.info.timeoutDescription')}
               </p>
               {timeoutSec && parseInt(timeoutSec) < 10 && (
@@ -740,13 +740,13 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-slate-400 p-3 bg-slate-800/30 rounded-xl border border-slate-700">
+          <div className="flex items-center gap-2 text-xs text-content-secondary p-3 bg-surface-overlay/30 rounded-xl border border-border-default">
             <Info className="h-4 w-4 text-blue-500 flex-shrink-0" />
             <p>{t('tradeManual.makerForm.info.sufficientBalanceWarning')}</p>
           </div>
 
           <button
-            className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-blue-600 button-animate"
+            className="w-full px-4 py-3 bg-primary hover:bg-primary-emphasis text-primary-foreground rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed button-animate"
             disabled={
               isInitiating ||
               !fromAsset ||
@@ -774,56 +774,56 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
       </div>
 
       {swapInitiated && (
-        <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 swap-card swap-initiated">
+        <div className="bg-surface-overlay/50 rounded-lg p-4 border border-border-default/50 swap-card swap-initiated">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold text-white step-indicator">
+            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground step-indicator">
               2
             </div>
             <h3 className="text-md font-medium text-white">
               {t('tradeManual.makerForm.buttons.shareWithTaker')}
             </h3>
           </div>
-          <p className="text-sm text-slate-400 ml-8 mb-4">
+          <p className="text-sm text-content-secondary ml-8 mb-4">
             {t('tradeManual.makerForm.info.swapInitiated')}
           </p>
 
-          <div className="bg-slate-900 p-4 rounded-lg mb-4 relative swap-string-container">
-            <pre className="text-xs text-slate-300 font-mono break-all whitespace-pre-wrap">
+          <div className="bg-surface-base p-4 rounded-lg mb-4 relative swap-string-container">
+            <pre className="text-xs text-content-secondary font-mono break-all whitespace-pre-wrap">
               {swapString}
             </pre>
             <button
-              className="absolute top-2 right-2 p-1.5 bg-slate-700 rounded hover:bg-slate-600 transition-colors"
+              className="absolute top-2 right-2 p-1.5 bg-surface-high rounded hover:bg-surface-elevated transition-colors"
               onClick={() => copyToClipboard(swapString)}
               title="Copy swap string"
               type="button"
             >
-              <Copy className="w-4 h-4 text-slate-300" />
+              <Copy className="w-4 h-4 text-content-secondary" />
             </button>
             {copied && (
-              <div className="absolute top-2 right-10 bg-slate-700 text-white text-xs py-1 px-2 rounded copied-indicator">
+              <div className="absolute top-2 right-10 bg-surface-high text-white text-xs py-1 px-2 rounded copied-indicator">
                 {t('tradeManual.makerForm.info.copiedToClipboard')}
               </div>
             )}
           </div>
 
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold text-white step-indicator">
+            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground step-indicator">
               3
             </div>
             <h3 className="text-md font-medium text-white">
               {t('tradeManual.makerForm.buttons.executeSwap')}
             </h3>
           </div>
-          <p className="text-sm text-slate-400 ml-8 mb-4">
+          <p className="text-sm text-content-secondary ml-8 mb-4">
             {t('tradeManual.makerForm.info.executeInfo')}
           </p>
 
           <div className="flex flex-col gap-1.5 mb-4">
-            <label className="text-sm font-medium text-slate-300">
+            <label className="text-sm font-medium text-content-secondary">
               {t('tradeManual.makerForm.labels.takerPubkey')}
             </label>
             <input
-              className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500 input-animate"
+              className="w-full px-4 py-3 bg-surface-overlay border border-border-default rounded-lg text-white focus:outline-none focus:border-blue-500 input-animate"
               placeholder={t('tradeManual.makerForm.placeholders.takerPubkey')}
               type="text"
               {...register('takerPubkey', { required: true })}
