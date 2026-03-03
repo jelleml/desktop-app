@@ -30,7 +30,9 @@ import {
   ORDER_CHANNEL_PATH,
   WALLET_HISTORY_DEPOSITS_PATH,
 } from '../../app/router/paths'
-import { useAppDispatch, useAppSelector } from '../../app/store/hooks'
+import { useAppDispatch } from '../../app/store/hooks'
+import { useCopyToClipboard } from '../../hooks/useCopyToClipboard'
+import { useSettings } from '../../hooks/useSettings'
 import { AssetRow } from '../../components/AssetRow'
 import { IssueAssetModal } from '../../components/IssueAssetModal'
 import { PeerManagementModal } from '../../components/PeerManagementModal'
@@ -67,7 +69,7 @@ export const Component = () => {
     Record<string, { offChain: number; onChain: number }>
   >({})
   const [assetsMap, setAssetsMap] = useState<Record<string, NiaAsset>>({})
-  const bitcoinUnit = useAppSelector((state) => state.settings.bitcoinUnit)
+  const { bitcoinUnit } = useSettings()
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [getNodeInfo, nodeInfoResponse] =
     nodeApi.endpoints.nodeInfo.useLazyQuery()
@@ -76,7 +78,7 @@ export const Component = () => {
   const [showUTXOModal, setShowUTXOModal] = useState(false)
   const [showPeerModal, setShowPeerModal] = useState(false)
   const [showIssueAssetModal, setShowIssueAssetModal] = useState(false)
-  const [pubkeyCopied, setPubkeyCopied] = useState(false)
+  const { copied: pubkeyCopied, copy: copyPubkey } = useCopyToClipboard()
 
   const refreshData = useCallback(async () => {
     setIsRefreshing(true)
@@ -159,9 +161,7 @@ export const Component = () => {
 
   const handleCopyPubkey = () => {
     if (!pubkey) return
-    navigator.clipboard.writeText(pubkey)
-    setPubkeyCopied(true)
-    setTimeout(() => setPubkeyCopied(false), 2000)
+    copyPubkey(pubkey)
   }
 
   const btcOnChain = onChainSpendableBalance + onChainColoredSpendableBalance

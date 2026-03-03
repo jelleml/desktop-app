@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'react-toastify'
 
-import { useAppSelector } from '../../app/store/hooks'
+import { useSettings } from '../../hooks/useSettings'
 import { useAssetIcon } from '../../helpers/utils'
 import { nodeApi, SwapDetails } from '../../slices/nodeApi/nodeApi.slice'
 import { useNotification } from '../NotificationSystem'
@@ -43,7 +43,7 @@ const SwapStatusContent: React.FC<{
   assets: any[]
   timestamp?: Date
 }> = ({ swap, assets, timestamp }) => {
-  const bitcoinUnit = useAppSelector((state) => state.settings.bitcoinUnit)
+  const { bitcoinUnit } = useSettings()
 
   const fromAssetTicker =
     assets.find((asset) => asset.asset_id === swap.from_asset)?.ticker ||

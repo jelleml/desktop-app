@@ -11,7 +11,8 @@ import {
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { useAppSelector } from '../../app/store/hooks'
+import { useCopyToClipboard } from '../../hooks/useCopyToClipboard'
+import { useSettings } from '../../hooks/useSettings'
 import defaultRgbIcon from '../../assets/rgb-symbol-color.svg'
 import { formatBitcoinAmount } from '../../helpers/number'
 import { useAssetIcon } from '../../helpers/utils'
@@ -27,13 +28,9 @@ interface InfoModalProps {
 }
 
 const CopyableValue: React.FC<{ value: string }> = ({ value }) => {
-  const [copied, setCopied] = useState(false)
+  const { copied, copy } = useCopyToClipboard()
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(value)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+  const handleCopy = () => copy(value)
 
   return (
     <div className="flex items-start gap-2">
@@ -274,7 +271,7 @@ export const ChannelCard: React.FC<ChannelCardProps> = ({
 }) => {
   const [isCloseModalOpen, setIsCloseModalOpen] = useState(false)
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false)
-  const bitcoinUnit = useAppSelector((state) => state.settings.bitcoinUnit)
+  const { bitcoinUnit } = useSettings()
   const { t } = useTranslation()
 
   const assetPrecision = asset?.precision ?? 8

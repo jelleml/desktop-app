@@ -8,9 +8,8 @@ import {
 } from 'lucide-react'
 import React, { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useSelector } from 'react-redux'
 
-import { RootState } from '../../../app/store'
+import { useAppSelector } from '../../../app/store/hooks'
 import { Button, Badge, Alert, IconButton, Card } from '../../../components/ui'
 import {
   Table,
@@ -18,93 +17,12 @@ import {
   renderDateField,
   renderStatusBadge,
 } from '../../../components/ui/Table'
+import {
+  formatBitcoinAmount,
+  formatAssetAmount,
+  resolveAssetInfo,
+} from '../../../helpers/walletHistoryUtils'
 import { nodeApi } from '../../../slices/nodeApi/nodeApi.slice'
-
-const formatBitcoinAmount = (
-  amount: string | number,
-  bitcoinUnit: string
-): string => {
-  const amountDecimal = new Decimal(amount)
-  if (bitcoinUnit === 'SAT') {
-    return amountDecimal.toNumber().toLocaleString('en-US', {
-      maximumFractionDigits: 0,
-      useGrouping: true,
-    })
-  } else {
-    return amountDecimal.div(100000000).toNumber().toLocaleString('en-US', {
-      maximumFractionDigits: 8,
-      minimumFractionDigits: 8,
-      useGrouping: true,
-    })
-  }
-}
-
-const formatAssetAmount = (
-  amount: string | number,
-  isBtc: boolean,
-  bitcoinUnit: string,
-  precision: number
-): string => {
-  if (isBtc) {
-    return formatBitcoinAmount(amount, bitcoinUnit)
-  }
-  const amountDecimal = new Decimal(amount)
-  return amountDecimal
-    .div(Math.pow(10, precision))
-    .toNumber()
-    .toLocaleString('en-US', {
-      maximumFractionDigits: precision,
-      minimumFractionDigits: 0,
-      useGrouping: true,
-    })
-}
-
-type AssetInfo = {
-  label: string
-  precision: number
-  fullId: string
-}
-
-const resolveAssetInfo = (
-  assetId: string | undefined,
-  listAssetsData: any
-): AssetInfo | null => {
-  if (!assetId) return null
-
-  const nia = listAssetsData?.nia ?? []
-  const uda = listAssetsData?.uda ?? []
-  const cfa = listAssetsData?.cfa ?? []
-
-  const niaMatch = nia.find((a: any) => a.asset_id === assetId)
-  if (niaMatch)
-    return {
-      label: niaMatch.ticker ?? niaMatch.name ?? assetId,
-      precision: niaMatch.precision ?? 0,
-      fullId: assetId,
-    }
-
-  const udaMatch = uda.find((a: any) => a.asset_id === assetId)
-  if (udaMatch)
-    return {
-      label: udaMatch.ticker ?? udaMatch.name ?? assetId,
-      precision: udaMatch.precision ?? 0,
-      fullId: assetId,
-    }
-
-  const cfaMatch = cfa.find((a: any) => a.asset_id === assetId)
-  if (cfaMatch)
-    return {
-      label: cfaMatch.name ?? assetId,
-      precision: cfaMatch.precision ?? 0,
-      fullId: assetId,
-    }
-
-  return {
-    label: assetId,
-    precision: 0,
-    fullId: assetId,
-  }
-}
 
 export type DepositType = {
   satAmount: string
@@ -129,9 +47,7 @@ export const Component: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('')
   const [isRefreshing, setIsRefreshing] = useState(false)
 
-  const bitcoinUnit = useSelector(
-    (state: RootState) => state.settings.bitcoinUnit
-  )
+  const bitcoinUnit = useAppSelector((state) => state.settings.bitcoinUnit)
 
   const { data: listAssetsData } = nodeApi.endpoints.listAssets.useQuery()
   const {

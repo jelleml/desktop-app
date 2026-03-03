@@ -16,7 +16,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'react-toastify'
 
-import { useAppSelector } from '../../../../app/store/hooks'
+import { useSettings } from '../../../../hooks/useSettings'
 import btcLogo from '../../../../assets/bitcoin-logo.svg'
 import rgbLogo from '../../../../assets/rgb-symbol-color.svg'
 import { CreateUTXOModal } from '../../../../components/CreateUTXOModal'
@@ -58,7 +58,7 @@ export const Step2 = ({ assetId, onBack, onNext }: Props) => {
     useUtxoErrorHandler()
   const { t } = useTranslation()
 
-  const bitcoinUnit = useAppSelector((state) => state.settings.bitcoinUnit)
+  const { bitcoinUnit } = useSettings()
   const [addressQuery] = nodeApi.useLazyAddressQuery()
   const [lnInvoice] = nodeApi.useLnInvoiceMutation()
   const [rgbInvoice] = nodeApi.useRgbInvoiceMutation()

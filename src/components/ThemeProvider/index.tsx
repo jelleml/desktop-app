@@ -1,13 +1,13 @@
 import { useEffect } from 'react'
 
-import { useAppSelector } from '../../app/store/hooks'
+import { useSettings } from '../../hooks/useSettings'
 
 interface ThemeProviderProps {
   children: React.ReactNode
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const theme = useAppSelector((state) => state.settings.theme)
+  const { theme } = useSettings()
 
   useEffect(() => {
     const root = document.documentElement

@@ -9,6 +9,7 @@ import { getKaleidoClient } from '../../../api/client'
 import { webSocketService } from '../../../app/hubs/websocketService'
 import { CREATE_NEW_CHANNEL_PATH } from '../../../app/router/paths'
 import { useAppDispatch, useAppSelector } from '../../../app/store/hooks'
+import { useSettings } from '../../../hooks/useSettings'
 import { BuyChannelModal } from '../../../components/BuyChannelModal'
 import { SwapConfirmation } from '../../../components/SwapConfirmation'
 import { SwapRecap } from '../../../components/SwapRecap'
@@ -377,7 +378,7 @@ export const Component = () => {
 
   const wsConnected = useAppSelector((state) => state.pairs.wsConnected)
   const quoteError = useAppSelector((state) => state.pairs.quoteError)
-  const bitcoinUnit = useAppSelector((state) => state.settings.bitcoinUnit)
+  const { bitcoinUnit } = useSettings()
 
   // Define parseAssetAmount early to avoid initialization error in quoteResponse
   const parseAssetAmount = useCallback(

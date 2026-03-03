@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'react-toastify'
 
 import { useAppDispatch, useAppSelector } from '../../../../app/store/hooks'
+import { useSettings } from '../../../../hooks/useSettings'
 import { BTC_ASSET_ID } from '../../../../constants'
 import {
   parseAssetAmountWithPrecision,
@@ -51,7 +52,7 @@ const createFungibleAssignment = (amount: number): any => {
 export const WithdrawModalContent: React.FC = () => {
   const dispatch = useAppDispatch()
   const { t } = useTranslation()
-  const bitcoinUnit = useAppSelector((state) => state.settings.bitcoinUnit)
+  const { bitcoinUnit } = useSettings()
   const transportEndpoint = useAppSelector(
     (state) => state.nodeSettings.data.proxy_endpoint
   )

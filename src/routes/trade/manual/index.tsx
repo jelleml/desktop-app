@@ -13,7 +13,7 @@ import { Trans, useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
-import { useAppSelector } from '../../../app/store/hooks'
+import { useSettings } from '../../../hooks/useSettings'
 import { Loader } from '../../../components/Loader'
 // import { StatusToast } from '../../../components/StatusToast'
 import { NoChannelsMessage, ManualSwapForm } from '../../../components/Trade'
@@ -51,7 +51,7 @@ export const Component = () => {
     }
   )
 
-  const bitcoinUnit = useAppSelector((state) => state.settings.bitcoinUnit)
+  const { bitcoinUnit } = useSettings()
   const { t } = useTranslation()
 
   // Utility functions

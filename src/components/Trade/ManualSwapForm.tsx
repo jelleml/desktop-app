@@ -4,7 +4,8 @@ import { useForm, SubmitHandler } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'react-toastify'
 
-import { useAppSelector } from '../../app/store/hooks'
+import { useCopyToClipboard } from '../../hooks/useCopyToClipboard'
+import { useSettings } from '../../hooks/useSettings'
 import {
   formatNumberInput,
   msatToSat,
@@ -44,7 +45,7 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
   const [swapString, setSwapString] = useState<string>('')
   const [paymentSecret, setPaymentSecret] = useState<string>('')
   const [swapInitiated, setSwapInitiated] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const { copied, copy } = useCopyToClipboard()
   const [isExecuting, setIsExecuting] = useState(false)
   const [isInitiating, setIsInitiating] = useState(false)
   const [assetBalances, setAssetBalances] = useState<
@@ -55,7 +56,7 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
   const [maxOutboundHtlc, setMaxOutboundHtlc] = useState<number | null>(null)
 
   // Get bitcoin unit from app state
-  const bitcoinUnit = useAppSelector((state) => state.settings.bitcoinUnit)
+  const { bitcoinUnit } = useSettings()
 
   const { register, handleSubmit, watch, setValue } = useForm<FormValues>({
     defaultValues: {
@@ -235,11 +236,7 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
     }
   }
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+  const copyToClipboard = (text: string) => copy(text)
 
   const handleMaxAmount = (asset: string, type: 'from' | 'to') => {
     if (!asset) return

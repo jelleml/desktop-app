@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { ClipLoader } from 'react-spinners'
 import { toast } from 'react-toastify'
 
-import { useAppSelector } from '../../app/store/hooks'
+import { useSettings } from '../../hooks/useSettings'
 import { MIN_CHANNEL_CAPACITY, MAX_CHANNEL_CAPACITY } from '../../constants'
 import { formatNumberWithCommas } from '../../helpers/number'
 import { WalletConfirmationModal } from '../../routes/order-new-channel/components'
@@ -88,7 +88,7 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
   preselectedAsset,
 }) => {
   const { t } = useTranslation()
-  const bitcoinUnit = useAppSelector((state) => state.settings.bitcoinUnit)
+  const { bitcoinUnit } = useSettings()
 
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [loading, setLoading] = useState(false)

@@ -6,7 +6,7 @@ import { toast } from 'react-toastify'
 import { twJoin } from 'tailwind-merge'
 import { z } from 'zod'
 
-import { useAppSelector } from '../../app/store/hooks'
+import { useSettings } from '../../hooks/useSettings'
 import defaultIcon from '../../assets/rgb-symbol-color.svg'
 import { AssetSelectWithModal } from '../../components/Trade/AssetSelectWithModal'
 import { Button } from '../../components/ui'
@@ -73,7 +73,7 @@ export const Step2 = ({
   const [selectedAsset, setSelectedAsset] = useState<NiaAsset | null>(null)
   const [assetAmountInput, setAssetAmountInput] = useState('')
 
-  const bitcoinUnit = useAppSelector((state) => state.settings.bitcoinUnit)
+  const { bitcoinUnit } = useSettings()
 
   // Asset icon hook
   const [assetIconSrc, setAssetIconSrc] = useAssetIcon(

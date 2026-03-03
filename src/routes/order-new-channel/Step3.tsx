@@ -4,7 +4,7 @@ import { ClipLoader } from 'react-spinners'
 import { toast } from 'react-toastify'
 
 import 'react-toastify/dist/ReactToastify.css'
-import { useAppSelector } from '../../app/store/hooks'
+import { useSettings } from '../../hooks/useSettings'
 import { Lsps1CreateOrderResponse } from '../../slices/makerApi/makerApi.slice'
 import {
   nodeApi,
@@ -60,7 +60,7 @@ export const Step3: React.FC<StepProps> = ({
     'lightning'
   )
   const [useWalletFunds, setUseWalletFunds] = useState(true)
-  const bitcoinUnit = useAppSelector((state) => state.settings.bitcoinUnit)
+  const { bitcoinUnit } = useSettings()
 
   type PaymentStateType =
     | 'waiting'

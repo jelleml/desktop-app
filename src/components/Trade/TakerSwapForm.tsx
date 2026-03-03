@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'react-toastify'
 
-import { useAppSelector } from '../../app/store/hooks'
+import { useSettings } from '../../hooks/useSettings'
 import { getAssetPrecision } from '../../helpers/number'
 import { nodeApi } from '../../slices/nodeApi/nodeApi.slice'
 
@@ -43,7 +43,7 @@ export const TakerSwapForm: React.FC<TakerSwapFormProps> = ({
   })
 
   const swapString = watch('swapString')
-  const bitcoinUnit = useAppSelector((state) => state.settings.bitcoinUnit)
+  const { bitcoinUnit } = useSettings()
 
   const [assetBalance] = nodeApi.endpoints.assetBalance.useLazyQuery()
   const [executeTaker] = nodeApi.useTakerMutation()

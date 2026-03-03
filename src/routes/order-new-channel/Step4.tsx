@@ -8,7 +8,7 @@ import {
   Copy,
   Clock,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useCopyToClipboard } from '../../hooks/useCopyToClipboard'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 
@@ -25,14 +25,10 @@ export const Step4 = ({
 }) => {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [copied, setCopied] = useState(false)
+  const { copied, copy } = useCopyToClipboard()
 
   const copyToClipboard = () => {
-    if (orderId) {
-      navigator.clipboard.writeText(orderId)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }
+    if (orderId) copy(orderId)
   }
 
   const statusConfig = {
