@@ -251,7 +251,7 @@ export const WithdrawModalContent: React.FC = () => {
             if (
               !assetCapacities[channel.asset_id] ||
               (channel.asset_local_amount || 0) >
-                assetCapacities[channel.asset_id]
+              assetCapacities[channel.asset_id]
             ) {
               assetCapacities[channel.asset_id] =
                 channel.asset_local_amount || 0
@@ -761,8 +761,8 @@ export const WithdrawModalContent: React.FC = () => {
           data.asset_id === BTC_ASSET_ID
             ? null
             : (assets.data?.nia || []).find(
-                (a: any) => a.asset_id === data.asset_id
-              )
+              (a: any) => a.asset_id === data.asset_id
+            )
         const ticker =
           assetInfo?.ticker ||
           (data.asset_id === BTC_ASSET_ID
@@ -1033,9 +1033,9 @@ export const WithdrawModalContent: React.FC = () => {
             fee_rate:
               pendingData.fee_rate !== 'custom'
                 ? feeEstimations[
-                    pendingData.fee_rate as keyof typeof feeEstimations
-                  ]
-                : customFee,
+                pendingData.fee_rate as keyof typeof feeEstimations
+                ]
+                : Math.round(customFee),
           }).unwrap()
 
           // if ('error' in res) check removed as unwrap throws
@@ -1114,9 +1114,9 @@ export const WithdrawModalContent: React.FC = () => {
               fee_rate:
                 pendingData.fee_rate !== 'custom'
                   ? feeEstimations[
-                      pendingData.fee_rate as keyof typeof feeEstimations
-                    ]
-                  : customFee,
+                  pendingData.fee_rate as keyof typeof feeEstimations
+                  ]
+                  : Math.round(customFee),
               recipient_map: {
                 [targetAssetId]: [
                   {
@@ -1140,9 +1140,9 @@ export const WithdrawModalContent: React.FC = () => {
               fee_rate:
                 pendingData.fee_rate !== 'custom'
                   ? feeEstimations[
-                      pendingData.fee_rate as keyof typeof feeEstimations
-                    ]
-                  : customFee,
+                  pendingData.fee_rate as keyof typeof feeEstimations
+                  ]
+                  : Math.round(customFee),
               recipient_map: {
                 [pendingData.asset_id]: [
                   {
@@ -1159,7 +1159,7 @@ export const WithdrawModalContent: React.FC = () => {
           if ('error' in res) {
             throw new Error(
               (res.error as ApiError)?.data?.error ||
-                t('withdrawModal.main.errors.rgbPaymentFailed')
+              t('withdrawModal.main.errors.rgbPaymentFailed')
             )
           }
           toast.success(t('withdrawModal.main.toasts.rgbSuccess'), {
@@ -1249,9 +1249,9 @@ export const WithdrawModalContent: React.FC = () => {
           estimateFee({ blocks: 1 }).unwrap(),
         ])
         setFeeEstimations({
-          fast: fast?.fee_rate || 0,
-          normal: normal?.fee_rate || 0,
-          slow: slow?.fee_rate || 0,
+          fast: Math.round(fast?.fee_rate || 0),
+          normal: Math.round(normal?.fee_rate || 0),
+          slow: Math.round(slow?.fee_rate || 0),
         })
       } catch (error) {
         console.error('Failed to fetch fee estimates:', error)

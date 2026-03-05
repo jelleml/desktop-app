@@ -233,7 +233,7 @@ export const Step3: React.FC<StepProps> = ({
         const result = await sendBtc({
           address: order.payment.onchain.address,
           amount: order.payment.onchain.order_total_sat,
-          fee_rate: feeRate,
+          fee_rate: Math.round(feeRate),
         })
 
         if ('error' in result) {
@@ -485,46 +485,46 @@ export const Step3: React.FC<StepProps> = ({
                   {/* Countdown Timer - Always visible */}
                   {(order?.payment?.bolt11?.expires_at ||
                     order?.payment?.onchain?.expires_at) && (
-                    <div className="mb-6">
-                      <CountdownTimer
-                        expiresAt={
-                          order?.payment?.bolt11?.expires_at ||
-                          order?.payment?.onchain?.expires_at ||
-                          ''
-                        }
-                        onExpiry={handleCountdownExpiry}
-                      />
-                    </div>
-                  )}
+                      <div className="mb-6">
+                        <CountdownTimer
+                          expiresAt={
+                            order?.payment?.bolt11?.expires_at ||
+                            order?.payment?.onchain?.expires_at ||
+                            ''
+                          }
+                          onExpiry={handleCountdownExpiry}
+                        />
+                      </div>
+                    )}
 
                   {/* QR Code Payment */}
                   {(!useWalletFunds ||
                     (paymentMethod === 'lightning' &&
                       outboundLiquidity <= 0)) && (
-                    <div className="text-center">
-                      {localPaymentState === 'waiting' ? (
-                        <PaymentWaiting
-                          bitcoinUnit={bitcoinUnit}
-                          currentPayment={currentPayment}
-                          handleCopy={handleCopy}
-                          order={order}
-                          paymentMethod={paymentMethod}
-                          paymentURI={paymentURI}
-                        />
-                      ) : (
-                        order && (
-                          <QRCodePayment
+                      <div className="text-center">
+                        {localPaymentState === 'waiting' ? (
+                          <PaymentWaiting
                             bitcoinUnit={bitcoinUnit}
                             currentPayment={currentPayment}
-                            onCopy={handleCopy}
+                            handleCopy={handleCopy}
                             order={order}
                             paymentMethod={paymentMethod}
                             paymentURI={paymentURI}
                           />
-                        )
-                      )}
-                    </div>
-                  )}
+                        ) : (
+                          order && (
+                            <QRCodePayment
+                              bitcoinUnit={bitcoinUnit}
+                              currentPayment={currentPayment}
+                              onCopy={handleCopy}
+                              order={order}
+                              paymentMethod={paymentMethod}
+                              paymentURI={paymentURI}
+                            />
+                          )
+                        )}
+                      </div>
+                    )}
                 </div>
               </div>
             </div>

@@ -80,7 +80,7 @@ export const CreateUTXOModal: React.FC<CreateUTXOModalProps> = ({
         if (!feeRate) {
           throw Error('Unable to calculate fee-rate')
         }
-        setFeeRate(feeRate)
+        setFeeRate(Math.round(feeRate))
       } catch (error) {
         console.error('Failed to fetch fee rate:', error)
         // Default to a reasonable fee rate if we can't fetch it
@@ -120,7 +120,7 @@ export const CreateUTXOModal: React.FC<CreateUTXOModalProps> = ({
 
     try {
       await createUtxos({
-        fee_rate: feeRate,
+        fee_rate: Math.round(feeRate),
         num: numUtxos,
         size: utxoSize,
         skip_sync: false,

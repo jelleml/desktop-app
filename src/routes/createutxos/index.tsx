@@ -48,7 +48,9 @@ export const Component = () => {
     setIsLoading(true)
     createutxos({
       fee_rate:
-        data.fee_rate !== 'custom' ? parseFloat(data.fee_rate) : customFee,
+        data.fee_rate !== 'custom'
+          ? Math.round(parseFloat(data.fee_rate))
+          : Math.round(customFee),
       num: data.num,
       size: data.size,
       up_to: false,
@@ -80,9 +82,9 @@ export const Component = () => {
           fastFeePromise,
         ])
         setFeeRates({
-          fast: fastFee.fee_rate ?? 3,
-          normal: normalFee.fee_rate ?? 2,
-          slow: slowFee.fee_rate ?? 1,
+          fast: Math.round(fastFee.fee_rate ?? 3),
+          normal: Math.round(normalFee.fee_rate ?? 2),
+          slow: Math.round(slowFee.fee_rate ?? 1),
         })
       } catch (e) {
         console.error(e)
@@ -154,9 +156,9 @@ export const Component = () => {
                   max={
                     btcBalanceResponse.data
                       ? Math.floor(
-                          (btcBalanceResponse.data?.vanilla?.spendable ?? 0) /
-                            num
-                        )
+                        (btcBalanceResponse.data?.vanilla?.spendable ?? 0) /
+                        num
+                      )
                       : 0
                   }
                   min={0}
@@ -172,8 +174,8 @@ export const Component = () => {
                 max={
                   btcBalanceResponse.data
                     ? Math.floor(
-                        (btcBalanceResponse.data?.vanilla?.spendable ?? 0) / num
-                      )
+                      (btcBalanceResponse.data?.vanilla?.spendable ?? 0) / num
+                    )
                     : 0
                 }
                 min={0}
@@ -233,8 +235,8 @@ export const Component = () => {
                 {t('createUtxos.availableBalance', {
                   amount: btcBalanceResponse.data
                     ? (
-                        btcBalanceResponse.data?.vanilla?.spendable ?? 0
-                      ).toLocaleString()
+                      btcBalanceResponse.data?.vanilla?.spendable ?? 0
+                    ).toLocaleString()
                     : '0',
                 })}
               </span>

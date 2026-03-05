@@ -85,9 +85,9 @@ export const Component = () => {
           estimateFee({ blocks: 1 }).unwrap(),
         ])
         setFeeRates({
-          fast: fastFee.fee_rate ?? DEFAULT_FEE_RATES.fast,
-          medium: mediumFee.fee_rate ?? DEFAULT_FEE_RATES.medium,
-          slow: slowFee.fee_rate ?? DEFAULT_FEE_RATES.slow,
+          fast: Math.round(fastFee.fee_rate ?? DEFAULT_FEE_RATES.fast),
+          medium: Math.round(mediumFee.fee_rate ?? DEFAULT_FEE_RATES.medium),
+          slow: Math.round(slowFee.fee_rate ?? DEFAULT_FEE_RATES.slow),
         })
       } catch (e) {
         setFormError(t('createChannel.errorFetchFeeRates'))
@@ -194,7 +194,7 @@ export const Component = () => {
       if (!wasHandled) {
         setChannelOpeningError(
           error?.data?.error ||
-            (error instanceof Error ? error.message : 'Failed to open channel')
+          (error instanceof Error ? error.message : 'Failed to open channel')
         )
         setStep(4)
       }
