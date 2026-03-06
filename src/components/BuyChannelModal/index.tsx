@@ -102,6 +102,8 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
   const [showPreselectedConfirmation, setShowPreselectedConfirmation] =
     useState(false)
   const hasShownConfirmation = useRef(false)
+  const onSuccessRef = useRef(onSuccess)
+  onSuccessRef.current = onSuccess
 
   const [assetMap, setAssetMap] = useState<Record<string, AssetInfo>>({})
   const [lspOptions, setLspOptions] = useState<LspOptions | null>(null)
@@ -489,8 +491,8 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
           setIsProcessingPayment(false)
           setPaymentStatus('success')
           setStep(3)
-          if (onSuccess) {
-            setTimeout(onSuccess, 2000)
+          if (onSuccessRef.current) {
+            setTimeout(onSuccessRef.current, 2000)
           }
         } else if (orderData?.order_state === 'FAILED') {
           const now = new Date().getTime()
@@ -523,7 +525,7 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
 
       return () => clearInterval(intervalId)
     }
-  }, [orderId, getOrderRequest, step, paymentReceived, orderPayload, onSuccess])
+  }, [orderId, getOrderRequest, step, paymentReceived, orderPayload])
 
   // Fetch fee estimates
   useEffect(() => {
