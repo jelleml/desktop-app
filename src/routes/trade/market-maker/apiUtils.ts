@@ -37,8 +37,11 @@ export const handleApiError = (error: FetchBaseQueryError): string => {
     }
     // Fallback to error field
     if ('error' in errorData && typeof errorData.error === 'string') {
-      // Strip SDK prefix like "API Error (500): " to show only the maker's message
-      const stripped = errorData.error.replace(/^(?:\w+Error:\s*)?API Error \(\d+\):\s*/i, '')
+      // Strip SDK class prefixes and "API Error (N): " wrappers to show only the core message
+      const stripped = errorData.error
+        .replace(/^[A-Za-z]*Error:\s*/i, '')
+        .replace(/^API Error \(\d+\):\s*/i, '')
+        .trim()
       return stripped || errorData.error
     }
     // If no recognized error format, stringify the object

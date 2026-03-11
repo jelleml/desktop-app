@@ -3,7 +3,8 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 export type DcaOrderType = 'scheduled' | 'price-target'
 export type DcaOrderStatus = 'active' | 'paused' | 'completed' | 'cancelled'
 
-export type DcaIntervalHours = 1 | 4 | 8 | 24 | 168
+// Stored as fractional hours; 1/60 ≈ 0.01667 = 1 minute
+export type DcaIntervalHours = number
 
 export interface DcaExecution {
   id: string
@@ -11,6 +12,7 @@ export interface DcaExecution {
   fromAmountUsdt: number
   toAmountSats: number
   priceBtcUsdt: number
+  feeSats?: number
   status: 'success' | 'failed'
   error?: string
 }
@@ -38,27 +40,8 @@ interface DcaState {
   orders: DcaOrder[]
 }
 
-const STORAGE_KEY = 'kaleidoswap_dca_orders'
-
-const loadFromStorage = (): DcaOrder[] => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-const saveToStorage = (orders: DcaOrder[]) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(orders))
-  } catch {
-    // Silently fail
-  }
-}
-
 const initialState: DcaState = {
-  orders: loadFromStorage(),
+  orders: [],
 }
 
 export const dcaSlice = createSlice({
@@ -69,7 +52,6 @@ export const dcaSlice = createSlice({
       const order = state.orders.find((o) => o.id === action.payload)
       if (order) {
         order.status = 'cancelled'
-        saveToStorage(state.orders)
       }
     },
 
@@ -98,6 +80,7 @@ export const dcaSlice = createSlice({
 
       if (type === 'scheduled' && intervalHours) {
         order.intervalHours = intervalHours
+        order.lastExecutedAt = now
         order.nextExecutionAt = now + intervalHours * 3600 * 1000
       }
 
@@ -108,14 +91,16 @@ export const dcaSlice = createSlice({
       }
 
       state.orders.unshift(order)
-      saveToStorage(state.orders)
+    },
+
+    deleteOrder(state, action: PayloadAction<string>) {
+      state.orders = state.orders.filter((o) => o.id !== action.payload)
     },
 
     pauseOrder(state, action: PayloadAction<string>) {
       const order = state.orders.find((o) => o.id === action.payload)
       if (order && order.status === 'active') {
         order.status = 'paused'
-        saveToStorage(state.orders)
       }
     },
 
@@ -126,17 +111,19 @@ export const dcaSlice = createSlice({
         fromAmountUsdt: number
         toAmountSats: number
         priceBtcUsdt: number
+        feeSats?: number
         status: 'success' | 'failed'
         error?: string
       }>
     ) {
-      const { orderId, fromAmountUsdt, toAmountSats, priceBtcUsdt, status, error } =
+      const { orderId, fromAmountUsdt, toAmountSats, priceBtcUsdt, feeSats, status, error } =
         action.payload
       const order = state.orders.find((o) => o.id === orderId)
       if (!order) return
 
       const execution: DcaExecution = {
         error,
+        feeSats,
         fromAmountUsdt,
         id: crypto.randomUUID(),
         priceBtcUsdt,
@@ -145,25 +132,30 @@ export const dcaSlice = createSlice({
         toAmountSats,
       }
       order.executions.push(execution)
-      order.lastExecutedAt = execution.timestamp
 
-      if (order.type === 'scheduled' && order.intervalHours) {
-        order.nextExecutionAt = execution.timestamp + order.intervalHours * 3600 * 1000
+      if (status === 'success') {
+        order.lastExecutedAt = execution.timestamp
+
+        if (order.type === 'scheduled' && order.intervalHours) {
+          order.nextExecutionAt = execution.timestamp + order.intervalHours * 3600 * 1000
+        }
       }
-
-      saveToStorage(state.orders)
     },
 
     resumeOrder(state, action: PayloadAction<string>) {
       const order = state.orders.find((o) => o.id === action.payload)
       if (order && order.status === 'paused') {
         order.status = 'active'
-        // Reset next execution for scheduled orders
         if (order.type === 'scheduled' && order.intervalHours) {
-          order.nextExecutionAt = Date.now() + order.intervalHours * 3600 * 1000
+          const now = Date.now()
+          order.lastExecutedAt = now
+          order.nextExecutionAt = now + order.intervalHours * 3600 * 1000
         }
-        saveToStorage(state.orders)
       }
+    },
+
+    setOrders(state, action: PayloadAction<DcaOrder[]>) {
+      state.orders = action.payload
     },
 
     updateAfterExecution(
@@ -175,12 +167,19 @@ export const dcaSlice = createSlice({
       if (order && order.type === 'price-target' && order.targetDropPercent) {
         order.creationPriceBtcUsdt = newCreationPrice
         order.triggerPriceBtcUsdt = newCreationPrice * (1 - order.targetDropPercent / 100)
-        saveToStorage(state.orders)
       }
     },
   },
 })
 
-export const { createOrder, cancelOrder, pauseOrder, resumeOrder, recordExecution, updateAfterExecution } =
-  dcaSlice.actions
+export const {
+  cancelOrder,
+  createOrder,
+  deleteOrder,
+  pauseOrder,
+  recordExecution,
+  resumeOrder,
+  setOrders,
+  updateAfterExecution,
+} = dcaSlice.actions
 export const dcaReducer = dcaSlice.reducer

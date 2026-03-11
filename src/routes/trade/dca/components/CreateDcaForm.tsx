@@ -1,16 +1,21 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'react-toastify'
+import { Wallet, Target, CalendarClock } from 'lucide-react'
 
 import { useAppDispatch } from '../../../../app/store/hooks'
 import { DcaIntervalHours, DcaOrderType, createOrder } from '../../../../slices/dcaSlice'
+import { nodeApi } from '../../../../slices/nodeApi/nodeApi.slice'
 
 interface Props {
   currentBtcPrice?: number
   onCreated?: () => void
 }
 
+const ONE_MINUTE_IN_HOURS = 1 / 60
+
 const INTERVALS: { label: string; value: DcaIntervalHours }[] = [
+  { label: '1m', value: ONE_MINUTE_IN_HOURS },
   { label: '1h', value: 1 },
   { label: '4h', value: 4 },
   { label: '8h', value: 8 },
@@ -18,24 +23,60 @@ const INTERVALS: { label: string; value: DcaIntervalHours }[] = [
   { label: '1w', value: 168 },
 ]
 
-const DROP_OPTIONS = [3, 5, 10, 15, 20]
+const DROP_OPTIONS = [0.1, 3, 5, 10, 15, 20]
+
+function useUsdtLnBalance(): number | undefined {
+  const { data: channelsData } = nodeApi.endpoints.listChannels.useQuery(undefined, {
+    pollingInterval: 30_000,
+  })
+  const { data: assetsData } = nodeApi.endpoints.listAssets.useQuery(undefined, {
+    pollingInterval: 30_000,
+  })
+
+  if (!channelsData?.channels || !assetsData?.nia) return undefined
+
+  // Find USDT asset_id
+  const usdtAsset = assetsData.nia.find((a: any) => a.ticker === 'USDT')
+  if (!usdtAsset) return undefined
+
+  const usdtAssetId = usdtAsset.asset_id as string
+  const usdtPrecision = usdtAsset.precision ?? 6
+  const precisionFactor = Math.pow(10, usdtPrecision)
+
+  // Sum asset_local_amount across ready channels with this asset_id
+  return channelsData.channels
+    .filter((ch: any) => ch.asset_id === usdtAssetId && ch.ready)
+    .reduce(
+      (sum: number, ch: any) => sum + (ch.asset_local_amount ?? 0) / precisionFactor,
+      0
+    )
+}
 
 export function CreateDcaForm({ currentBtcPrice, onCreated }: Props) {
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
+  const usdtBalance = useUsdtLnBalance()
 
   const [type, setType] = useState<DcaOrderType>('scheduled')
   const [amountUsdt, setAmountUsdt] = useState('')
   const [intervalHours, setIntervalHours] = useState<DcaIntervalHours>(24)
   const [targetDropPercent, setTargetDropPercent] = useState(5)
 
+  const amount = parseFloat(amountUsdt)
+  const insufficientBalance =
+    usdtBalance !== undefined && amount > 0 && amount > usdtBalance
+  const estimatedSats =
+    currentBtcPrice && amount > 0
+      ? Math.round((amount / currentBtcPrice) * 100_000_000)
+      : undefined
+  const availableAfterOrder =
+    usdtBalance !== undefined && amount > 0 ? usdtBalance - amount : undefined
+
   const handleCreate = () => {
-    const amount = parseFloat(amountUsdt)
     if (!amount || amount <= 0) {
       toast.error(t('dca.errors.invalidAmount', 'Please enter a valid USDT amount'))
       return
     }
-
     if (type === 'price-target' && !currentBtcPrice) {
       toast.error(t('dca.errors.noPriceData', 'BTC price not available'))
       return
@@ -57,40 +98,79 @@ export function CreateDcaForm({ currentBtcPrice, onCreated }: Props) {
   }
 
   return (
-    <div className="bg-surface-raised border border-border-subtle rounded-xl p-5 space-y-5">
-      <h3 className="text-sm font-semibold text-content-primary">
-        {t('dca.createOrder', 'New DCA Order')}
-      </h3>
+    <div className="bg-surface-raised border border-border-subtle rounded-2xl p-5 md:p-6 space-y-5 shadow-sm">
+      <div className="space-y-1">
+        <h3 className="text-sm font-semibold text-content-primary">
+          {t('dca.createOrder', 'New DCA Order')}
+        </h3>
+        <p className="text-xs text-content-tertiary">
+          {t(
+            'dca.form.subtitle',
+            'Set amount, trigger mode, and schedule. You can pause or cancel later anytime.'
+          )}
+        </p>
+      </div>
 
       {/* Type selector */}
-      <div className="flex gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {(['scheduled', 'price-target'] as DcaOrderType[]).map((t_) => (
           <button
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium border transition-all duration-200 ${
+            className={`py-2.5 px-3 rounded-lg text-sm font-medium border transition-all duration-200 text-left ${
               type === t_
-                ? 'bg-primary/15 text-primary border-primary/40'
+                ? 'bg-primary/15 text-primary border-primary/40 shadow-sm'
                 : 'bg-surface-overlay/30 text-content-secondary border-border-subtle hover:border-border-default'
             }`}
             key={t_}
             onClick={() => setType(t_)}
           >
-            {t_ === 'scheduled'
-              ? t('dca.type.scheduled', 'Scheduled')
-              : t('dca.type.priceTarget', 'Price Target')}
+            <div className="inline-flex items-center gap-1.5">
+              {t_ === 'scheduled' ? (
+                <CalendarClock className="w-4 h-4" />
+              ) : (
+                <Target className="w-4 h-4" />
+              )}
+              <span>
+                {t_ === 'scheduled'
+                  ? t('dca.type.scheduled', 'Scheduled')
+                  : t('dca.type.priceTarget', 'Price Target')}
+              </span>
+            </div>
+            <p className="text-[11px] mt-1 text-content-tertiary">
+              {t_ === 'scheduled'
+                ? t('dca.form.scheduledHint', 'Buys at recurring intervals')
+                : t('dca.form.targetHint', 'Buys when BTC hits your trigger')}
+            </p>
           </button>
         ))}
       </div>
 
-      {/* Amount */}
-      <div className="space-y-1.5">
-        <label className="text-xs text-content-tertiary font-medium">
-          {t('dca.amountLabel', 'Amount per buy')} (USDT)
-        </label>
+      {/* Amount + USDT balance */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="text-xs text-content-tertiary font-medium">
+            {t('dca.amountLabel', 'Amount per buy')} (USDT)
+          </label>
+          {usdtBalance !== undefined && (
+            <button
+              className="flex items-center gap-1 text-xs text-content-tertiary hover:text-primary transition-colors"
+              onClick={() => setAmountUsdt(String(usdtBalance))}
+            >
+              <Wallet className="w-3 h-3" />
+              <span>
+                {usdtBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDT
+              </span>
+            </button>
+          )}
+        </div>
         <input
-          className="w-full bg-surface-overlay border border-border-subtle rounded-lg px-3 py-2.5
+          className={`w-full bg-surface-overlay border rounded-lg px-3 py-2.5
                      text-sm text-content-primary placeholder:text-content-tertiary
-                     focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20
-                     transition-colors"
+                     focus:outline-none focus:ring-1 transition-colors
+                     ${
+                       insufficientBalance
+                         ? 'border-status-danger/50 focus:border-status-danger/70 focus:ring-status-danger/20'
+                         : 'border-border-subtle focus:border-primary/50 focus:ring-primary/20'
+                     }`}
           min="0"
           placeholder="50"
           step="any"
@@ -98,6 +178,26 @@ export function CreateDcaForm({ currentBtcPrice, onCreated }: Props) {
           value={amountUsdt}
           onChange={(e) => setAmountUsdt(e.target.value)}
         />
+        {estimatedSats != null && estimatedSats > 0 && (
+          <div className="bg-surface-overlay/40 border border-border-subtle rounded-lg p-2 text-xs">
+            <p className="text-content-tertiary">
+              {t('dca.form.estimatedReceive', 'Estimated receive per buy')}
+            </p>
+            <p className="text-content-primary font-semibold">
+              ~{estimatedSats.toLocaleString()} sats
+            </p>
+          </div>
+        )}
+        {availableAfterOrder != null && !insufficientBalance && (
+          <p className="text-[11px] text-content-tertiary">
+            {t('dca.form.remainingBalance', 'Remaining after each buy')}: {availableAfterOrder.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDT
+          </p>
+        )}
+        {insufficientBalance && (
+          <p className="text-xs text-status-danger">
+            {t('dca.errors.insufficientBalance', 'Exceeds available USDT channel balance')}
+          </p>
+        )}
       </div>
 
       {/* Scheduled options */}
@@ -114,13 +214,19 @@ export function CreateDcaForm({ currentBtcPrice, onCreated }: Props) {
                     ? 'bg-primary/15 text-primary border-primary/40'
                     : 'bg-surface-overlay/30 text-content-secondary border-border-subtle hover:border-border-default'
                 }`}
-                key={value}
+                key={label}
                 onClick={() => setIntervalHours(value)}
               >
                 {label}
               </button>
             ))}
           </div>
+          <p className="text-[11px] text-content-tertiary">
+            {t(
+              'dca.form.scheduleNote',
+              'Execution is checked approximately every 30 seconds while your node is unlocked.'
+            )}
+          </p>
         </div>
       )}
 
@@ -146,7 +252,8 @@ export function CreateDcaForm({ currentBtcPrice, onCreated }: Props) {
             ))}
           </div>
           {currentBtcPrice && (
-            <p className="text-xs text-content-tertiary pt-1">
+            <div className="bg-surface-overlay/40 border border-border-subtle rounded-lg p-2 mt-1">
+              <p className="text-xs text-content-tertiary">
               {t('dca.triggerPrice', 'Triggers at ≤')}:{' '}
               <span className="text-status-warning font-medium">
                 $
@@ -157,7 +264,8 @@ export function CreateDcaForm({ currentBtcPrice, onCreated }: Props) {
               <span className="text-content-tertiary">
                 (now: ${currentBtcPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })})
               </span>
-            </p>
+              </p>
+            </div>
           )}
         </div>
       )}
@@ -166,7 +274,7 @@ export function CreateDcaForm({ currentBtcPrice, onCreated }: Props) {
         className="w-full py-2.5 rounded-xl bg-primary text-white font-semibold text-sm
                    hover:bg-primary/90 active:scale-[0.98] transition-all duration-200
                    disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled={!amountUsdt || parseFloat(amountUsdt) <= 0}
+        disabled={!amountUsdt || amount <= 0 || insufficientBalance}
         onClick={handleCreate}
       >
         {t('dca.createButton', 'Create Order')}

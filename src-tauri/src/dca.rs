@@ -1,11 +1,10 @@
+use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use serde::{Deserialize, Serialize};
-use tauri::Emitter;
-use tauri::WebviewWindow;
+use tauri::{AppHandle, Emitter};
 
-const POLL_INTERVAL_SECS: u64 = 60;
+const POLL_INTERVAL_SECS: u64 = 30;
 const COINGECKO_URL: &str =
     "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd";
 
@@ -40,7 +39,7 @@ struct CoinGeckoPrice {
 
 pub struct DcaScheduler {
     orders: Arc<RwLock<Vec<DcaOrderInfo>>>,
-    window: Arc<Mutex<Option<WebviewWindow>>>,
+    app_handle: Arc<Mutex<Option<AppHandle>>>,
     running: Arc<Mutex<bool>>,
 }
 
@@ -49,15 +48,22 @@ impl DcaScheduler {
         DcaScheduler {
             orders: Arc::new(RwLock::new(Vec::new())),
             running: Arc::new(Mutex::new(false)),
-            window: Arc::new(Mutex::new(None)),
+            app_handle: Arc::new(Mutex::new(None)),
         }
     }
 
-    pub fn set_window(&self, window: WebviewWindow) {
-        *self.window.lock().unwrap() = Some(window);
+    pub fn set_app_handle(&self, handle: AppHandle) {
+        *self.app_handle.lock().unwrap() = Some(handle);
     }
 
     pub fn set_orders(&self, orders: Vec<DcaOrderInfo>) {
+        println!("[DCA] set_orders: {} orders", orders.len());
+        for o in &orders {
+            println!(
+                "[DCA]   order id={} type={} status={} interval={:?} last_exec={:?} trigger_price={:?}",
+                o.id, o.order_type, o.status, o.interval_secs, o.last_executed_at, o.trigger_price_usd
+            );
+        }
         *self.orders.write().unwrap() = orders;
     }
 
@@ -65,6 +71,10 @@ impl DcaScheduler {
         let mut orders = self.orders.write().unwrap();
         if let Some(order) = orders.iter_mut().find(|o| o.id == order_id) {
             order.last_executed_at = Some(timestamp);
+            println!(
+                "[DCA] updated last_executed_at for order {} to {}",
+                order_id, timestamp
+            );
         }
     }
 
@@ -72,13 +82,19 @@ impl DcaScheduler {
         {
             let mut running = self.running.lock().unwrap();
             if *running {
+                println!("[DCA] scheduler already running, skipping start");
                 return;
             }
             *running = true;
         }
 
+        println!(
+            "[DCA] scheduler starting (poll every {}s)",
+            POLL_INTERVAL_SECS
+        );
+
         let orders = Arc::clone(&self.orders);
-        let window = Arc::clone(&self.window);
+        let app_handle = Arc::clone(&self.app_handle);
         let running = Arc::clone(&self.running);
 
         thread::spawn(move || {
@@ -91,33 +107,51 @@ impl DcaScheduler {
                 {
                     let is_running = running.lock().unwrap();
                     if !*is_running {
+                        println!("[DCA] scheduler stopping");
                         break;
                     }
                 }
 
+                // Fetch price (optional - scheduled orders don't need it)
                 let current_price = fetch_btc_price(&http);
+                println!("[DCA] poll tick — price={:?}", current_price);
 
-                if let Some(price) = current_price {
-                    let now = SystemTime::now()
-                        .duration_since(UNIX_EPOCH)
-                        .unwrap_or_default()
-                        .as_secs();
+                let now = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs();
 
-                    let triggers: Vec<DcaTriggerPayload> = {
-                        let orders_guard = orders.read().unwrap();
-                        orders_guard
-                            .iter()
-                            .filter(|o| o.status == "active")
-                            .filter_map(|o| check_trigger(o, price, now))
-                            .collect()
-                    };
+                let triggers: Vec<DcaTriggerPayload> = {
+                    let orders_guard = orders.read().unwrap();
+                    println!(
+                        "[DCA] checking {} active orders at t={}",
+                        orders_guard.len(),
+                        now
+                    );
+                    orders_guard
+                        .iter()
+                        .filter(|o| o.status == "active")
+                        .filter_map(|o| check_trigger(o, current_price.unwrap_or(0.0), now))
+                        .collect()
+                };
 
-                    if !triggers.is_empty() {
-                        let window_guard = window.lock().unwrap();
-                        if let Some(win) = window_guard.as_ref() {
+                println!("[DCA] {} trigger(s) to emit", triggers.len());
+                if !triggers.is_empty() {
+                    let handle_guard = app_handle.lock().unwrap();
+                    match handle_guard.as_ref() {
+                        Some(handle) => {
                             for trigger in triggers {
-                                let _ = win.emit("dca:trigger", trigger);
+                                println!(
+                                    "[DCA] emitting dca:trigger for order={} price={}",
+                                    trigger.order_id, trigger.current_price
+                                );
+                                if let Err(e) = handle.emit("dca:trigger", &trigger) {
+                                    println!("[DCA] emit error: {:?}", e);
+                                }
                             }
+                        }
+                        None => {
+                            println!("[DCA] no app_handle set, cannot emit events");
                         }
                     }
                 }
@@ -134,9 +168,22 @@ impl DcaScheduler {
 }
 
 fn fetch_btc_price(http: &reqwest::blocking::Client) -> Option<f64> {
-    let response = http.get(COINGECKO_URL).send().ok()?;
-    let data: CoinGeckoResponse = response.json().ok()?;
-    Some(data.bitcoin.usd)
+    match http.get(COINGECKO_URL).send() {
+        Ok(resp) => match resp.json::<CoinGeckoResponse>() {
+            Ok(data) => {
+                println!("[DCA] BTC price fetched: ${}", data.bitcoin.usd);
+                Some(data.bitcoin.usd)
+            }
+            Err(e) => {
+                println!("[DCA] price JSON parse error: {:?}", e);
+                None
+            }
+        },
+        Err(e) => {
+            println!("[DCA] price fetch HTTP error: {:?}", e);
+            None
+        }
+    }
 }
 
 fn check_trigger(order: &DcaOrderInfo, current_price: f64, now: u64) -> Option<DcaTriggerPayload> {
@@ -144,7 +191,17 @@ fn check_trigger(order: &DcaOrderInfo, current_price: f64, now: u64) -> Option<D
         "scheduled" => {
             let interval = order.interval_secs?;
             let last = order.last_executed_at.unwrap_or(0);
-            if now >= last + interval {
+            let next = last + interval;
+            println!(
+                "[DCA] scheduled order={} interval={}s last={} next={} now={} → {}",
+                order.id,
+                interval,
+                last,
+                next,
+                now,
+                if now >= next { "TRIGGER" } else { "wait" }
+            );
+            if now >= next {
                 Some(DcaTriggerPayload {
                     current_price,
                     order_id: order.id.clone(),
@@ -155,7 +212,18 @@ fn check_trigger(order: &DcaOrderInfo, current_price: f64, now: u64) -> Option<D
         }
         "price-target" => {
             let trigger_price = order.trigger_price_usd?;
-            if current_price <= trigger_price {
+            println!(
+                "[DCA] price-target order={} trigger=${} current=${} → {}",
+                order.id,
+                trigger_price,
+                current_price,
+                if current_price <= trigger_price && current_price > 0.0 {
+                    "TRIGGER"
+                } else {
+                    "wait"
+                }
+            );
+            if current_price > 0.0 && current_price <= trigger_price {
                 Some(DcaTriggerPayload {
                     current_price,
                     order_id: order.id.clone(),

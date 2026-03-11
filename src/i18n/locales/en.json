@@ -272,6 +272,7 @@
     "totalBalance": "Total Balance",
     "deposit": "Deposit",
     "depositNow": "Deposit Now",
+    "swap": "Swap",
     "withdraw": "Withdraw",
     "onChain": "On-chain",
     "offChain": "Off-chain",
@@ -2697,8 +2698,45 @@
   },
   "dca": {
     "title": "DCA Orders",
+    "subtitle": "Automate BTC accumulation with fixed-interval buys or downside price triggers.",
+    "spotPrice": "BTC spot",
+    "spotHint": "Used for price-trigger monitoring",
+    "refreshAmounts": "Refresh amounts",
+    "refreshingAmounts": "Refreshing...",
     "createOrder": "New DCA Order",
+    "closeCreate": "Close form",
     "createButton": "Create Order",
+    "actions": {
+      "execute": "Execute",
+      "pause": "Pause",
+      "resume": "Resume",
+      "cancel": "Cancel"
+    },
+    "metrics": {
+      "totalOrders": "Orders",
+      "executions": "Successful buys",
+      "accumulated": "Accumulated",
+      "activeMix": "Active mix",
+      "btcLnBalance": "BTC LN balance",
+      "usdtLnBalance": "USDT LN balance"
+    },
+    "card": {
+      "executions": "Executions",
+      "accumulated": "Accumulated",
+      "successRate": "Success rate",
+      "lastExecution": "Last execution",
+      "progressToNext": "Progress to next buy",
+      "triggerGap": "Needs another {{pct}}% drop",
+      "triggerReady": "At/under trigger threshold"
+    },
+    "form": {
+      "subtitle": "Set amount, trigger mode, and schedule. You can pause or cancel later anytime.",
+      "scheduledHint": "Buys at recurring intervals",
+      "targetHint": "Buys when BTC hits your trigger",
+      "estimatedReceive": "Estimated receive per buy",
+      "remainingBalance": "Remaining after each buy",
+      "scheduleNote": "Execution is checked approximately every 30 seconds while your node is unlocked."
+    },
     "tabs": {
       "active": "Active",
       "history": "History"
@@ -2724,9 +2762,26 @@
       "history": "No order history yet",
       "hint": "Create a scheduled or price-target order to start automatically buying BTC with USDT."
     },
+    "howItWorks": {
+      "title": "How DCA works",
+      "description": "Each order repeatedly buys BTC with your chosen USDT amount. Executions happen only while your node is unlocked and ready.",
+      "scheduled": "Scheduled: buys at fixed time intervals (for example every 24h).",
+      "priceTarget": "Price Target: buys when BTC falls to or below your trigger.",
+      "actions": "Actions: Execute Now runs one immediate buy, Pause stops triggers, Cancel moves the order to history."
+    },
+    "orderHelp": {
+      "scheduled": "This order buys on a fixed schedule based on the selected interval.",
+      "priceTarget": "This order buys when market price is at or below the trigger.",
+      "statusActive": "Active: it will trigger automatically when conditions are met.",
+      "statusPaused": "Paused: no automatic execution until resumed.",
+      "statusCancelled": "Cancelled: no more executions; history remains visible.",
+      "statusCompleted": "Completed: order has finished and is stored in history.",
+      "createdAt": "Created"
+    },
     "errors": {
       "invalidAmount": "Please enter a valid USDT amount",
-      "noPriceData": "BTC price not available"
+      "noPriceData": "BTC price not available",
+      "insufficientBalance": "Exceeds available USDT channel balance"
     },
     "toast": {
       "created": "DCA order created",
@@ -2734,6 +2789,27 @@
       "success": "DCA: Bought {{amount}} sats",
       "failed": "DCA order failed: {{error}}",
       "skippedNoWs": "DCA skipped: not connected to maker"
+    },
+    "addBtcLiquidity": "Add BTC",
+    "addUsdtLiquidity": "Add USDT",
+    "getUsdt": {
+      "cta": "Get USDT",
+      "title": "Get USDT on Lightning",
+      "buyTitle": "Buy via Kaleido LSP",
+      "buyDesc": "Pay BTC and receive inbound USDT Lightning liquidity. Choose the channel capacity to set your max BTC receive limit.",
+      "buyButton": "Buy USDT Channel",
+      "onChainTitle": "Open with On-Chain USDT",
+      "onChainBalance": "On-chain balance: {{amount}} USDT",
+      "noOnChain": "No on-chain USDT available",
+      "useAll": "Use all",
+      "usdtAmountLabel": "USDT amount",
+      "capacityLabel": "Channel capacity",
+      "capacityHint": "BTC capacity of the channel. Also sets the max BTC you can receive per DCA execution.",
+      "capacityRange": "Min {{min}} – max {{max}} sats",
+      "maxReceive": "max receive ≈ {{sats}} sats BTC",
+      "openButton": "Open USDT Channel",
+      "channelOpened": "USDT channel opening initiated",
+      "errorLspInfo": "Failed to get LSP info"
     }
   }
 }
