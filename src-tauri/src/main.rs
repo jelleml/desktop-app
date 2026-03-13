@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
-use tauri::{Listener, Manager, Window};
+use tauri::{Emitter, Listener, Manager, Window};
 
 mod crypto;
 mod db;
@@ -11,10 +11,10 @@ mod rgb_node;
 mod tray;
 
 use dca::{DcaOrderInfo, DcaScheduler};
-use rgb_node::NodeProcess;
+use rgb_node::{NodeProcess, NodeState};
 
 #[derive(Default)]
-struct CurrentAccount(RwLock<Option<db::Account>>);
+pub(crate) struct CurrentAccount(pub(crate) RwLock<Option<db::Account>>);
 
 #[derive(serde::Serialize)]
 pub struct NodeLogsResponse {
@@ -44,12 +44,7 @@ fn main() {
             if window.label() == "main" {
                 if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                     api.prevent_close();
-                    let _ = window.hide();
-                    #[cfg(target_os = "macos")]
-                    {
-                        let app = window.app_handle();
-                        let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
-                    }
+                    let _ = window.emit("confirm-app-close", ());
                 }
             }
         })
@@ -69,24 +64,21 @@ fn main() {
 
                 // Listen for node state changes to update tray menu
                 let app_handle = app.handle().clone();
-                let np = Arc::clone(&node_process);
                 app.listen("node-started", move |_| {
-                    let state = np.lock().unwrap().get_state();
-                    tray::update_tray_menu(&app_handle, state);
+                    tray::update_tray_menu(&app_handle, NodeState::Running);
                 });
 
                 let app_handle = app.handle().clone();
-                let np = Arc::clone(&node_process);
                 app.listen("node-stopped", move |_| {
-                    let state = np.lock().unwrap().get_state();
-                    tray::update_tray_menu(&app_handle, state);
+                    tray::update_tray_menu(&app_handle, NodeState::Stopped);
                 });
 
                 let app_handle = app.handle().clone();
-                let np = Arc::clone(&node_process);
                 app.listen("node-crashed", move |_| {
-                    let state = np.lock().unwrap().get_state();
-                    tray::update_tray_menu(&app_handle, state);
+                    tray::update_tray_menu(
+                        &app_handle,
+                        NodeState::Failed("Node crashed".to_string()),
+                    );
                 });
 
                 Ok(())
@@ -112,6 +104,9 @@ fn main() {
             get_running_node_account,
             get_node_state,
             probe_node_http,
+            hide_main_window,
+            quit_app,
+            shutdown_node_and_quit,
             // Port management commands
             check_ports_available,
             get_running_node_ports,
@@ -149,6 +144,34 @@ fn close_splashscreen(window: Window) {
             let _ = splashscreen.close();
         }
     });
+}
+
+#[tauri::command]
+fn hide_main_window(window: Window) -> Result<(), String> {
+    window
+        .hide()
+        .map_err(|e| format!("Failed to hide main window: {}", e))?;
+
+    #[cfg(target_os = "macos")]
+    {
+        let app = window.app_handle();
+        let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+fn quit_app(app: tauri::AppHandle) {
+    app.exit(0);
+}
+
+#[tauri::command]
+fn shutdown_node_and_quit(
+    app: tauri::AppHandle,
+    node_process: tauri::State<'_, Arc<Mutex<NodeProcess>>>,
+) {
+    tray::shutdown_node_and_exit(app, Arc::clone(&*node_process));
 }
 
 #[tauri::command]
@@ -208,30 +231,42 @@ async fn start_node(
     let account_name_for_readiness = account_name.clone();
 
     tauri::async_runtime::spawn_blocking(move || {
-        if let Err(readiness_error) = NodeProcess::wait_for_http_ready_static(daemon_port, state_arc) {
+        if let Err(readiness_error) =
+            NodeProcess::wait_for_http_ready_static(daemon_port, state_arc)
+        {
+            let err = format!(
+                "Node process started but never became ready: {}",
+                readiness_error
+            );
+
             if let Ok(node_process) = node_process_for_readiness.lock() {
                 node_process.handle_http_wait_error(&readiness_error);
             }
 
-            println!(
-                "Failed to start node: Node process started but never became ready: {}",
-                readiness_error
-            );
-            return;
+            println!("Failed to start node: {}", err);
+            return Err(err);
         }
 
         match node_process_for_readiness.lock() {
             Ok(node_process) => {
                 node_process.finalize_running(&account_name_for_readiness);
                 println!("Node started successfully");
+                Ok(())
             }
             Err(e) => {
-                println!("Failed to acquire lock on node process after readiness: {}", e);
+                let err = format!(
+                    "Failed to acquire lock on node process after readiness: {}",
+                    e
+                );
+                println!("{}", err);
+                Err(err)
             }
         }
-    });
+    })
+    .await
+    .map_err(|e| format!("Failed to join node readiness task: {}", e))??;
 
-    println!("Node process spawned successfully, waiting for readiness in background");
+    println!("start_node command returning success");
     Ok(())
 }
 

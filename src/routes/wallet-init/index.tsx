@@ -21,10 +21,7 @@ import { useTranslation } from 'react-i18next'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
-import {
-  ROOT_PATH,
-  WALLET_SETUP_PATH,
-} from '../../app/router/paths'
+import { ROOT_PATH, WALLET_SETUP_PATH } from '../../app/router/paths'
 import { useAppDispatch } from '../../app/store/hooks'
 import { Layout } from '../../components/Layout'
 import { MnemonicDisplay } from '../../components/MnemonicDisplay'
@@ -56,6 +53,7 @@ import { buildLocalNodeUrl } from '../../api/client'
 import { parseRpcUrl } from '../../helpers/utils'
 import { nodeApi } from '../../slices/nodeApi/nodeApi.slice'
 import { setSettingsAsync } from '../../slices/nodeSettings/nodeSettings.slice'
+import { unlockNodeWithRetry, withTimeout } from '../../utils/nodeUnlock'
 import { waitForNodeReady } from '../../utils/nodeState'
 
 const checkPortAvailability = async (
@@ -92,9 +90,11 @@ const checkPortAvailability = async (
     }
   } catch (error) {
     console.error('Error checking port availability:', error)
-    throw new Error('Failed to check port availability')
+    throw new Error('Failed to check port availability', { cause: error })
   }
 }
+
+const NODE_UNLOCK_TIMEOUT_MS = 120000
 
 interface NodeSetupFields {
   name: string
@@ -124,6 +124,7 @@ export const Component = () => {
   const [nodeErrorMessage, setNodeErrorMessage] = useState('')
   const [startupErrorMessage, setStartupErrorMessage] = useState('')
   const [isUnlocking, setIsUnlocking] = useState(false)
+  const [unlockStatusMessage, setUnlockStatusMessage] = useState('')
   const [errors, setErrors] = useState<string[]>([])
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const [nodePassword, setNodePassword] = useState('')
@@ -144,6 +145,7 @@ export const Component = () => {
 
   const [init] = nodeApi.endpoints.init.useMutation()
   const [unlock] = nodeApi.endpoints.unlock.useMutation()
+  const [nodeInfo] = nodeApi.endpoints.nodeInfo.useLazyQuery()
 
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
@@ -222,6 +224,7 @@ export const Component = () => {
   const handleStepChange = (newStep: SetupStep) => {
     setErrors([]) // Clear additional errors
     setStartupErrorMessage('')
+    setUnlockStatusMessage('')
 
     // Reset form errors based on step
     switch (newStep) {
@@ -420,7 +423,9 @@ export const Component = () => {
         // Additional delay to ensure resources are released
         await new Promise((resolve) => setTimeout(resolve, 2000))
       } catch (error) {
-        throw new Error(`Failed to stop existing node: ${error}`)
+        throw new Error(`Failed to stop existing node: ${error}`, {
+          cause: error,
+        })
       }
     } else if (runningNodeAccount) {
       console.log(
@@ -429,27 +434,6 @@ export const Component = () => {
       )
     }
   }
-
-  /** Races a promise against a timeout; rejects with a descriptive error if the timeout fires first. */
-  const withTimeout = <T,>(
-    promise: Promise<T>,
-    ms: number,
-    label: string
-  ): Promise<T> =>
-    Promise.race([
-      promise,
-      new Promise<never>((_, reject) =>
-        setTimeout(
-          () =>
-            reject(
-              new Error(
-                `${label} timed out after ${ms / 1000}s — the node may be busy. Please try again.`
-              )
-            ),
-          ms
-        )
-      ),
-    ])
 
   const startLocalNode = async (
     accountName: string,
@@ -486,7 +470,9 @@ export const Component = () => {
               await new Promise((resolve) => setTimeout(resolve, 2000)) // Wait for cleanup
             } catch (error) {
               console.error(`Failed to stop node on port ${port}:`, error)
-              throw new Error(`Failed to stop existing node on port ${port}`)
+              throw new Error(`Failed to stop existing node on port ${port}`, {
+                cause: error,
+              })
             }
           }
 
@@ -561,14 +547,17 @@ export const Component = () => {
             `${errorMessage}\n` +
               `Suggested alternative ports:\n` +
               `- Daemon port: ${suggestedPorts.daemon}\n` +
-              `- LDK peer port: ${suggestedPorts.ldk}`
+              `- LDK peer port: ${suggestedPorts.ldk}`,
+            { cause: error }
           )
         } catch (e) {
-          throw new Error(errorMessage)
+          throw new Error(errorMessage, { cause: e })
         }
       }
 
-      throw new Error(`Failed to start node: ${errorMessage}`)
+      throw new Error(`Failed to start node: ${errorMessage}`, {
+        cause: error,
+      })
     }
   }
 
@@ -615,23 +604,51 @@ export const Component = () => {
     return mnemonic.split(' ')
   }
 
-  const unlockExistingNode = async (password: string): Promise<void> => {
+  const buildUnlockRequest = (password: string) => {
     const rpcConfig = parseRpcUrl(nodeSetupForm.getValues('rpc_connection_url'))
 
-    await withTimeout(
-      unlock({
-        announce_addresses: [],
-        bitcoind_rpc_host: rpcConfig.host,
-        bitcoind_rpc_password: rpcConfig.password,
-        bitcoind_rpc_port: rpcConfig.port,
-        bitcoind_rpc_username: rpcConfig.username,
-        indexer_url: nodeSetupForm.getValues('indexer_url'),
-        password,
-        proxy_endpoint: nodeSetupForm.getValues('proxy_endpoint'),
-      }).unwrap(),
-      20000,
-      'Node unlock'
-    )
+    return {
+      announce_addresses: [],
+      bitcoind_rpc_host: rpcConfig.host,
+      bitcoind_rpc_password: rpcConfig.password,
+      bitcoind_rpc_port: rpcConfig.port,
+      bitcoind_rpc_username: rpcConfig.username,
+      indexer_url: nodeSetupForm.getValues('indexer_url'),
+      password,
+      proxy_endpoint: nodeSetupForm.getValues('proxy_endpoint'),
+    }
+  }
+
+  const unlockNodeUntilReady = async (password: string): Promise<void> => {
+    const outcome = await unlockNodeWithRetry({
+      getNodeInfo: () => nodeInfo(),
+      invalidPasswordMessage: t('walletUnlock.invalidPassword'),
+      isCancelled: () => isCancelledRef.current,
+      maxRetriesMessage: t('walletUnlock.maxRetriesReached', {
+        defaultValue:
+          'Maximum unlock attempts reached. The node may still be syncing — please try again shortly.',
+      }),
+      onLongUnlock: setUnlockStatusMessage,
+      unlock: () =>
+        unlock(buildUnlockRequest(password))
+          .unwrap()
+          .then(() => undefined),
+      unlockLabel: 'Node unlock',
+      unlockTimeoutMessage: t('walletUnlock.unlockTimeoutMessage', {
+        defaultValue:
+          'Unlocking is taking longer than usual. If the node was offline for a while, it may still be syncing the blockchain in the background. Please keep the app open while unlock continues.',
+      }),
+      unlockTimeoutMs: NODE_UNLOCK_TIMEOUT_MS,
+      verifyFailureMessage: t('walletInit.unlockStep.failedToVerify'),
+    })
+
+    if (outcome === 'cancelled') {
+      throw new Error('CANCELLED')
+    }
+
+    if (outcome === 'needs-init') {
+      throw new Error('Wallet has not been initialized (hint: call init)')
+    }
   }
 
   const handlePasswordSetup: SubmitHandler<PasswordFields> = async (data) => {
@@ -639,7 +656,11 @@ export const Component = () => {
     const accountName = nodeSetupForm.getValues('name')
     const network = nodeSetupForm.getValues('network')
     const datapath = getDatapath(accountName)
-    const pendingNodeSettings = buildNodeSettings(accountName, network, datapath)
+    const pendingNodeSettings = buildNodeSettings(
+      accountName,
+      network,
+      datapath
+    )
 
     isCancelledRef.current = false
     setIsInitializing(true)
@@ -735,8 +756,9 @@ export const Component = () => {
           setNodePassword(data.password)
           setInitPhase('unlocking-wallet')
           console.log('[init] step 4: POST /unlock')
-          await unlockExistingNode(data.password)
+          await unlockNodeUntilReady(data.password)
           console.log('[init] step 4 done — unlock succeeded')
+          if (isCancelledRef.current) return
           await saveAccountSettings(accountName, network, datapath)
           setRedirectToRoot(true)
         } else {
@@ -784,7 +806,9 @@ export const Component = () => {
       makerUrls: defaultMakerUrl,
       name: accountName,
       network,
-      nodeUrl: buildLocalNodeUrl(nodeSetupForm.getValues('daemon_listening_port')),
+      nodeUrl: buildLocalNodeUrl(
+        nodeSetupForm.getValues('daemon_listening_port')
+      ),
       proxyEndpoint: nodeSetupForm.getValues('proxy_endpoint'),
       rpcConnectionUrl: nodeSetupForm.getValues('rpc_connection_url'),
     })
@@ -855,50 +879,15 @@ export const Component = () => {
   const handleUnlockComplete = async () => {
     try {
       setIsUnlocking(true)
+      await unlockNodeUntilReady(nodePassword)
+      if (isCancelledRef.current) return
 
-      const rpcConfig = parseRpcUrl(
-        nodeSetupForm.getValues('rpc_connection_url')
-      )
-
-      await withTimeout(
-        unlock({
-          announce_addresses: [],
-          bitcoind_rpc_host: rpcConfig.host,
-          bitcoind_rpc_password: rpcConfig.password,
-          bitcoind_rpc_port: rpcConfig.port,
-          bitcoind_rpc_username: rpcConfig.username,
-          indexer_url: nodeSetupForm.getValues('indexer_url'),
-          password: nodePassword,
-          proxy_endpoint: nodeSetupForm.getValues('proxy_endpoint'),
-        }).unwrap(),
-        45000,
-        'Node unlock'
-      )
-
-      // Format settings before dispatching
       const network = nodeSetupForm.getValues('network')
-      const defaultMakerUrl = NETWORK_DEFAULTS[network].default_maker_url
+      const accountName = nodeSetupForm.getValues('name')
+      const datapath = getDatapath(accountName)
+
       await dispatch(
-        setSettingsAsync({
-          daemon_listening_port: nodeSetupForm.getValues(
-            'daemon_listening_port'
-          ),
-          datapath: `kaleidoswap-${formatAccountName(nodeSetupForm.getValues('name'))}`,
-          default_lsp_url: NETWORK_DEFAULTS[network].default_lsp_url,
-          default_maker_url: defaultMakerUrl,
-          indexer_url: nodeSetupForm.getValues('indexer_url'),
-          ldk_peer_listening_port: nodeSetupForm.getValues(
-            'ldk_peer_listening_port'
-          ),
-          maker_urls: [defaultMakerUrl],
-          name: nodeSetupForm.getValues('name'),
-          network: network,
-          node_url: buildLocalNodeUrl(
-            nodeSetupForm.getValues('daemon_listening_port')
-          ),
-          proxy_endpoint: nodeSetupForm.getValues('proxy_endpoint'),
-          rpc_connection_url: nodeSetupForm.getValues('rpc_connection_url'),
-        })
+        setSettingsAsync(buildNodeSettings(accountName, network, datapath))
       )
 
       // Show success message
@@ -908,6 +897,7 @@ export const Component = () => {
       setRedirectToRoot(true)
     } catch (error) {
       setIsNodeError(true)
+      setUnlockStatusMessage('')
       setNodeErrorMessage(
         error instanceof Error ? error.message : 'Failed to unlock node'
       )
@@ -928,6 +918,7 @@ export const Component = () => {
       toast.error(t('walletInit.unlockStep.failedToCancel'))
     } finally {
       setIsUnlocking(false)
+      setUnlockStatusMessage('')
       setIsCancellingUnlock(false)
     }
   }
@@ -1222,6 +1213,7 @@ export const Component = () => {
           ) : (
             <div className="w-full">
               <UnlockingProgress
+                infoMessage={unlockStatusMessage || undefined}
                 isUnlocking={isUnlocking}
                 onBack={() => handleBackNavigation()}
                 onCancel={

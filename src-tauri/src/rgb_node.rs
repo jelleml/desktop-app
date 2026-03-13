@@ -342,7 +342,9 @@ impl NodeProcess {
             self.shutdown();
 
             if self.is_process_active() {
-                let err = "Failed to stop existing node process. Please try restarting the application.".to_string();
+                let err =
+                    "Failed to stop existing node process. Please try restarting the application."
+                        .to_string();
                 println!("{}", err);
                 self.set_state(NodeState::Failed(err.clone()));
                 if let Ok(window_guard) = self.window.lock() {
@@ -556,7 +558,8 @@ impl NodeProcess {
                                     // via the separate node-crashed event.
                                     if let Ok(window_guard) = window_for_thread.lock() {
                                         if let Some(win) = window_guard.as_ref() {
-                                            let _ = win.emit("node-state-changed", failed_state.clone());
+                                            let _ = win
+                                                .emit("node-state-changed", failed_state.clone());
                                             let _ = win.emit("node-crashed", crash_msg.clone());
                                         }
                                     }
@@ -576,17 +579,16 @@ impl NodeProcess {
                             Err(e) => {
                                 should_emit_stopped = false;
                                 println!("Error waiting for child process: {:?}", e);
-                                let failed_state = NodeState::Failed(format!(
-                                    "Process monitoring error: {:?}",
-                                    e
-                                ));
+                                let failed_state =
+                                    NodeState::Failed(format!("Process monitoring error: {:?}", e));
                                 let err_msg = format!("Monitoring error: {:?}", e);
                                 if let Ok(mut state_guard) = state_for_thread.write() {
                                     *state_guard = failed_state.clone();
                                 }
                                 if let Ok(window_guard) = window_for_thread.lock() {
                                     if let Some(win) = window_guard.as_ref() {
-                                        let _ = win.emit("node-state-changed", failed_state.clone());
+                                        let _ =
+                                            win.emit("node-state-changed", failed_state.clone());
                                         let _ = win.emit("node-crashed", err_msg.clone());
                                     }
                                 }
@@ -692,7 +694,13 @@ impl NodeProcess {
         ldk_peer_listening_port: String,
         account_name: String,
     ) -> Result<u16, String> {
-        self.start_inner(network, datapath, daemon_listening_port, ldk_peer_listening_port, account_name)
+        self.start_inner(
+            network,
+            datapath,
+            daemon_listening_port,
+            ldk_peer_listening_port,
+            account_name,
+        )
     }
 
     /// Handle an HTTP-readiness failure that occurred after `start_spawn_only` returned.

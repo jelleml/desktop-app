@@ -16,10 +16,7 @@ import { useTranslation } from 'react-i18next'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
-import {
-  ROOT_PATH,
-  WALLET_SETUP_PATH,
-} from '../../app/router/paths'
+import { ROOT_PATH, WALLET_SETUP_PATH } from '../../app/router/paths'
 import { useAppSelector } from '../../app/store/hooks'
 import { Layout } from '../../components/Layout'
 import {
@@ -31,22 +28,8 @@ import {
 } from '../../components/ui'
 import { UnlockingProgress } from '../../components/UnlockingProgress'
 import { parseRpcUrl } from '../../helpers/utils'
-import { nodeApi, NodeApiError } from '../../slices/nodeApi/nodeApi.slice'
-
-const withTimeout = <T,>(
-  promise: Promise<T>,
-  ms: number,
-  label: string
-): Promise<T> =>
-  Promise.race([
-    promise,
-    new Promise<never>((_, reject) =>
-      setTimeout(
-        () => reject(new Error(`${label} timed out after ${ms / 1000}s`)),
-        ms
-      )
-    ),
-  ])
+import { nodeApi } from '../../slices/nodeApi/nodeApi.slice'
+import { unlockNodeWithRetry, withTimeout } from '../../utils/nodeUnlock'
 
 interface Fields {
   password: string
@@ -72,6 +55,9 @@ export const Component = () => {
   const [showInitModal, setShowInitModal] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
   const [unlockError, setUnlockError] = useState<string | null>(null)
+  const [unlockStatusMessage, setUnlockStatusMessage] = useState<string | null>(
+    null
+  )
   const [isConnectionDetailsOpen, setIsConnectionDetailsOpen] = useState(false)
   const [isCheckingStatus, setIsCheckingStatus] = useState(true)
   const [redirectToRoot, setRedirectToRoot] = useState(false)
@@ -118,6 +104,7 @@ export const Component = () => {
   useEffect(() => {
     if (nodeLifecycle.status === 'Failed') {
       setUnlockError(nodeLifecycle.message)
+      setUnlockStatusMessage(null)
       setErrors([nodeLifecycle.message])
       setIsUnlocking(false)
       return
@@ -132,6 +119,7 @@ export const Component = () => {
         defaultValue: 'Node stopped before the wallet unlock completed.',
       })
       setUnlockError(message)
+      setUnlockStatusMessage(null)
       setErrors([message])
       setIsUnlocking(false)
     }
@@ -142,40 +130,25 @@ export const Component = () => {
   })
 
   const onSubmit: SubmitHandler<Fields> = async (data) => {
-    let shouldRetry = true
-    let pollingInterval = 2000
-    const maxPollingInterval = 15000
-    let retryCount = 0
-    // Separate counter for unlock timeouts — the /unlock endpoint can legitimately
-    // take 30–120 s on first run (bitcoind connection + blockchain sync).
-    // We allow one silent timeout retry, then surface an informative message.
-    let unlockTimeoutCount = 0
-    const MAX_UNLOCK_TIMEOUTS = 2
-
     isCancelledRef.current = false
     setIsUnlocking(true)
     setErrors([])
     setUnlockError(null)
+    setUnlockStatusMessage(null)
 
-    while (shouldRetry && !isCancelledRef.current) {
-      if (retryCount >= MAX_UNLOCK_RETRIES) {
-        const maxRetriesMsg = t('walletUnlock.maxRetriesReached', {
+    try {
+      const rpcConfig = parseRpcUrl(nodeSettings.rpc_connection_url)
+      const outcome = await unlockNodeWithRetry({
+        getNodeInfo: () => nodeInfo(),
+        invalidPasswordMessage: t('walletUnlock.invalidPassword'),
+        isCancelled: () => isCancelledRef.current,
+        maxRetries: MAX_UNLOCK_RETRIES,
+        maxRetriesMessage: t('walletUnlock.maxRetriesReached', {
           defaultValue:
             'Maximum unlock attempts reached. The node may still be syncing — please try again shortly.',
-        })
-        setUnlockError(maxRetriesMsg)
-        setErrors([maxRetriesMsg])
-        shouldRetry = false
-        break
-      }
-
-      try {
-        const rpcConfig = parseRpcUrl(nodeSettings.rpc_connection_url)
-
-        // 120 s timeout — the RGB Lightning Node's /unlock endpoint connects to
-        // bitcoind, verifies the chain, starts LDK, etc. and can take a long time.
-        // Without a timeout the fetch hangs forever, freezing the UI.
-        await withTimeout(
+        }),
+        onLongUnlock: setUnlockStatusMessage,
+        unlock: () =>
           unlock({
             announce_addresses: [],
             announce_alias: 'kaleidoswap-desktop',
@@ -186,131 +159,51 @@ export const Component = () => {
             indexer_url: nodeSettings.indexer_url,
             password: data.password,
             proxy_endpoint: nodeSettings.proxy_endpoint,
-          }).unwrap(),
-          120000,
-          'Wallet unlock'
-        )
-
-        if (isCancelledRef.current) break
-
-        // 10 s timeout for the follow-up nodeInfo check
-        const nodeInfoRes = await withTimeout(nodeInfo(), 10000, 'Node info check')
-        if (nodeInfoRes.isSuccess) {
-          toast.success(t('walletUnlock.successMessage'), {
-            autoClose: 3000,
-            position: 'bottom-right',
           })
-          setRedirectToRoot(true)
-        } else {
-          throw new Error(t('walletUnlock.failedGetNodeInfo'))
-        }
+            .unwrap()
+            .then(() => undefined),
+        unlockLabel: 'Wallet unlock',
+        unlockTimeoutMessage: t('walletUnlock.unlockTimeoutMessage', {
+          defaultValue:
+            'Unlocking is taking longer than usual. If the node was offline for a while, it may still be syncing the blockchain in the background. Please keep the app open while unlock continues.',
+        }),
+        verifyFailureMessage: t('walletUnlock.failedGetNodeInfo'),
+      })
 
-        shouldRetry = false
-      } catch (e: any) {
-        if (isCancelledRef.current) break
-
-        // Handle unlock-specific timeout: the node is doing a long operation
-        // (blockchain sync, bitcoind connection). Allow a couple of silent retries,
-        // then surface a clear message so the user knows what's happening.
-        if (e?.message?.startsWith('Wallet unlock timed out')) {
-          unlockTimeoutCount++
-          if (unlockTimeoutCount >= MAX_UNLOCK_TIMEOUTS) {
-            const timeoutMsg = t('walletUnlock.unlockTimeoutMessage', {
-              defaultValue:
-                'The node is taking longer than expected to unlock. This is normal during the first unlock while the node syncs the blockchain. Please wait a moment and try again.',
-            })
-            setUnlockError(timeoutMsg)
-            setErrors([timeoutMsg])
-            shouldRetry = false
-            break
-          }
-          // Silent retry — the node is busy, wait a bit
-          await new Promise((res) => setTimeout(res, pollingInterval))
-          pollingInterval = Math.min(pollingInterval * 1.5, maxPollingInterval)
-          continue
-        }
-
-        if (
-          e?.message?.includes('timeout') ||
-          e?.message?.includes('timed out') ||
-          e?.message?.includes('The request timed out')
-        ) {
-          retryCount++
-          await new Promise((res) => setTimeout(res, pollingInterval))
-          pollingInterval = Math.min(pollingInterval * 1.5, maxPollingInterval)
-          continue
-        }
-
-        const error = e as NodeApiError
-        let errorMessage: string
-
-        if (error?.data?.error) {
-          errorMessage = error.data.error
-        } else if (e instanceof Error) {
-          errorMessage = e.message
-        } else {
-          errorMessage = t('walletUnlock.unknownError')
-        }
-
-        if (
-          typeof error.status === 'string' &&
-          (error?.status === 'FETCH_ERROR' || error?.status === 'TIMEOUT_ERROR')
-        ) {
-          retryCount++
-          await new Promise((res) => setTimeout(res, pollingInterval))
-          pollingInterval = Math.min(pollingInterval * 1.5, maxPollingInterval)
-          continue
-        }
-
-        if (
-          error?.status === 403 &&
-          errorMessage === 'Cannot call other APIs while node is changing state'
-        ) {
-          retryCount++
-          await new Promise((res) => setTimeout(res, pollingInterval))
-          pollingInterval = Math.min(pollingInterval * 1.5, maxPollingInterval)
-          continue
-        }
-
-        if (
-          (error?.status === 401 && errorMessage === 'Invalid password') ||
-          errorMessage.toLowerCase().includes('password is incorrect')
-        ) {
-          setUnlockError(t('walletUnlock.invalidPassword'))
-          toast.error(t('walletUnlock.invalidPassword'), {
-            autoClose: 5000,
-            position: 'top-right',
-          })
-          shouldRetry = false
-          continue
-        }
-
-        if (
-          error.status === 403 &&
-          errorMessage === 'Wallet has not been initialized (hint: call init)'
-        ) {
-          setShowInitModal(true)
-          shouldRetry = false
-        } else if (
-          errorMessage === 'Node has already been unlocked' ||
-          errorMessage.includes('Node is unlocked')
-        ) {
-          toast.info(t('walletUnlock.alreadyUnlocked'), {
-            autoClose: 3000,
-            position: 'bottom-right',
-          })
-          setRedirectToRoot(true)
-          shouldRetry = false
-        } else {
-          setUnlockError(errorMessage)
-          setErrors([errorMessage])
-          toast.error(errorMessage, { autoClose: 5000, position: 'top-right' })
-          shouldRetry = false
-        }
+      if (outcome === 'cancelled') {
+        return
       }
-    }
 
-    if (!isCancelledRef.current && !shouldRetry && !showInitModal) {
+      if (outcome === 'needs-init') {
+        setShowInitModal(true)
+        return
+      }
+
+      if (outcome === 'already-unlocked') {
+        toast.info(t('walletUnlock.alreadyUnlocked'), {
+          autoClose: 3000,
+          position: 'bottom-right',
+        })
+      } else {
+        toast.success(t('walletUnlock.successMessage'), {
+          autoClose: 3000,
+          position: 'bottom-right',
+        })
+      }
+
+      setRedirectToRoot(true)
+    } catch (error) {
+      if (isCancelledRef.current) {
+        return
+      }
+
+      const errorMessage =
+        error instanceof Error ? error.message : t('walletUnlock.unknownError')
+      setUnlockError(errorMessage)
+      setUnlockStatusMessage(null)
+      setErrors([errorMessage])
+      toast.error(errorMessage, { autoClose: 5000, position: 'top-right' })
+    } finally {
       setIsUnlocking(false)
     }
   }
@@ -334,6 +227,7 @@ export const Component = () => {
     isCancelledRef.current = true
     setIsUnlocking(false)
     setUnlockError(null)
+    setUnlockStatusMessage(null)
     toast.info(t('walletUnlock.unlockCancelled'), {
       autoClose: 3000,
       position: 'bottom-right',
@@ -453,12 +347,17 @@ export const Component = () => {
                   </div>
 
                   {/* Form */}
-                  <form className="space-y-5" onSubmit={unlockForm.handleSubmit(onSubmit)}>
+                  <form
+                    className="space-y-5"
+                    onSubmit={unlockForm.handleSubmit(onSubmit)}
+                  >
                     {/* Connection Details */}
                     <div>
                       <button
                         className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-surface-overlay/40 border border-border-default/30 hover:border-primary/30 transition-colors text-sm"
-                        onClick={() => setIsConnectionDetailsOpen(!isConnectionDetailsOpen)}
+                        onClick={() =>
+                          setIsConnectionDetailsOpen(!isConnectionDetailsOpen)
+                        }
                         type="button"
                       >
                         <span className="flex items-center gap-2 text-content-secondary">
@@ -466,8 +365,9 @@ export const Component = () => {
                           Connection Details
                         </span>
                         <ChevronDown
-                          className={`w-4 h-4 text-content-tertiary transition-transform duration-200 ${isConnectionDetailsOpen ? 'rotate-180' : ''
-                            }`}
+                          className={`w-4 h-4 text-content-tertiary transition-transform duration-200 ${
+                            isConnectionDetailsOpen ? 'rotate-180' : ''
+                          }`}
                         />
                       </button>
 
@@ -476,7 +376,9 @@ export const Component = () => {
                           <div className="flex items-center gap-3">
                             <Globe className="w-4 h-4 text-primary shrink-0" />
                             <div className="min-w-0">
-                              <p className="text-xs text-content-tertiary mb-0.5">Node URL</p>
+                              <p className="text-xs text-content-tertiary mb-0.5">
+                                Node URL
+                              </p>
                               <p className="text-sm text-content-primary font-mono truncate">
                                 {nodeSettings.node_url}
                               </p>
@@ -485,7 +387,9 @@ export const Component = () => {
                           <div className="flex items-center gap-3">
                             <Zap className="w-4 h-4 text-secondary shrink-0" />
                             <div>
-                              <p className="text-xs text-content-tertiary mb-0.5">Bitcoind RPC</p>
+                              <p className="text-xs text-content-tertiary mb-0.5">
+                                Bitcoind RPC
+                              </p>
                               <p className="text-sm text-content-primary font-mono">
                                 {rpcConfig.host}:{rpcConfig.port}
                               </p>
@@ -494,7 +398,9 @@ export const Component = () => {
                           <div className="flex items-start gap-3">
                             <Server className="w-4 h-4 text-content-secondary mt-0.5 shrink-0" />
                             <div className="min-w-0">
-                              <p className="text-xs text-content-tertiary mb-0.5">Indexer</p>
+                              <p className="text-xs text-content-tertiary mb-0.5">
+                                Indexer
+                              </p>
                               <p className="text-sm text-content-primary font-mono break-all">
                                 {nodeSettings.indexer_url}
                               </p>
@@ -503,7 +409,9 @@ export const Component = () => {
                           <div className="flex items-start gap-3">
                             <Globe className="w-4 h-4 text-content-secondary mt-0.5 shrink-0" />
                             <div className="min-w-0">
-                              <p className="text-xs text-content-tertiary mb-0.5">RGB Proxy</p>
+                              <p className="text-xs text-content-tertiary mb-0.5">
+                                RGB Proxy
+                              </p>
                               <p className="text-sm text-content-primary font-mono break-all">
                                 {nodeSettings.proxy_endpoint}
                               </p>
@@ -527,7 +435,9 @@ export const Component = () => {
                             unlockForm.handleSubmit(onSubmit)()
                           }
                         }}
-                        onToggleVisibility={() => setIsPasswordVisible(!isPasswordVisible)}
+                        onToggleVisibility={() =>
+                          setIsPasswordVisible(!isPasswordVisible)
+                        }
                         placeholder={t('walletUnlock.passwordPlaceholder')}
                         {...unlockForm.register('password', {
                           required: t('walletUnlock.passwordRequired'),
@@ -572,6 +482,7 @@ export const Component = () => {
                 <div className="flex flex-col flex-1 pb-8">
                   <UnlockingProgress
                     errorMessage={unlockError || undefined}
+                    infoMessage={unlockStatusMessage || undefined}
                     isUnlocking={isUnlocking}
                     onCancel={handleCancelUnlocking}
                   />

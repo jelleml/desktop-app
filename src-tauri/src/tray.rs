@@ -1,11 +1,15 @@
 use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{TrayIconBuilder, TrayIconEvent},
     AppHandle, Manager,
 };
 
-use crate::rgb_node::{NodeProcess, NodeState};
+use crate::{
+    rgb_node::{NodeProcess, NodeState},
+    CurrentAccount,
+};
 
 pub const TRAY_ID: &str = "main-tray";
 const MENU_OPEN_ID: &str = "open";
@@ -118,48 +122,88 @@ fn handle_menu_event(app: &AppHandle, id: &str, node_process: Arc<Mutex<NodeProc
             let state = node_process.lock().unwrap().get_state();
             match state {
                 NodeState::Running | NodeState::Starting | NodeState::Stopping => {
+                    update_tray_menu(app, NodeState::Stopping);
                     let np = Arc::clone(&node_process);
                     std::thread::spawn(move || {
                         perform_graceful_shutdown(np, None);
                     });
                 }
                 NodeState::Stopped | NodeState::Failed(_) => {
-                    // Account context needed to start — show window so user can start from UI
-                    show_main_window(app);
+                    if !start_selected_local_node(app.clone(), Arc::clone(&node_process)) {
+                        show_main_window(app);
+                    }
                 }
             }
         }
         MENU_QUIT_ID => {
-            let np = Arc::clone(&node_process);
-            let app_clone = app.clone();
-            std::thread::spawn(move || {
-                perform_graceful_shutdown(np, None);
-                app_clone.exit(0);
-            });
+            update_tray_menu(app, NodeState::Stopping);
+            shutdown_node_and_exit(app.clone(), Arc::clone(&node_process));
         }
         _ => {}
     }
+}
+
+pub fn shutdown_node_and_exit(app: AppHandle, node_process: Arc<Mutex<NodeProcess>>) {
+    std::thread::spawn(move || {
+        perform_graceful_shutdown(node_process, None);
+        app.exit(0);
+    });
+}
+
+fn start_selected_local_node(app: AppHandle, node_process: Arc<Mutex<NodeProcess>>) -> bool {
+    let account = match app
+        .state::<CurrentAccount>()
+        .0
+        .read()
+        .ok()
+        .and_then(|g| g.clone())
+    {
+        Some(account) => account,
+        None => return false,
+    };
+
+    let datapath = match account.datapath.clone() {
+        Some(datapath) if !datapath.is_empty() => Some(datapath),
+        _ => return false,
+    };
+
+    update_tray_menu(&app, NodeState::Starting);
+
+    std::thread::spawn(move || {
+        let result = node_process
+            .lock()
+            .map_err(|e| e.to_string())
+            .and_then(|np| {
+                np.start(
+                    account.network.clone(),
+                    datapath,
+                    account.daemon_listening_port.clone(),
+                    account.ldk_peer_listening_port.clone(),
+                    account.name.clone(),
+                )
+            });
+
+        if let Err(error) = result {
+            eprintln!("Failed to start node from tray: {}", error);
+            update_tray_menu(&app, NodeState::Failed(error));
+            show_main_window(&app);
+        }
+    });
+
+    true
 }
 
 fn perform_graceful_shutdown(
     node_process: Arc<Mutex<NodeProcess>>,
     status_cb: Option<Box<dyn Fn(String) + Send + 'static>>,
 ) {
-    let node_process = node_process.lock().unwrap();
-
-    let daemon_port = node_process.get_daemon_port();
+    let daemon_port = node_process.lock().ok().and_then(|np| np.get_daemon_port());
 
     if let Some(port) = daemon_port {
-        if let Some(ref cb) = status_cb {
-            cb("Locking wallet...".to_string());
-        }
-
         let http = reqwest::blocking::Client::builder()
             .timeout(std::time::Duration::from_secs(5))
             .build()
             .unwrap_or_else(|_| reqwest::blocking::Client::new());
-
-        let _ = http.post(format!("http://127.0.0.1:{}/lock", port)).send();
 
         if let Some(ref cb) = status_cb {
             cb("Shutting down local node...".to_string());
@@ -172,10 +216,17 @@ fn perform_graceful_shutdown(
         cb("Shutting down local node...".to_string());
     }
 
-    node_process.shutdown();
-
+    let wait_start = Instant::now();
     let mut attempts = 0;
-    while node_process.is_running() && attempts < 30 {
+    while wait_start.elapsed() < Duration::from_secs(10) {
+        let is_running = node_process
+            .lock()
+            .map(|np| np.is_running())
+            .unwrap_or(false);
+        if !is_running {
+            break;
+        }
+
         std::thread::sleep(std::time::Duration::from_millis(100));
         attempts += 1;
 
@@ -189,12 +240,19 @@ fn perform_graceful_shutdown(
         }
     }
 
-    if node_process.is_running() {
+    let still_running = node_process
+        .lock()
+        .map(|np| np.is_running())
+        .unwrap_or(false);
+
+    if still_running {
         if let Some(ref cb) = status_cb {
             cb("Force stopping node...".to_string());
         }
-        node_process.force_kill();
-        std::thread::sleep(std::time::Duration::from_millis(500));
+        if let Ok(node_process) = node_process.lock() {
+            node_process.force_kill();
+            std::thread::sleep(std::time::Duration::from_millis(500));
+        }
     }
 
     if let Some(ref cb) = status_cb {

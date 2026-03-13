@@ -40,9 +40,11 @@ const nodeSlice = createSlice({
     setLifecycleState: (state, action: PayloadAction<BackendNodeState>) => {
       state.lifecycle = action.payload
       state.isRunning =
-        action.payload.status === 'Running' || action.payload.status === 'Starting'
+        action.payload.status === 'Running' ||
+        action.payload.status === 'Starting'
       state.isLoading =
-        action.payload.status === 'Starting' || action.payload.status === 'Stopping'
+        action.payload.status === 'Starting' ||
+        action.payload.status === 'Stopping'
 
       if (action.payload.status === 'Failed') {
         state.error = action.payload.message

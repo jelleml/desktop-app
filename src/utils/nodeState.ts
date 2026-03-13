@@ -215,7 +215,6 @@ export const waitForNodeReady = async (
             // Connection refused or timeout — node not listening yet, keep polling
           }
         }
-
       } catch {
         // Keep polling
       }
@@ -260,7 +259,8 @@ export const waitForNodeReady = async (
                 reject(
                   new Error(
                     `Node failed: ${
-                      (state as Extract<NodeState, { status: 'Failed' }>).message
+                      (state as Extract<NodeState, { status: 'Failed' }>)
+                        .message
                     }`
                   )
                 )
@@ -272,7 +272,9 @@ export const waitForNodeReady = async (
             // cancelled init) or after force_kill. Reject immediately so the
             // caller doesn't have to wait for the next 2-second poll cycle.
             if (state.status === 'Stopped') {
-              settle(() => reject(new Error('Node process stopped unexpectedly')))
+              settle(() =>
+                reject(new Error('Node process stopped unexpectedly'))
+              )
             }
           }
         )

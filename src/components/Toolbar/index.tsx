@@ -21,6 +21,7 @@ import {
   nodeSettingsActions,
   setSettingsAsync,
 } from '../../slices/nodeSettings/nodeSettings.slice'
+import { waitForNodeReady } from '../../utils/nodeState'
 
 export interface Account {
   datapath: string
@@ -95,11 +96,18 @@ const Modal: React.FC<ModalProps> = ({ onClose, children }) => {
   )
 }
 
-const withTimeout = <T,>(promise: Promise<T>, ms: number, label: string): Promise<T> =>
+const withTimeout = <T,>(
+  promise: Promise<T>,
+  ms: number,
+  label: string
+): Promise<T> =>
   Promise.race([
     promise,
     new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error(`${label} timed out after ${ms / 1000}s`)), ms)
+      setTimeout(
+        () => reject(new Error(`${label} timed out after ${ms / 1000}s`)),
+        ms
+      )
     ),
   ])
 
@@ -109,11 +117,7 @@ const invokeWithTimeout = <T,>(
   ms: number,
   label: string
 ): Promise<T> =>
-  withTimeout(
-    args ? invoke<T>(command, args) : invoke<T>(command),
-    ms,
-    label
-  )
+  withTimeout(args ? invoke<T>(command, args) : invoke<T>(command), ms, label)
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -456,7 +460,11 @@ export const Toolbar: React.FC<ToolbarProps> = ({ isCollapsed = false }) => {
 
         const timeoutId = window.setTimeout(() => {
           cleanup()
-          reject(new Error(`Waiting for node shutdown timed out after ${timeoutMs / 1000}s`))
+          reject(
+            new Error(
+              `Waiting for node shutdown timed out after ${timeoutMs / 1000}s`
+            )
+          )
         }, timeoutMs)
 
         listen('node-stopped', () => {
@@ -511,9 +519,14 @@ export const Toolbar: React.FC<ToolbarProps> = ({ isCollapsed = false }) => {
 
       if (currentNode && currentNode.name === node.name && isNodeRunning) {
         // First update the Redux store before navigating
-        const dbNode = await invokeWithTimeout<Account>('get_account_by_name', {
-          name: node.name,
-        }, 10000, 'Loading selected account')
+        const dbNode = await invokeWithTimeout<Account>(
+          'get_account_by_name',
+          {
+            name: node.name,
+          },
+          10000,
+          'Loading selected account'
+        )
 
         if (!dbNode) {
           throw new Error('Node not found in database')
@@ -617,7 +630,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({ isCollapsed = false }) => {
             node.daemon_listening_port,
             node.ldk_peer_listening_port,
           ]
-          const portCheck = await invokeWithTimeout<{ [port: string]: boolean }>(
+          const portCheck = await invokeWithTimeout<{
+            [port: string]: boolean
+          }>(
             'check_ports_available',
             { ports },
             10000,
@@ -629,7 +644,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({ isCollapsed = false }) => {
 
           if (unavailablePorts.length > 0) {
             // Get running node ports to check if they're our own nodes
-            const runningNodePorts = await invokeWithTimeout<{ [port: string]: string }>(
+            const runningNodePorts = await invokeWithTimeout<{
+              [port: string]: string
+            }>(
               'get_running_node_ports',
               undefined,
               10000,
@@ -665,7 +682,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({ isCollapsed = false }) => {
                 } catch (error) {
                   console.error(`Failed to stop node on port ${port}:`, error)
                   throw new Error(
-                    `Failed to stop existing node on port ${port}`
+                    `Failed to stop existing node on port ${port}`,
+                    { cause: error }
                   )
                 }
               }
@@ -677,7 +695,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({ isCollapsed = false }) => {
               })
 
               // Recheck port availability after stopping our nodes
-              const recheckPorts = await invokeWithTimeout<{ [port: string]: boolean }>(
+              const recheckPorts = await invokeWithTimeout<{
+                [port: string]: boolean
+              }>(
                 'check_ports_available',
                 { ports },
                 10000,
@@ -692,10 +712,15 @@ export const Toolbar: React.FC<ToolbarProps> = ({ isCollapsed = false }) => {
                 const suggestedPorts = await invokeWithTimeout<{
                   daemon: number
                   ldk: number
-                }>('find_available_ports', {
-                  base_daemon_port: parseInt(node.daemon_listening_port),
-                  base_ldk_port: parseInt(node.ldk_peer_listening_port),
-                }, 10000, 'Finding available ports')
+                }>(
+                  'find_available_ports',
+                  {
+                    base_daemon_port: parseInt(node.daemon_listening_port),
+                    base_ldk_port: parseInt(node.ldk_peer_listening_port),
+                  },
+                  10000,
+                  'Finding available ports'
+                )
 
                 throw new Error(
                   `Ports ${stillUnavailablePorts.join(', ')} are still in use by other processes. ` +
@@ -746,10 +771,15 @@ export const Toolbar: React.FC<ToolbarProps> = ({ isCollapsed = false }) => {
                 const suggestedPorts = await invokeWithTimeout<{
                   daemon: number
                   ldk: number
-                }>('find_available_ports', {
-                  base_daemon_port: parseInt(node.daemon_listening_port),
-                  base_ldk_port: parseInt(node.ldk_peer_listening_port),
-                }, 10000, 'Finding available ports')
+                }>(
+                  'find_available_ports',
+                  {
+                    base_daemon_port: parseInt(node.daemon_listening_port),
+                    base_ldk_port: parseInt(node.ldk_peer_listening_port),
+                  },
+                  10000,
+                  'Finding available ports'
+                )
                 throw new Error(
                   `Ports ${stillUnavailable.join(', ')} are in use by other applications. ` +
                     'Suggested alternative ports:\n' +
@@ -770,9 +800,15 @@ export const Toolbar: React.FC<ToolbarProps> = ({ isCollapsed = false }) => {
               ldkPeerListeningPort: node.ldk_peer_listening_port,
               network: node.network,
             },
-            15000,
+            90000,
             'Starting local node process'
           )
+
+          await waitForNodeReady({
+            daemonPort: node.daemon_listening_port,
+            timeoutMs: 90000,
+          })
+
           // Decide destination from real node API status:
           // - unlocked: dashboard
           // - locked: unlock
@@ -818,7 +854,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({ isCollapsed = false }) => {
           return
         } catch (error) {
           throw new Error(
-            error instanceof Error ? error.message : 'Failed to start node'
+            error instanceof Error ? error.message : 'Failed to start node',
+            { cause: error }
           )
         }
       }
