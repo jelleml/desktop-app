@@ -391,7 +391,9 @@ export const Step3: React.FC<StepProps> = ({
                   <p className="text-sm font-medium text-content-primary truncate">
                     {step.label}
                   </p>
-                  <p className="text-[11px] text-content-tertiary">{step.state}</p>
+                  <p className="text-[11px] text-content-tertiary">
+                    {step.state}
+                  </p>
                 </div>
               </div>
             </div>

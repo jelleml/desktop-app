@@ -26,7 +26,7 @@ const MAX_SLIPPAGE_PCT = 2
 const DCA_QUOTE_TIMEOUT_MS = 15_000
 const LEGACY_STORAGE_KEY = 'kaleidoswap_dca_orders'
 
-const withTimeout = <T,>(
+const withTimeout = <T>(
   promise: Promise<T>,
   ms: number,
   label: string
