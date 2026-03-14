@@ -65,7 +65,10 @@ export interface LightningInvoiceDetailsProps {
   assets: any
   bitcoinUnit: string
   maxLightningCapacity: number
-  fetchAssetBalance: (assetId: string) => Promise<void>
+  fetchAssetBalance: (
+    assetId: string,
+    mode?: 'spendable' | 'offchain_outbound'
+  ) => Promise<number>
 }
 
 // RGBInvoiceDetails component props
@@ -134,7 +137,10 @@ export interface WithdrawFormProps {
   setShowAssetDropdown: (show: boolean) => void
   setValue: (name: string, value: any) => void
   fetchBtcBalance: () => Promise<void>
-  fetchAssetBalance: (assetId: string) => Promise<void>
+  fetchAssetBalance: (
+    assetId: string,
+    mode?: 'spendable' | 'offchain_outbound'
+  ) => Promise<number>
   getMinAmount: () => number
   getMinAmountMessage: () => string
   getFeeIcon: (type: string) => JSX.Element

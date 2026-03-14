@@ -26,8 +26,8 @@ export const LiquidityBar: React.FC<LiquidityBarProps> = ({
     } else {
       return {
         background: 'bg-surface-overlay',
-        local: 'bg-green-500',
-        remote: 'bg-purple-500',
+        local: 'bg-lime-300',
+        remote: 'bg-emerald-700',
       }
     }
   }

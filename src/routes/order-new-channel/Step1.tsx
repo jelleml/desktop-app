@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import React, { useState, useEffect, useCallback } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'react-toastify'
 
@@ -31,79 +32,84 @@ const ConnectPopup: React.FC<{
   connectionUrl: string
   isAlreadyConnected: boolean
   t: any
-}> = ({ onClose, onConfirm, connectionUrl, isAlreadyConnected, t }) => (
-  <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-    <div className="flex min-h-full items-start justify-center p-4 sm:items-center sm:p-6">
-      <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 sm:p-8 rounded-2xl border border-border-default/50 max-w-lg w-full shadow-2xl max-h-[calc(100vh-2rem)] overflow-y-auto animate-in slide-in-from-bottom-4 duration-300">
-        <div className="flex items-center gap-4 mb-6">
-          {isAlreadyConnected ? (
-            <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <CheckCircle className="text-green-400" size={28} />
-            </div>
-          ) : (
-            <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <Link className="text-blue-400" size={28} />
-            </div>
-          )}
-          <h3 className="text-2xl font-bold text-white">
-            {isAlreadyConnected
-              ? t('orderChannel.step1.alreadyConnected')
-              : t('orderChannel.step1.modalTitle')}
-          </h3>
-        </div>
+}> = ({ onClose, onConfirm, connectionUrl, isAlreadyConnected, t }) => {
+  if (typeof document === 'undefined') return null
 
-        {isAlreadyConnected ? (
-          <div className="mb-6 p-4 bg-green-900/20 border border-green-700/50 rounded-xl">
-            <div className="flex items-start gap-3">
-              <CheckCircle
-                className="text-green-400 flex-shrink-0 mt-0.5"
-                size={20}
-              />
-              <div>
-                <p className="font-semibold text-green-300 mb-1">
-                  {t('orderChannel.step1.alreadyConnectedMessage')}
-                </p>
-                <p className="text-sm text-green-200/80">
-                  {t('orderChannel.step1.alreadyConnectedPopup')}
-                </p>
+  return createPortal(
+    <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="flex min-h-screen items-center justify-center p-4 sm:p-6">
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 sm:p-8 rounded-2xl border border-border-default/50 max-w-lg w-full shadow-2xl max-h-[calc(100vh-2rem)] overflow-y-auto animate-in slide-in-from-bottom-4 duration-300">
+          <div className="flex items-center gap-4 mb-6">
+            {isAlreadyConnected ? (
+              <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                <CheckCircle className="text-green-400" size={28} />
+              </div>
+            ) : (
+              <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                <Link className="text-blue-400" size={28} />
+              </div>
+            )}
+            <h3 className="text-2xl font-bold text-white">
+              {isAlreadyConnected
+                ? t('orderChannel.step1.alreadyConnected')
+                : t('orderChannel.step1.modalTitle')}
+            </h3>
+          </div>
+
+          {isAlreadyConnected ? (
+            <div className="mb-6 p-4 bg-green-900/20 border border-green-700/50 rounded-xl">
+              <div className="flex items-start gap-3">
+                <CheckCircle
+                  className="text-green-400 flex-shrink-0 mt-0.5"
+                  size={20}
+                />
+                <div>
+                  <p className="font-semibold text-green-300 mb-1">
+                    {t('orderChannel.step1.alreadyConnectedMessage')}
+                  </p>
+                  <p className="text-sm text-green-200/80">
+                    {t('orderChannel.step1.alreadyConnectedPopup')}
+                  </p>
+                </div>
               </div>
             </div>
+          ) : (
+            <p className="mb-6 text-content-secondary text-lg">
+              {t('orderChannel.step1.establishConnection')}
+            </p>
+          )}
+
+          <div className="mb-6 p-4 bg-surface-base/50 rounded-xl border border-border-default/50">
+            <p className="text-xs text-content-secondary mb-2 font-semibold uppercase tracking-wide">
+              {t('orderChannel.step1.lspConnectionLabel')}
+            </p>
+            <p className="text-sm text-content-secondary break-all font-mono">
+              {connectionUrl}
+            </p>
           </div>
-        ) : (
-          <p className="mb-6 text-content-secondary text-lg">
-            {t('orderChannel.step1.establishConnection')}
-          </p>
-        )}
 
-        <div className="mb-6 p-4 bg-surface-base/50 rounded-xl border border-border-default/50">
-          <p className="text-xs text-content-secondary mb-2 font-semibold uppercase tracking-wide">
-            {t('orderChannel.step1.lspConnectionLabel')}
-          </p>
-          <p className="text-sm text-content-secondary break-all font-mono">
-            {connectionUrl}
-          </p>
-        </div>
-
-        <div className="flex gap-3">
-          <button
-            className="flex-1 px-6 py-3 bg-surface-high hover:bg-surface-elevated text-white rounded-lg transition-all duration-200 font-semibold transform active:scale-95"
-            onClick={onClose}
-          >
-            {t('orderChannel.step1.cancelButton')}
-          </button>
-          <button
-            className="flex-1 px-6 py-3 bg-primary hover:bg-primary-emphasis text-[#12131C] rounded-lg font-semibold transition-all duration-200 transform active:scale-95 shadow-lg shadow-primary/20"
-            onClick={onConfirm}
-          >
-            {isAlreadyConnected
-              ? t('orderChannel.step1.continueButton')
-              : t('orderChannel.step1.connectButton')}
-          </button>
+          <div className="flex gap-3">
+            <button
+              className="flex-1 px-6 py-3 bg-surface-high hover:bg-surface-elevated text-white rounded-lg transition-all duration-200 font-semibold transform active:scale-95"
+              onClick={onClose}
+            >
+              {t('orderChannel.step1.cancelButton')}
+            </button>
+            <button
+              className="flex-1 px-6 py-3 bg-primary hover:bg-primary-emphasis text-[#12131C] rounded-lg font-semibold transition-all duration-200 transform active:scale-95 shadow-lg shadow-primary/20"
+              onClick={onConfirm}
+            >
+              {isAlreadyConnected
+                ? t('orderChannel.step1.continueButton')
+                : t('orderChannel.step1.connectButton')}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-)
+    </div>,
+    document.body
+  )
+}
 
 export const Step1: React.FC<Props> = ({ onNext }) => {
   const { t } = useTranslation()

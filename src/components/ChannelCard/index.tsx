@@ -410,19 +410,19 @@ export const ChannelCard: React.FC<ChannelCardProps> = ({
         {isRgbChannel && asset && (
           <div className="rounded-lg bg-surface-overlay/40 p-2.5">
             <div className="flex justify-between items-center mb-1.5">
-              <div className="flex items-center gap-1 text-[10px] text-purple-400/90">
+              <div className="flex items-center gap-1 text-[10px] text-lime-300/90">
                 <AssetIcon className="h-3 w-3" ticker={asset.ticker} />
                 <span className="font-medium">{asset.ticker}</span>
               </div>
               <div className="flex items-center gap-1.5 text-[10px]">
-                <span className="flex items-center gap-0.5 text-green-300/80">
+                <span className="flex items-center gap-0.5 text-lime-300/80">
                   <ArrowUpRight className="h-3 w-3" />
                   <span className="font-mono">
                     {formatAssetAmount(channel.asset_local_amount)}
                   </span>
                 </span>
                 <span className="text-content-tertiary/40">/</span>
-                <span className="flex items-center gap-0.5 text-purple-300/80">
+                <span className="flex items-center gap-0.5 text-emerald-400/80">
                   <ArrowDownRight className="h-3 w-3" />
                   <span className="font-mono">
                     {formatAssetAmount(channel.asset_remote_amount)}

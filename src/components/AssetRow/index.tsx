@@ -118,7 +118,7 @@ export const AssetRow: React.FC<AssetRowProps> = ({
               {
                 icon: <Upload className="w-3.5 h-3.5" />,
                 label: 'Withdraw',
-                color: 'text-status-danger hover:bg-status-danger/15',
+                color: 'text-emerald-300 hover:bg-emerald-900/30',
                 onClick: () =>
                   dispatch(
                     uiSliceActions.setModal({

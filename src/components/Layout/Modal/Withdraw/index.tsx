@@ -41,6 +41,8 @@ const isLightningAddress = (input: string): boolean => {
   return emailRegex.test(input)
 }
 
+type AssetBalanceMode = 'spendable' | 'offchain_outbound'
+
 // Helper function to create fungible assignment from amount
 const createFungibleAssignment = (amount: number): any => {
   return {
@@ -180,19 +182,27 @@ export const WithdrawModalContent: React.FC = () => {
   }, [dispatch, bitcoinUnit, t])
 
   const fetchAssetBalance = useCallback(
-    async (assetId: string) => {
+    async (
+      assetId: string,
+      mode: AssetBalanceMode = 'spendable'
+    ): Promise<number> => {
       if (assetId === BTC_ASSET_ID) {
-        return fetchBtcBalance()
+        await fetchBtcBalance()
+        return 0
       }
 
       try {
         const balance = await dispatch(
           nodeApi.endpoints.assetBalance.initiate({ asset_id: assetId })
         ).unwrap()
-        setAssetBalance(balance.spendable || 0)
+        const selectedBalance =
+          mode === 'offchain_outbound'
+            ? balance.offchain_outbound || 0
+            : balance.spendable || 0
+        setAssetBalance(selectedBalance)
 
         // Check if balance is zero
-        if (balance?.spendable === 0) {
+        if (selectedBalance === 0) {
           const assetInfo = (assets.data?.nia || []).find(
             (a: any) => a.asset_id === assetId
           )
@@ -205,6 +215,7 @@ export const WithdrawModalContent: React.FC = () => {
             type: 'error',
           })
         }
+        return selectedBalance
       } catch (error) {
         console.error(`Error fetching asset balance for ${assetId}:`, error)
         setAssetBalance(0)
@@ -223,9 +234,25 @@ export const WithdrawModalContent: React.FC = () => {
             type: 'error',
           })
         }
+        return 0
       }
     },
     [dispatch, fetchBtcBalance, assets.data?.nia, t]
+  )
+
+  const getAssetBalanceMode = useCallback(
+    (targetAssetId: string): AssetBalanceMode => {
+      if (
+        addressType === 'lightning' &&
+        decodedInvoice?.asset_id &&
+        decodedInvoice.asset_id === targetAssetId
+      ) {
+        return 'offchain_outbound'
+      }
+
+      return 'spendable'
+    },
+    [addressType, decodedInvoice?.asset_id]
   )
 
   // Calculate max lightning outbound capacity for BTC and assets
@@ -419,6 +446,7 @@ export const WithdrawModalContent: React.FC = () => {
           if (decoded.asset_id && decoded.asset_amount) {
             // Invoice specifies an RGB asset
             setValue('asset_id', decoded.asset_id) // Set asset_id for potential display/validation
+            await fetchAssetBalance(decoded.asset_id, 'offchain_outbound')
 
             // Get max local asset amount for this asset from channels
             const maxAssetAmount = maxAssetCapacities[decoded.asset_id] || 0
@@ -653,6 +681,7 @@ export const WithdrawModalContent: React.FC = () => {
       setValue,
       assets.data?.nia,
       fetchAssetBalance,
+      getAssetBalanceMode,
       fetchBtcBalance,
       maxLightningCapacity,
       maxAssetCapacities,
@@ -1263,8 +1292,8 @@ export const WithdrawModalContent: React.FC = () => {
 
   // Effect to fetch initial balance for the selected asset
   useEffect(() => {
-    fetchAssetBalance(assetId)
-  }, [assetId, fetchAssetBalance])
+    fetchAssetBalance(assetId, getAssetBalanceMode(assetId))
+  }, [assetId, fetchAssetBalance, getAssetBalanceMode])
 
   // Define a wrapper function for setValue to fix type mismatch issue
   const setValueWrapper = (name: string, value: any) => {

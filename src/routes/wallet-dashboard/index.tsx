@@ -356,14 +356,14 @@ export const Component = () => {
                 <span className="truncate">{t('dashboard.deposit')}</span>
               </button>
               <button
-                className="flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-primary/15 hover:bg-primary/25 border border-primary/30 hover:border-primary/50 text-primary text-xs font-semibold transition-all overflow-hidden"
+                className="flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-status-danger/15 hover:bg-status-danger/25 border border-status-danger/30 hover:border-status-danger/50 text-status-danger text-xs font-semibold transition-all overflow-hidden"
                 onClick={() => navigate(TRADE_PATH)}
               >
                 <ArrowLeftRight className="w-3.5 h-3.5 flex-shrink-0" />
                 <span className="truncate">{t('dashboard.swap', 'Swap')}</span>
               </button>
               <button
-                className="flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-status-danger/15 hover:bg-status-danger/25 border border-status-danger/30 hover:border-status-danger/50 text-status-danger text-xs font-semibold transition-all overflow-hidden"
+                className="flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-emerald-900/35 hover:bg-emerald-900/50 border border-emerald-700/50 hover:border-emerald-600/70 text-emerald-300 text-xs font-semibold transition-all overflow-hidden"
                 onClick={() =>
                   dispatch(
                     uiSliceActions.setModal({
@@ -482,7 +482,7 @@ export const Component = () => {
                     {
                       icon: <Upload className="w-3.5 h-3.5" />,
                       label: t('dashboard.withdraw'),
-                      color: 'text-status-danger hover:bg-status-danger/15',
+                      color: 'text-emerald-300 hover:bg-emerald-900/30',
                       onClick: () =>
                         dispatch(
                           uiSliceActions.setModal({
@@ -713,25 +713,25 @@ export const Component = () => {
                         {asset && (
                           <div>
                             <div className="flex items-center justify-between text-[10px] text-content-tertiary mb-0.5 max-h-0 overflow-hidden group-hover/ch:max-h-4 transition-all duration-200">
-                              <span className="flex items-center gap-0.5 text-green-400">
+                              <span className="flex items-center gap-0.5 text-lime-300">
                                 <ArrowUpRight className="w-2.5 h-2.5" />
                                 {ch.asset_local_amount || 0}
                               </span>
-                              <span className="text-green-400/60 font-medium">
+                              <span className="text-lime-300/60 font-medium">
                                 {asset.ticker}
                               </span>
-                              <span className="flex items-center gap-0.5 text-purple-400">
+                              <span className="flex items-center gap-0.5 text-emerald-400">
                                 {ch.asset_remote_amount || 0}
                                 <ArrowDownRight className="w-2.5 h-2.5" />
                               </span>
                             </div>
                             <div className="relative h-1.5 bg-surface-high/60 rounded-full overflow-hidden">
                               <div
-                                className="absolute left-0 top-0 h-full bg-green-500 rounded-l-full"
+                                className="absolute left-0 top-0 h-full bg-lime-300 rounded-l-full"
                                 style={{ width: `${assetOutPct}%` }}
                               />
                               <div
-                                className="absolute right-0 top-0 h-full bg-purple-500 rounded-r-full"
+                                className="absolute right-0 top-0 h-full bg-emerald-700 rounded-r-full"
                                 style={{ width: `${assetInPct}%` }}
                               />
                               <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-px bg-surface-high/80" />
