@@ -1,5 +1,6 @@
 import { Link as ChainIcon, Wallet, X, Zap } from 'lucide-react'
 import React from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 
 import { formatBitcoinAmount } from '../../../helpers/number'
@@ -42,14 +43,15 @@ export const WalletConfirmationModal: React.FC<
   const { t } = useTranslation()
 
   if (!isOpen) return null
+  if (typeof document === 'undefined') return null
 
   const lightningAvailable = lightningAmountSat > 0
   const onchainAvailable = onchainAmountSat > 0
   const hasLightningBalance = outboundLiquidity >= lightningAmountSat
   const hasOnchainBalance = onChainBalance >= onchainAmountSat
 
-  return (
-    <div className="fixed inset-0 z-50">
+  return createPortal(
+    <div className="fixed inset-0 z-[100]">
       <div
         className="absolute inset-0 bg-black/80 backdrop-blur-sm"
         onClick={() => !isProcessing && onClose()}
@@ -264,6 +266,7 @@ export const WalletConfirmationModal: React.FC<
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
