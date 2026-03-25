@@ -2,22 +2,21 @@ import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react'
 import { getKaleidoClient } from '../../api/client'
 import { RootState } from '../../app/store'
 import {
+  ChannelOrderResponse as CreateOrderResponseModel,
   ConfirmSwapRequest,
-  TradingPair as PairResponse,
-  GetQuoteResponse,
-  GetQuoteRequest,
-  GetLspInfoResponse as GetInfoResponseModel,
+  LspInfoResponse as GetInfoResponseModel,
+  PairQuoteResponse as GetQuoteResponse,
+  PairQuoteRequest as GetQuoteRequest,
+  TradingPairsResponse as PairResponse,
   GetLspOrderResponse as OrderResponse,
-  CreateLspOrderRequest as CreateOrderRequest,
-  GetLspOrderRequest as GetOrderRequest,
-  RetryDeliveryResponse,
-  RetryDeliveryRequest,
-  GetSwapStatusResponse as SwapStatusResponse,
-  GetSwapStatusRequest as SwapStatusRequest,
+  CreateOrderRequest,
+  OrderRequest as GetOrderRequest,
+  SwapStatusResponse,
+  SwapStatusRequest,
   EstimateLspFeesResponse as ChannelFees,
-  InitiateSwapRequest,
-  InitiateSwapResponse,
-} from 'kaleidoswap-sdk'
+  SwapRequest as InitiateSwapRequest,
+  SwapResponse as InitiateSwapResponse,
+} from 'kaleido-sdk'
 
 // Types matching new OpenAPI schema
 
@@ -128,15 +127,15 @@ export const normalizePair = (pair: TradingPair): TradingPair => {
   return {
     ...pair,
     base_asset: pair.base?.ticker,
-    quote_asset: pair.quote?.ticker,
     base_asset_id: pair.base ? getAssetId(pair.base) : undefined,
-    quote_asset_id: pair.quote ? getAssetId(pair.quote) : undefined,
-    min_base_order_size: pair.base?.endpoints?.[0]?.min_amount || 0,
-    min_quote_order_size: pair.quote?.endpoints?.[0]?.min_amount || 0,
     max_base_order_size:
       pair.base?.endpoints?.[0]?.max_amount || Number.MAX_SAFE_INTEGER,
     max_quote_order_size:
       pair.quote?.endpoints?.[0]?.max_amount || Number.MAX_SAFE_INTEGER,
+    min_base_order_size: pair.base?.endpoints?.[0]?.min_amount || 0,
+    min_quote_order_size: pair.quote?.endpoints?.[0]?.min_amount || 0,
+    quote_asset: pair.quote?.ticker,
+    quote_asset_id: pair.quote ? getAssetId(pair.quote) : undefined,
   }
 }
 
@@ -147,7 +146,7 @@ export const normalizePairs = (pairs: TradingPair[]): TradingPair[] => {
   return pairs.map(normalizePair)
 }
 export type Lsps1CreateOrderRequest = CreateOrderRequest
-export type Lsps1CreateOrderResponse = OrderResponse
+export type Lsps1CreateOrderResponse = CreateOrderResponseModel
 export type QuoteRequest = GetQuoteRequest
 export type QuoteResponse = GetQuoteResponse
 export type Lsps1GetInfoResponse = GetInfoResponseModel
@@ -162,7 +161,6 @@ export type GetPairsResponse = PairResponse
 export type { ChannelFees }
 
 export const makerApi = createApi({
-  reducerPath: 'makerApi',
   baseQuery: fakeBaseQuery(),
   endpoints: (builder) => ({
     create_order: builder.query<
@@ -176,7 +174,7 @@ export const makerApi = createApi({
           return { data: res }
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e)
-          return { error: { status: 500, data: { error: msg } } }
+          return { error: { data: { error: msg }, status: 500 } }
         }
       },
     }),
@@ -188,7 +186,7 @@ export const makerApi = createApi({
           return { data: res }
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e)
-          return { error: { status: 500, data: { error: msg } } }
+          return { error: { data: { error: msg }, status: 500 } }
         }
       },
     }),
@@ -200,7 +198,7 @@ export const makerApi = createApi({
           return { data: null }
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e)
-          return { error: { status: 500, data: { error: msg } } }
+          return { error: { data: { error: msg }, status: 500 } }
         }
       },
     }),
@@ -212,7 +210,7 @@ export const makerApi = createApi({
           return { data: res as any }
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e)
-          return { error: { status: 500, data: { error: msg } } }
+          return { error: { data: { error: msg }, status: 500 } }
         }
       },
     }),
@@ -224,7 +222,7 @@ export const makerApi = createApi({
           return { data: res }
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e)
-          return { error: { status: 500, data: { error: msg } } }
+          return { error: { data: { error: msg }, status: 500 } }
         }
       },
     }),
@@ -236,7 +234,7 @@ export const makerApi = createApi({
           return { data: res }
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e)
-          return { error: { status: 500, data: { error: msg } } }
+          return { error: { data: { error: msg }, status: 500 } }
         }
       },
     }),
@@ -248,7 +246,7 @@ export const makerApi = createApi({
           return { data: res }
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e)
-          return { error: { status: 500, data: { error: msg } } }
+          return { error: { data: { error: msg }, status: 500 } }
         }
       },
     }),
@@ -260,19 +258,7 @@ export const makerApi = createApi({
           return { data: res }
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e)
-          return { error: { status: 500, data: { error: msg } } }
-        }
-      },
-    }),
-    retry_delivery: builder.query<RetryDeliveryResponse, RetryDeliveryRequest>({
-      queryFn: async (args, api) => {
-        try {
-          const client = await getKaleidoClient(api.getState() as RootState)
-          const res = await client.maker.retryAssetDelivery(args)
-          return { data: res }
-        } catch (e) {
-          const msg = e instanceof Error ? e.message : String(e)
-          return { error: { status: 500, data: { error: msg } } }
+          return { error: { data: { error: msg }, status: 500 } }
         }
       },
     }),
@@ -284,9 +270,10 @@ export const makerApi = createApi({
           return { data: res }
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e)
-          return { error: { status: 500, data: { error: msg } } }
+          return { error: { data: { error: msg }, status: 500 } }
         }
       },
     }),
   }),
+  reducerPath: 'makerApi',
 })
