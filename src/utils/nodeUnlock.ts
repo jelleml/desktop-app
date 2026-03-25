@@ -62,6 +62,21 @@ const isTimeoutError = (message: string | null | undefined): boolean => {
   )
 }
 
+const isAlreadyUnlockedError = (
+  message: string | null | undefined
+): boolean => {
+  if (!message) {
+    return false
+  }
+
+  const normalizedMessage = message.toLowerCase()
+
+  return (
+    normalizedMessage.includes('node has already been unlocked') ||
+    normalizedMessage.includes('node is unlocked')
+  )
+}
+
 const extractNodeError = (errorLike: NodeInfoResponseLike['error']) => {
   const error =
     errorLike && typeof errorLike === 'object'
@@ -237,8 +252,8 @@ export const unlockNodeWithRetry = async ({
       }
 
       if (
-        errorMessage === 'Node has already been unlocked' ||
-        errorMessage.includes('Node is unlocked')
+        isAlreadyUnlockedError(errorMessage) ||
+        isAlreadyUnlockedError(message)
       ) {
         await verifyUnlockedNode({
           getNodeInfo,

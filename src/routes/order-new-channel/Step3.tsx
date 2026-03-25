@@ -129,7 +129,9 @@ export const Step3: React.FC<StepProps> = ({
       if (assetId) {
         const result = await getAssetInfo()
         if (result.data) {
-          const asset = result.data?.nia?.find((a) => a.asset_id === assetId)
+          const asset = result.data?.nia?.find(
+            (a: any) => a.asset_id === assetId
+          )
           if (asset) {
             setAssetInfo(asset)
           }
@@ -141,11 +143,12 @@ export const Step3: React.FC<StepProps> = ({
 
   // Calculate available liquidity
   const channels =
-    listChannelsResponse?.data?.channels?.filter((channel) => channel.ready) ||
-    []
+    listChannelsResponse?.data?.channels?.filter(
+      (channel: any) => channel.ready
+    ) || []
   const outboundLiquidity = Math.max(
     ...(channels.map(
-      (channel) => (channel.next_outbound_htlc_limit_msat || 0) / 1000
+      (channel: any) => (channel.next_outbound_htlc_limit_msat || 0) / 1000
     ) || [0])
   )
   const vanillaChainBalance = btcBalanceResponse.data?.vanilla?.spendable || 0

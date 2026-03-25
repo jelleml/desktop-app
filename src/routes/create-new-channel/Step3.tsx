@@ -56,7 +56,7 @@ export const Step3 = ({ error, onBack, onNext, feeRates, formData }: Props) => {
         .unwrap()
         .then((response) => {
           const asset = response.nia?.find(
-            (a) => a.asset_id === formData.assetId
+            (a: any) => a.asset_id === formData.assetId
           )
           if (asset) {
             setAssetPrecision(asset.precision || 8)

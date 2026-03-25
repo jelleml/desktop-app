@@ -125,11 +125,18 @@ export const Step2: React.FC<Props> = ({ onNext, onBack }) => {
   const clientAsset = parseFloat(clientAssetAmount) || 0
   const assetFactor = assetInfo ? Math.pow(10, assetInfo.precision) : 1
   const assetMax = assetInfo ? assetInfo.max_channel_amount / assetFactor : 0
+  const assetMin = assetInfo ? assetInfo.min_channel_amount / assetFactor : 0
+  const clientAssetMin = assetInfo
+    ? assetInfo.min_initial_client_amount / assetFactor
+    : 0
+  const clientAssetMax = assetInfo
+    ? assetInfo.max_initial_client_amount / assetFactor
+    : 0
 
   // Custom USDT presets matching the requirement: 100, 250, 500, 1000
   const assetPresetsCalc =
     assetInfo && assetInfo.ticker.toUpperCase() === 'USDT'
-      ? [100, 250, 500, 1000]
+      ? [100, 250, 500, 1000].filter((p) => p >= assetMin && p <= assetMax)
       : []
 
   const isCustomAssetTotal =
@@ -811,22 +818,59 @@ export const Step2: React.FC<Props> = ({ onNext, onBack }) => {
                           </button>
                         </div>
                         {(showCustomAssetCapacity || isCustomAssetTotal) && (
-                          <input
-                            type="number"
-                            autoFocus
-                            value={lspAssetAmount}
-                            onChange={(e) => {
-                              setValue('lspAssetAmount', e.target.value)
-                              const newTotal = parseFloat(e.target.value) || 0
-                              if (clientAsset > newTotal)
-                                setValue('clientAssetAmount', e.target.value)
-                            }}
-                            min={0}
-                            max={assetMax}
-                            step={1 / assetFactor}
-                            placeholder={`Custom (${assetInfo.ticker})`}
-                            className="mt-3 w-full px-3 py-2 bg-background shadow-inner rounded-xl border border-border-default focus:border-cyan-400 text-white text-sm outline-none animate-fadeInUp"
-                          />
+                          <>
+                            <input
+                              type="number"
+                              autoFocus
+                              value={lspAssetAmount}
+                              onChange={(e) => {
+                                const raw = parseFloat(e.target.value)
+                                if (!isNaN(raw) && raw > assetMax) {
+                                  const capped = assetMax.toString()
+                                  setValue('lspAssetAmount', capped)
+                                  if (clientAsset > assetMax)
+                                    setValue('clientAssetAmount', capped)
+                                } else {
+                                  setValue('lspAssetAmount', e.target.value)
+                                  const newTotal = raw || 0
+                                  if (clientAsset > newTotal)
+                                    setValue(
+                                      'clientAssetAmount',
+                                      e.target.value
+                                    )
+                                }
+                              }}
+                              onBlur={(e) => {
+                                const val = parseFloat(e.target.value)
+                                if (!isNaN(val) && val > 0) {
+                                  const clamped = Math.min(
+                                    assetMax,
+                                    Math.max(assetMin, val)
+                                  )
+                                  if (clamped !== val) {
+                                    setValue(
+                                      'lspAssetAmount',
+                                      clamped.toString()
+                                    )
+                                    if (clientAsset > clamped)
+                                      setValue(
+                                        'clientAssetAmount',
+                                        clamped.toString()
+                                      )
+                                  }
+                                }
+                              }}
+                              min={assetMin}
+                              max={assetMax}
+                              step="any"
+                              placeholder={`Custom (${assetInfo.ticker})`}
+                              className="mt-3 w-full px-3 py-2 bg-background shadow-inner rounded-xl border border-border-default focus:border-cyan-400 text-white text-sm outline-none animate-fadeInUp"
+                            />
+                            <p className="mt-1.5 text-[10px] text-content-tertiary">
+                              Min: {assetMin} {assetInfo.ticker} · Max:{' '}
+                              {assetMax} {assetInfo.ticker}
+                            </p>
+                          </>
                         )}
                       </div>
 
@@ -835,7 +879,10 @@ export const Step2: React.FC<Props> = ({ onNext, onBack }) => {
                         <LiquiditySlider
                           value={clientAsset}
                           min={0}
-                          max={lspAsset || assetMax}
+                          max={Math.min(
+                            lspAsset || assetMax,
+                            clientAssetMax || Infinity
+                          )}
                           step={assetMax >= 1000 ? 10 : 1 / assetFactor}
                           outboundLabel={`${clientAsset.toFixed(assetInfo.precision > 0 ? 2 : 0)} ${assetInfo.ticker}`}
                           inboundLabel={`${Math.max(0, lspAsset - clientAsset).toFixed(assetInfo.precision > 0 ? 2 : 0)} ${assetInfo.ticker}`}
@@ -847,6 +894,12 @@ export const Step2: React.FC<Props> = ({ onNext, onBack }) => {
                           inputFocusClass="focus:border-cyan-400"
                           inputLabel="Available to send now"
                           inputHint={`Type the exact ${assetInfo.ticker} amount you want available immediately after funding.`}
+                          minLabel={
+                            clientAssetMin > 0
+                              ? `Min: ${clientAssetMin} ${assetInfo.ticker}`
+                              : undefined
+                          }
+                          maxLabel={`Max: ${Math.min(lspAsset || assetMax, clientAssetMax || Infinity).toFixed(assetInfo.precision > 0 ? 2 : 0)} ${assetInfo.ticker}`}
                           onChange={(val) =>
                             setValue('clientAssetAmount', val.toString())
                           }

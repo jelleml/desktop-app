@@ -148,7 +148,7 @@ export const Component = () => {
 
         // Check if there's at least one channel with an asset that is ready and usable
         const hasValidChannels = channelsList?.some(
-          (channel) =>
+          (channel: any) =>
             channel.asset_id !== null &&
             channel.ready &&
             ((channel.outbound_balance_msat ?? 0) > 0 ||

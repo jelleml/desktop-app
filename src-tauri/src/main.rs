@@ -129,6 +129,10 @@ fn main() {
             dca_get_orders,
             dca_upsert_order,
             dca_delete_order,
+            // LimitOrder commands
+            limit_get_orders,
+            limit_upsert_order,
+            limit_delete_order,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -679,6 +683,40 @@ fn dca_order_executed(
     timestamp: u64,
 ) {
     scheduler.update_last_executed(&order_id, timestamp);
+}
+
+#[tauri::command]
+fn limit_get_orders(state: tauri::State<CurrentAccount>) -> Result<Vec<String>, String> {
+    let current_account = state.0.read().unwrap();
+    let account = current_account
+        .as_ref()
+        .ok_or_else(|| "No account selected".to_string())?;
+    db::get_limit_orders(account.id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn limit_upsert_order(
+    state: tauri::State<CurrentAccount>,
+    order_id: String,
+    payload: String,
+) -> Result<usize, String> {
+    let current_account = state.0.read().unwrap();
+    let account = current_account
+        .as_ref()
+        .ok_or_else(|| "No account selected".to_string())?;
+    db::upsert_limit_order(account.id, order_id, payload).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn limit_delete_order(
+    state: tauri::State<CurrentAccount>,
+    order_id: String,
+) -> Result<usize, String> {
+    let current_account = state.0.read().unwrap();
+    let account = current_account
+        .as_ref()
+        .ok_or_else(|| "No account selected".to_string())?;
+    db::delete_limit_order(account.id, order_id).map_err(|e| e.to_string())
 }
 
 /// Retrieve and decrypt mnemonic for an account

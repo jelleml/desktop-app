@@ -44,7 +44,6 @@ import type {
   MakerExecuteResponse,
   MakerInitRequest,
   MakerInitResponse,
-  NetworkInfoResponse,
   NodeInfoResponse,
   OpenChannelResponse,
   RestoreRequest,

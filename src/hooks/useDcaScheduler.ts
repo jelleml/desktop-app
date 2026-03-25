@@ -21,7 +21,7 @@ import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { NiaAsset } from '../slices/nodeApi/nodeApi.slice'
 import { useBitcoinPrice } from './useBitcoinPrice'
 
-export const DCA_SCHEDULER_INTERVAL_MS = 5_000
+export const DCA_SCHEDULER_INTERVAL_MS = 20_000
 const MAX_SLIPPAGE_PCT = 2
 const DCA_QUOTE_TIMEOUT_MS = 15_000
 const LEGACY_STORAGE_KEY = 'kaleidoswap_dca_orders'

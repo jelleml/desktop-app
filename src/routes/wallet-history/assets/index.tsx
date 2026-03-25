@@ -51,7 +51,7 @@ export const Component = () => {
       if (urlAssetId) {
         // Check if the URL asset ID exists in the assets list
         const assetExists = (assetsResponse?.data?.nia || []).some(
-          (asset) => asset.asset_id === urlAssetId
+          (asset: any) => asset.asset_id === urlAssetId
         )
         if (assetExists) {
           setSelectedAssetId(urlAssetId)
@@ -210,7 +210,7 @@ export const Component = () => {
 
   const getSelectedAsset = () => {
     return (assetsResponse.data?.nia || []).find(
-      (asset) => asset.asset_id === selectedAssetId
+      (asset: any) => asset.asset_id === selectedAssetId
     )
   }
 
@@ -228,7 +228,7 @@ export const Component = () => {
 
   // Get unique statuses for filter dropdown
   const uniqueStatuses = Array.from(
-    new Set(
+    new Set<string>(
       (transfersResponse.data?.transfers || []).map((t: any) => t.status) || []
     )
   )
@@ -367,7 +367,7 @@ export const Component = () => {
               onChange={(e) => setSelectedAssetId(e.target.value)}
               value={selectedAssetId || ''}
             >
-              {(assetsResponse.data?.nia || []).map((asset) => (
+              {(assetsResponse.data?.nia || []).map((asset: any) => (
                 <option key={asset.asset_id} value={asset.asset_id}>
                   {asset.name} ({asset.ticker})
                 </option>
@@ -520,7 +520,7 @@ export const Component = () => {
 
           {/* Expanded transaction details */}
           {filteredTransfers.map(
-            (transfer) =>
+            (transfer: any) =>
               showTxDetails === `${transfer.txid}-${transfer.idx}` && (
                 <div
                   className="mt-4 bg-surface-overlay/50 rounded-lg p-4"

@@ -118,7 +118,7 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
         const channels = await listChannels()
         const maxHtlc = Math.max(
           ...((channels.data?.channels ?? []).map(
-            (c) => c.next_outbound_htlc_limit_msat || 0
+            (c: any) => c.next_outbound_htlc_limit_msat || 0
           ) || [0])
         )
         setMaxOutboundHtlc(maxHtlc || 0)
@@ -129,7 +129,7 @@ export const ManualSwapForm: React.FC<ManualSwapFormProps> = ({ assets }) => {
             // For BTC, inbound is the sum of inbound_balance_msat across all channels
             inbound:
               (channels.data?.channels ?? []).reduce(
-                (sum, c) => sum + (c.inbound_balance_msat || 0),
+                (sum: number, c: any) => sum + (c.inbound_balance_msat || 0),
                 0
               ) || 0,
 

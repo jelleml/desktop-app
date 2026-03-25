@@ -24,6 +24,7 @@ export const TRADE_MARKET_MAKER_PATH = makePath(['market-maker'])
 export const TRADE_MANUAL_PATH = makePath(['manual'])
 export const TRADE_NOSTR_P2P_PATH = makePath(['nostr-p2p'])
 export const TRADE_DCA_PATH = makePath(['dca'])
+export const TRADE_LIMIT_PATH = makePath(['limit-orders'])
 
 export const WALLET_DASHBOARD_PATH = makePath(['wallet-dashboard'])
 

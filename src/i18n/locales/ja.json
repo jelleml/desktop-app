@@ -38,7 +38,8 @@
     "getHelpSupport": "ヘルプ&サポートを利用",
     "menu": "Menu",
     "expandSidebar": "Expand sidebar",
-    "dca": "DCA"
+    "dca": "DCA",
+    "limitOrders": "指値注文"
   },
   "channels": {
     "buyChannel": "チャネルを購入",
@@ -2944,6 +2945,73 @@
       "pendingUsdtChannels": "保留中のUSDTチャネル",
       "pendingUsdtDescription": "新しいUSDT Lightningチャネルは作成中です。承認されると利用可能残高に表示されます。",
       "pendingUsdtTitle": "新しいUSDTチャネルが保留中"
+    }
+  },
+  "limitOrders": {
+    "title": "指値注文",
+    "description": "任意の取引ペアに目標価格を設定します。市場が指定した価格に達すると、スワップが自動的に実行されます。",
+    "createOrder": "新規指値注文",
+    "side": {
+      "buy": "買い",
+      "sell": "売り"
+    },
+    "form": {
+      "pair": "取引ペア",
+      "noPairs": "利用可能なペアがありません",
+      "side": "売買",
+      "limitPrice": "指値価格",
+      "amount": "数量",
+      "available": "利用可能",
+      "estimatedTotal": "見積もり合計",
+      "expiration": "有効期限",
+      "noExpiration": "無期限",
+      "submitBuy": "買い指値注文を発注",
+      "submitSell": "売り指値注文を発注"
+    },
+    "status": {
+      "active": "有効",
+      "paused": "一時停止",
+      "filled": "約定",
+      "expired": "期限切れ",
+      "cancelled": "キャンセル済"
+    },
+    "tabs": {
+      "active": "有効",
+      "history": "履歴"
+    },
+    "metrics": {
+      "activeOrders": "有効な注文",
+      "filledOrders": "約定済み注文",
+      "totalExecutions": "成功した実行"
+    },
+    "orders": {
+      "activeTitle": "有効な指値注文",
+      "historyTitle": "約定済み・終了した注文"
+    },
+    "empty": {
+      "active": "有効な指値注文はありません",
+      "history": "注文履歴はまだありません"
+    },
+    "card": {
+      "limitPrice": "指値",
+      "currentPrice": "現在",
+      "amount": "数量",
+      "expires": "期限",
+      "noExpiration": "無期限",
+      "fillNow": "今すぐ約定",
+      "executionHistory": "実行履歴"
+    },
+    "notifications": {
+      "created": "指値注文を作成しました",
+      "filled": "指値注文が約定しました",
+      "expired": "指値注文が期限切れになりました",
+      "failed": "指値注文の実行に失敗しました"
+    },
+    "errors": {
+      "noPair": "取引ペアを選択してください",
+      "invalidPrice": "有効な指値価格を入力してください",
+      "invalidAmount": "有効な数量を入力してください",
+      "insufficientBalance": "残高不足"
     }
   }
 }

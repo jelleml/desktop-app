@@ -33,7 +33,7 @@ export const Step1 = ({ onNext }: Props) => {
   // Combine BTC with other assets
   const allAssets: Asset[] = [
     { asset_id: BTC_ASSET_ID, name: 'Bitcoin', ticker: 'BTC' },
-    ...(assets.data?.nia || []).map((a) => ({
+    ...(assets.data?.nia || []).map((a: any) => ({
       asset_id: a.asset_id ?? '',
       ticker: a.ticker ?? '',
       name: a.name,

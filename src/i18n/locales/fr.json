@@ -38,7 +38,8 @@
     "getHelpSupport": "Obtenir de l'aide et du support",
     "menu": "Menu",
     "expandSidebar": "Expand sidebar",
-    "dca": "DCA"
+    "dca": "DCA",
+    "limitOrders": "Ordres Limites"
   },
   "channels": {
     "buyChannel": "Acheter un canal",
@@ -2944,6 +2945,73 @@
       "pendingUsdtChannels": "Canaux USDT en attente",
       "pendingUsdtDescription": "Votre nouveau canal Lightning USDT est en cours de création et apparaîtra dans le solde disponible une fois confirmé.",
       "pendingUsdtTitle": "Nouveau canal USDT en attente"
+    }
+  },
+  "limitOrders": {
+    "title": "Ordres Limites",
+    "description": "Définissez un prix cible pour n'importe quelle paire de trading. Lorsque le marché atteint votre prix, le swap s'exécute automatiquement.",
+    "createOrder": "Nouvel Ordre Limite",
+    "side": {
+      "buy": "Acheter",
+      "sell": "Vendre"
+    },
+    "form": {
+      "pair": "Paire de Trading",
+      "noPairs": "Aucune paire disponible",
+      "side": "Côté",
+      "limitPrice": "Prix Limite",
+      "amount": "Montant",
+      "available": "Disponible",
+      "estimatedTotal": "Total Estimé",
+      "expiration": "Expiration",
+      "noExpiration": "Jamais",
+      "submitBuy": "Placer un Ordre d'Achat",
+      "submitSell": "Placer un Ordre de Vente"
+    },
+    "status": {
+      "active": "Actif",
+      "paused": "En pause",
+      "filled": "Exécuté",
+      "expired": "Expiré",
+      "cancelled": "Annulé"
+    },
+    "tabs": {
+      "active": "Actifs",
+      "history": "Historique"
+    },
+    "metrics": {
+      "activeOrders": "Ordres actifs",
+      "filledOrders": "Ordres exécutés",
+      "totalExecutions": "Exécutions réussies"
+    },
+    "orders": {
+      "activeTitle": "Ordres Limites Actifs",
+      "historyTitle": "Ordres Exécutés & Fermés"
+    },
+    "empty": {
+      "active": "Aucun ordre limite actif",
+      "history": "Pas encore d'historique"
+    },
+    "card": {
+      "limitPrice": "Limite",
+      "currentPrice": "Actuel",
+      "amount": "Montant",
+      "expires": "Expire",
+      "noExpiration": "Sans expiration",
+      "fillNow": "Exécuter Maintenant",
+      "executionHistory": "Historique d'Exécution"
+    },
+    "notifications": {
+      "created": "Ordre limite créé",
+      "filled": "Ordre limite exécuté",
+      "expired": "Ordre limite expiré",
+      "failed": "Échec de l'exécution de l'ordre limite"
+    },
+    "errors": {
+      "noPair": "Veuillez sélectionner une paire de trading",
+      "invalidPrice": "Veuillez entrer un prix limite valide",
+      "invalidAmount": "Veuillez entrer un montant valide",
+      "insufficientBalance": "Solde insuffisant"
     }
   }
 }

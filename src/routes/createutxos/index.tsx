@@ -96,7 +96,7 @@ export const Component = () => {
 
   useEffect(() => {
     refreshData()
-    const intervalId = setInterval(refreshData, 3000)
+    const intervalId = setInterval(refreshData, 15_000)
     return () => clearInterval(intervalId)
   }, [refreshData])
 

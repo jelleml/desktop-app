@@ -14,6 +14,7 @@ import {
   TRADE_MANUAL_PATH,
   TRADE_NOSTR_P2P_PATH,
   TRADE_DCA_PATH,
+  TRADE_LIMIT_PATH,
   WALLET_REMOTE_PATH,
   WALLET_SETUP_PATH,
   WALLET_RESTORE_PATH,
@@ -70,6 +71,10 @@ export const router = createBrowserRouter([
       {
         lazy: () => import('../../routes/trade/dca'),
         path: TRADE_DCA_PATH,
+      },
+      {
+        lazy: () => import('../../routes/trade/limit-orders'),
+        path: TRADE_LIMIT_PATH,
       },
       {
         lazy: () => import('../../routes/settings'),

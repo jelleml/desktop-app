@@ -30,6 +30,7 @@ import { AppVersion } from '../AppVersion'
 import { BackupModal } from '../BackupModal'
 import { useBackup } from '../../hooks/useBackup'
 import { useDcaScheduler } from '../../hooks/useDcaScheduler'
+import { useLimitOrderScheduler } from '../../hooks/useLimitOrderScheduler'
 import { LogoutModal, LogoutButton } from '../LogoutModal'
 import { useNotification } from '../NotificationSystem'
 import { ShutdownAnimation } from '../ShutdownAnimation'
@@ -480,6 +481,7 @@ export const Layout = (props: Props) => {
   const [lock] = nodeApi.endpoints.lock.useMutation()
 
   useDcaScheduler()
+  useLimitOrderScheduler()
   useNodeLifecycleEvents()
 
   const [showLogoutModal, setShowLogoutModal] = useState(false)
@@ -598,11 +600,11 @@ export const Layout = (props: Props) => {
       const filteredTransactions =
         (data?.transactions || [])
           .filter(
-            (tx) =>
+            (tx: any) =>
               tx.transaction_type === 'User' &&
               new Decimal(tx.received ?? 0).minus(tx.sent ?? 0).gt(0)
           )
-          .map((tx) => ({
+          .map((tx: any) => ({
             amount: new Decimal(tx.received ?? 0)
               .minus(tx.sent ?? 0)
               .toString(),
@@ -614,7 +616,7 @@ export const Layout = (props: Props) => {
 
       const highestBlockDeposit =
         filteredTransactions && filteredTransactions.length > 0
-          ? filteredTransactions?.reduce((prev, current) =>
+          ? filteredTransactions?.reduce((prev: any, current: any) =>
               (prev?.confirmation_time?.height ?? 0) >
               (current?.confirmation_time?.height ?? 0)
                 ? prev

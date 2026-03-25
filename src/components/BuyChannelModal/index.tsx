@@ -98,6 +98,7 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [loading, setLoading] = useState(false)
   const [orderId, setOrderId] = useState<string | null>(null)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
   const [orderPayload, setOrderPayload] = useState<any>(null)
   const [paymentStatus, setPaymentStatus] = useState<
     'success' | 'error' | 'expired' | null
@@ -179,13 +180,15 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
 
   // Calculate available liquidity
   const channels =
-    listChannelsResponse?.data?.channels?.filter((channel) => channel.ready) ||
-    []
+    listChannelsResponse?.data?.channels?.filter(
+      (channel: any) => channel.ready
+    ) || []
   const outboundLiquidity =
     channels.length > 0
       ? Math.max(
           ...channels.map(
-            (channel) => (channel.next_outbound_htlc_limit_msat || 0) / 1000
+            (channel: any) =>
+              (channel.next_outbound_htlc_limit_msat || 0) / 1000
           )
         )
       : 0
@@ -623,7 +626,7 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
             // Check if we're already connected to this peer
             const peersResponse = await listPeers()
             const isConnected = peersResponse.data?.peers?.some(
-              (peer) => peer.pubkey === lspPubkey
+              (peer: any) => peer.pubkey === lspPubkey
             )
 
             // Connect to LSP if not already connected
@@ -740,6 +743,7 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
         }
 
         setOrderId(orderId)
+        setAccessToken(channelResponse.data?.access_token || null)
         setOrderPayload(payload)
         setOrder(channelResponse.data as Lsps1CreateOrderResponse)
         setStep(2)
@@ -869,6 +873,7 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
   const handleClose = useCallback(() => {
     setStep(1)
     setOrderId(null)
+    setAccessToken(null)
     setPaymentStatus(null)
     setPaymentReceived(false)
     setIsProcessingPayment(false)
@@ -1040,6 +1045,7 @@ export const BuyChannelModal: React.FC<BuyChannelModalProps> = ({
               onRetry={() => {
                 setStep(1)
                 setOrderId(null)
+                setAccessToken(null)
                 setPaymentStatus(null)
                 setPaymentReceived(false)
                 setIsProcessingPayment(false)

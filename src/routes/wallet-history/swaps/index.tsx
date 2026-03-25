@@ -116,7 +116,7 @@ export const Component: React.FC = () => {
   const assetInfo = useMemo(() => {
     const info: Record<string, AssetInfo> = {}
     if (assetsData?.nia) {
-      assetsData.nia.forEach((asset) => {
+      assetsData.nia.forEach((asset: any) => {
         if ((asset as any).asset_id) {
           info[(asset as any).asset_id] = {
             precision: asset.precision ?? 8,
@@ -132,12 +132,12 @@ export const Component: React.FC = () => {
   const allSwaps = useMemo(() => {
     if (!swapsData) return []
 
-    const makerSwaps = (swapsData?.maker || []).map((swap) => ({
+    const makerSwaps = (swapsData?.maker || []).map((swap: any) => ({
       ...swap,
       type: 'maker' as const,
     }))
 
-    const takerSwaps = (swapsData?.taker || []).map((swap) => ({
+    const takerSwaps = (swapsData?.taker || []).map((swap: any) => ({
       ...swap,
       type: 'taker' as const,
     }))

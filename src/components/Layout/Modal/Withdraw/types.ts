@@ -1,4 +1,4 @@
-import {
+import type {
   DecodeLNInvoiceResponse as DecodeInvoiceResponse,
   DecodeRGBInvoiceResponse,
 } from 'kaleido-sdk/rln'

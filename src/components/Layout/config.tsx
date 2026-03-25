@@ -15,6 +15,7 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   HardDriveDownload,
+  Target,
 } from 'lucide-react'
 import React from 'react'
 
@@ -23,6 +24,7 @@ import {
   TRADE_MARKET_MAKER_PATH,
   TRADE_MANUAL_PATH,
   TRADE_DCA_PATH,
+  TRADE_LIMIT_PATH,
   WALLET_HISTORY_DEPOSITS_PATH,
   WALLET_HISTORY_WITHDRAWALS_PATH,
   WALLET_HISTORY_TRADES_PATH,
@@ -84,6 +86,12 @@ export const getMainNavItems = (t: TFunction) => [
     label: t('navigation.dca', 'DCA'),
     matchPath: TRADE_DCA_PATH,
     to: TRADE_DCA_PATH,
+  },
+  {
+    icon: <Target className="w-5 h-5" />,
+    label: t('navigation.limitOrders', 'Limit Orders'),
+    matchPath: TRADE_LIMIT_PATH,
+    to: TRADE_LIMIT_PATH,
   },
   {
     icon: <Activity className="w-5 h-5" />,
@@ -223,6 +231,10 @@ export const getPageConfig = (t: TFunction) => ({
   [TRADE_DCA_PATH]: {
     icon: <DcaBagIcon className="h-9 w-9" />,
     title: t('navigation.dca', 'DCA'),
+  },
+  [TRADE_LIMIT_PATH]: {
+    icon: <Target className="w-5 h-5" />,
+    title: t('navigation.limitOrders', 'Limit Orders'),
   },
   [TRADE_MANUAL_PATH]: {
     icon: <Zap className="w-5 h-5" />,

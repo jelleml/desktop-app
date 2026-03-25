@@ -18,7 +18,7 @@ import {
   nodeApi,
   NodeApiError as ApiError,
 } from '../../../../slices/nodeApi/nodeApi.slice'
-import {
+import type {
   DecodeLNInvoiceResponse as DecodeInvoiceResponse,
   DecodeRGBInvoiceResponse,
 } from 'kaleido-sdk/rln'
@@ -259,21 +259,21 @@ export const WithdrawModalContent: React.FC = () => {
   useEffect(() => {
     if (channelsQuery.data?.channels) {
       const readyChannels = channelsQuery.data.channels.filter(
-        (channel) => channel.ready && channel.is_usable
+        (channel: any) => channel.ready && channel.is_usable
       )
 
       if (readyChannels.length > 0) {
         // Max BTC HTLC capacity across all ready channels
         const maxOutboundCapacity = Math.max(
           ...readyChannels.map(
-            (channel) => channel.next_outbound_htlc_limit_msat || 0
+            (channel: any) => channel.next_outbound_htlc_limit_msat || 0
           )
         )
         setMaxLightningCapacity(maxOutboundCapacity)
 
         // Max local_asset_amount per asset across all ready channels
         const assetCapacities: Record<string, number> = {}
-        readyChannels.forEach((channel) => {
+        readyChannels.forEach((channel: any) => {
           if (channel.asset_id && (channel.asset_local_amount || 0) > 0) {
             if (
               !assetCapacities[channel.asset_id] ||
@@ -324,7 +324,7 @@ export const WithdrawModalContent: React.FC = () => {
 
         // Find the payment with the matching hash from the decoded invoice
         const payment = (paymentsResponse?.payments || []).find(
-          (p) => p.payment_hash === paymentHash
+          (p: any) => p.payment_hash === paymentHash
         )
 
         if (payment) {

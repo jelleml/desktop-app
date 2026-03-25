@@ -112,34 +112,31 @@ export const Component = () => {
         listChannels(),
         btcBalance(),
         refreshTransfers({}),
-        getNodeInfo(),
-        getNetworkInfo(),
       ])
     } finally {
       setIsRefreshing(false)
     }
-  }, [
-    assets,
-    btcBalance,
-    listChannels,
-    refreshTransfers,
-    getNodeInfo,
-    getNetworkInfo,
-  ])
+  }, [assets, btcBalance, listChannels, refreshTransfers])
 
   useEffect(() => {
     if (assetsResponse.data?.nia) {
       const newAssetsMap: Record<string, NiaAsset> = {}
-      assetsResponse.data.nia.forEach((asset) => {
+      assetsResponse.data.nia.forEach((asset: any) => {
         if (asset.asset_id) newAssetsMap[asset.asset_id] = asset as NiaAsset
       })
       setAssetsMap(newAssetsMap)
     }
   }, [assetsResponse.data])
 
+  // Fetch nodeInfo and networkInfo once on mount (they rarely change)
+  useEffect(() => {
+    getNodeInfo()
+    getNetworkInfo()
+  }, [getNodeInfo, getNetworkInfo])
+
   useEffect(() => {
     refreshData()
-    const intervalId = setInterval(refreshData, 5000)
+    const intervalId = setInterval(refreshData, 30_000)
     return () => clearInterval(intervalId)
   }, [refreshData])
 
@@ -190,17 +187,17 @@ export const Component = () => {
 
   const channels = listChannelsResponse?.data?.channels || []
   const offChainBalance = channels.reduce(
-    (sum, ch) => sum + (ch.local_balance_sat || 0),
+    (sum: number, ch: any) => sum + (ch.local_balance_sat || 0),
     0
   )
   const totalBalance =
     offChainBalance + onChainSpendableBalance + onChainColoredSpendableBalance
   const totalInboundLiquidity = channels.reduce(
-    (sum, ch) => sum + (ch.inbound_balance_msat || 0) / 1000,
+    (sum: number, ch: any) => sum + (ch.inbound_balance_msat || 0) / 1000,
     0
   )
   const totalOutboundLiquidity = channels.reduce(
-    (sum, ch) => sum + (ch.outbound_balance_msat || 0) / 1000,
+    (sum: number, ch: any) => sum + (ch.outbound_balance_msat || 0) / 1000,
     0
   )
 
@@ -526,7 +523,7 @@ export const Component = () => {
                   </p>
                 </div>
               ) : (
-                niaAssets.map((asset) => (
+                niaAssets.map((asset: any) => (
                   <AssetRow
                     asset={asset as NiaAsset}
                     incomingBalance={
@@ -558,7 +555,8 @@ export const Component = () => {
                 </h3>
                 {channels.length > 0 && (
                   <span className="text-xs font-bold bg-secondary/15 text-secondary border border-secondary/20 rounded-full px-2 py-0.5">
-                    {channels.filter((c) => c.ready).length}/{channels.length}
+                    {channels.filter((c: any) => c.ready).length}/
+                    {channels.length}
                   </span>
                 )}
               </div>
@@ -615,7 +613,7 @@ export const Component = () => {
                 </div>
               ) : (
                 <div className="space-y-1.5">
-                  {channels.map((ch) => {
+                  {channels.map((ch: any) => {
                     const asset = assetsMap[ch.asset_id || '']
                     const btcTotal =
                       (ch.outbound_balance_msat || 0) +

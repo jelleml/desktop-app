@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { twJoin } from 'tailwind-merge'
 
 interface LiquiditySliderProps {
@@ -46,6 +47,17 @@ export function LiquiditySlider({
   const clamped = Math.min(safeMax, Math.max(min, value))
   const outPct = ((clamped - min) / range) * 100
 
+  // Local string state so intermediate typing (e.g. "1." or "0.0") isn't destroyed
+  const [inputText, setInputText] = useState(clamped.toString())
+  const isFocused = useRef(false)
+
+  // Sync from prop when not actively typing (slider drag, Max button, parent change)
+  useEffect(() => {
+    if (!isFocused.current) {
+      setInputText(clamped.toString())
+    }
+  }, [clamped])
+
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
@@ -60,12 +72,28 @@ export function LiquiditySlider({
                   type="number"
                   min={min}
                   max={safeMax}
-                  step={step}
-                  value={clamped}
+                  step="any"
+                  value={isFocused.current ? inputText : clamped}
+                  onFocus={() => {
+                    isFocused.current = true
+                    setInputText(clamped.toString())
+                  }}
                   onChange={(e) => {
+                    setInputText(e.target.value)
                     const val = parseFloat(e.target.value)
                     if (!isNaN(val)) {
                       onChange(Math.min(safeMax, Math.max(min, val)))
+                    }
+                  }}
+                  onBlur={(e) => {
+                    isFocused.current = false
+                    const val = parseFloat(e.target.value)
+                    if (!isNaN(val)) {
+                      const final = Math.min(safeMax, Math.max(min, val))
+                      onChange(final)
+                      setInputText(final.toString())
+                    } else {
+                      setInputText(clamped.toString())
                     }
                   }}
                   className={twJoin(

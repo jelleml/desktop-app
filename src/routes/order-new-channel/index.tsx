@@ -29,6 +29,7 @@ export const Component = () => {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
   const [loading, setLoading] = useState(false)
   const [orderId, setOrderId] = useState<string | null>(null)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
   const [orderPayload, setOrderPayload] = useState<any>(null)
   const [showBackConfirmation, setShowBackConfirmation] = useState(false)
   const [paymentStatus, setPaymentStatus] = useState<
@@ -334,6 +335,7 @@ export const Component = () => {
             throw new Error('Could not get order id from server response')
           }
           setOrderId(orderId)
+          setAccessToken(channelResponse.data?.access_token || null)
           setOrderPayload(payload)
           setStep(3)
         }
@@ -369,6 +371,7 @@ export const Component = () => {
     // Reset all state
     setStep(2)
     setOrderId(null)
+    setAccessToken(null)
     setOrderPayload(null)
     setPaymentStatus(null)
     setPaymentReceived(false)
@@ -382,6 +385,7 @@ export const Component = () => {
   const handleConfirmBack = useCallback(() => {
     setShowBackConfirmation(false)
     setOrderId(null)
+    setAccessToken(null)
     if (toastId) {
       toast.dismiss(toastId)
     }

@@ -139,7 +139,7 @@ export const Step1: React.FC<Props> = ({ onNext }) => {
         const peersResponse = await listPeers().unwrap()
         if (peersResponse?.peers) {
           const isConnected = peersResponse.peers.some(
-            (peer) => peer.pubkey === pubkey
+            (peer: any) => peer.pubkey === pubkey
           )
           setIsAlreadyConnected(isConnected)
           return isConnected

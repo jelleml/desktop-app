@@ -58,8 +58,8 @@ export const Component: React.FC = () => {
   const uniqueAssets = useMemo(() => {
     const assets = new Set<string>(['BTC'])
     ;(paymentsData?.payments || [])
-      .filter((p) => !p.inbound && p.asset_id)
-      .forEach((p) => {
+      .filter((p: any) => !p.inbound && p.asset_id)
+      .forEach((p: any) => {
         const info = resolveAssetInfo(p.asset_id, listAssetsData)
         if (info) assets.add(info.label)
       })
@@ -111,11 +111,11 @@ export const Component: React.FC = () => {
   const onChainWithdrawals: Withdrawal[] =
     (transactionsData?.transactions || [])
       .filter(
-        (tx) =>
+        (tx: any) =>
           tx.transaction_type === 'User' &&
           new Decimal(tx.sent ?? 0).minus(tx.received ?? 0).gt(0)
       )
-      .map((tx) => ({
+      .map((tx: any) => ({
         satAmount: new Decimal(tx.sent ?? 0).minus(tx.received ?? 0).toString(),
         timestamp: tx.confirmation_time?.timestamp,
         txId: tx.txid ?? '',
@@ -124,8 +124,8 @@ export const Component: React.FC = () => {
 
   const offChainWithdrawals: Withdrawal[] =
     (paymentsData?.payments || [])
-      .filter((payment) => !payment.inbound)
-      .map((payment) => {
+      .filter((payment: any) => !payment.inbound)
+      .map((payment: any) => {
         const assetInfo = resolveAssetInfo(payment.asset_id, listAssetsData)
         return {
           satAmount: ((payment.amt_msat ?? 0) / 1000).toString(),

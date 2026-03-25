@@ -702,7 +702,7 @@ export const Component = () => {
     if (assetsData && assetsData.nia) {
       // Set assets immediately and mark as loaded
       setAssets(
-        assetsData.nia.map((a) => ({
+        assetsData.nia.map((a: any) => ({
           ...a,
           is_active: true,
           media: a.media
@@ -1006,7 +1006,7 @@ export const Component = () => {
         setMaxOutboundHtlcSat(maxTradableAmount)
         return maxTradableAmount
       } else {
-        const assetInfo = assetsList.find((a) => a.ticker === asset)
+        const assetInfo = assetsList.find((a: any) => a.ticker === asset)
         if (!assetInfo) {
           logger.warn(`No asset info found for ticker: ${asset}`)
           return 0
@@ -1549,7 +1549,7 @@ export const Component = () => {
         dispatch,
         channels,
         // Use RTK Query data directly to ensure we have the latest assets
-        (assetsData?.nia || []).map((a) => ({
+        (assetsData?.nia || []).map((a: any) => ({
           ...a,
           is_active: true,
           media: a.media
@@ -2030,7 +2030,7 @@ export const Component = () => {
         setChannels(channelsList ?? [])
         setIsChannelsLoaded(true)
         setAssets(
-          assetsData.nia.map((a) => ({
+          assetsData.nia.map((a: any) => ({
             ...a,
             is_active: true,
             media: a.media
@@ -2048,7 +2048,7 @@ export const Component = () => {
         setIsAssetsLoaded(true)
 
         // Check if we have channels but none are ready - if so, set ready phase to show channels not ready message
-        const readyChannels = (channelsList ?? []).filter((c) => c.ready)
+        const readyChannels = (channelsList ?? []).filter((c: any) => c.ready)
         if (readyChannels.length === 0) {
           logger.warn(
             '❌ Channels exist but none are ready - setting ready phase to show channels not ready message'
@@ -2069,7 +2069,7 @@ export const Component = () => {
         // Fetch pairs using fresh data instead of waiting for state to update
         const pairsFound = await fetchAndSetPairsWithData(
           channelsList ?? [],
-          assetsData.nia.map((a) => ({
+          assetsData.nia.map((a: any) => ({
             ...a,
             is_active: true,
             media: a.media
@@ -2090,7 +2090,8 @@ export const Component = () => {
           {
             assetsAvailable: assetsData.nia.length,
             channelsAvailable: (channelsList ?? []).length,
-            channelsReady: (channelsList ?? []).filter((c) => c.ready).length,
+            channelsReady: (channelsList ?? []).filter((c: any) => c.ready)
+              .length,
           }
         )
 

@@ -38,7 +38,8 @@
     "getHelpSupport": "Ottieni Aiuto e Supporto",
     "menu": "Menu",
     "expandSidebar": "Expand sidebar",
-    "dca": "DCA"
+    "dca": "DCA",
+    "limitOrders": "Ordini Limite"
   },
   "channels": {
     "pageTitle": "Dashboard Portafoglio Lightning",
@@ -2939,5 +2940,72 @@
     },
     "addBtcLiquidity": "Add BTC",
     "addUsdtLiquidity": "Add USDT"
+  },
+  "limitOrders": {
+    "title": "Ordini Limite",
+    "description": "Imposta un prezzo obiettivo per qualsiasi coppia di trading. Quando il mercato raggiunge il tuo prezzo, lo swap viene eseguito automaticamente.",
+    "createOrder": "Nuovo Ordine Limite",
+    "side": {
+      "buy": "Compra",
+      "sell": "Vendi"
+    },
+    "form": {
+      "pair": "Coppia di Trading",
+      "noPairs": "Nessuna coppia disponibile",
+      "side": "Lato",
+      "limitPrice": "Prezzo Limite",
+      "amount": "Importo",
+      "available": "Disponibile",
+      "estimatedTotal": "Totale Stimato",
+      "expiration": "Scadenza",
+      "noExpiration": "Mai",
+      "submitBuy": "Piazza Ordine di Acquisto",
+      "submitSell": "Piazza Ordine di Vendita"
+    },
+    "status": {
+      "active": "Attivo",
+      "paused": "In pausa",
+      "filled": "Eseguito",
+      "expired": "Scaduto",
+      "cancelled": "Annullato"
+    },
+    "tabs": {
+      "active": "Attivi",
+      "history": "Storico"
+    },
+    "metrics": {
+      "activeOrders": "Ordini attivi",
+      "filledOrders": "Ordini eseguiti",
+      "totalExecutions": "Esecuzioni riuscite"
+    },
+    "orders": {
+      "activeTitle": "Ordini Limite Attivi",
+      "historyTitle": "Ordini Eseguiti & Chiusi"
+    },
+    "empty": {
+      "active": "Nessun ordine limite attivo",
+      "history": "Nessuno storico ordini"
+    },
+    "card": {
+      "limitPrice": "Limite",
+      "currentPrice": "Attuale",
+      "amount": "Importo",
+      "expires": "Scade",
+      "noExpiration": "Nessuna scadenza",
+      "fillNow": "Esegui Ora",
+      "executionHistory": "Storico Esecuzioni"
+    },
+    "notifications": {
+      "created": "Ordine limite creato",
+      "filled": "Ordine limite eseguito",
+      "expired": "Ordine limite scaduto",
+      "failed": "Esecuzione ordine limite fallita"
+    },
+    "errors": {
+      "noPair": "Seleziona una coppia di trading",
+      "invalidPrice": "Inserisci un prezzo limite valido",
+      "invalidAmount": "Inserisci un importo valido",
+      "insufficientBalance": "Saldo insufficiente"
+    }
   }
 }

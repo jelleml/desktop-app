@@ -166,7 +166,7 @@ export const StatusToast: React.FC<{
     if (!data?.taker) return
 
     // Process new and existing swaps
-    data.taker.forEach((swap) => {
+    data.taker.forEach((swap: any) => {
       const paymentHash = swap.payment_hash || ''
       if (!paymentHash) return
 
@@ -262,7 +262,7 @@ export const StatusToast: React.FC<{
     // Clean up completed swaps that are no longer in the data
     Object.entries(swapStates.current).forEach(([hash, state]) => {
       const swapExists = (data?.taker || []).some(
-        (swap) => swap.payment_hash === hash
+        (swap: any) => swap.payment_hash === hash
       )
       const isFinalStatus = ['Succeeded', 'Failed', 'Expired'].includes(
         state.status

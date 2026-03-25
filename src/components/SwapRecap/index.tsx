@@ -101,7 +101,7 @@ export const SwapRecap: React.FC<SwapRecapProps> = ({
     })
 
   const currentSwap = (swapsData?.taker || []).find(
-    (swap) => swap.payment_hash === payment_hash
+    (swap: any) => swap.payment_hash === payment_hash
   )
 
   const displayFromAsset = getDisplayAsset(fromAsset, bitcoinUnit)

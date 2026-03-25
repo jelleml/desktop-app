@@ -205,7 +205,7 @@ export const TakerSwapForm: React.FC<TakerSwapFormProps> = ({
   // Get asset ticker for display
   const getAssetTicker = (assetId: string) => {
     if (assetId === 'BTC') return bitcoinUnit === 'SAT' ? 'SAT' : 'BTC'
-    const asset = assetsData?.nia?.find((a) => a.asset_id === assetId)
+    const asset = assetsData?.nia?.find((a: any) => a.asset_id === assetId)
     return asset ? asset.ticker || asset.name : assetId
   }
 

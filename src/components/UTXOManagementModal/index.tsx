@@ -60,32 +60,32 @@ export const UTXOManagementModal = ({
     // 3. Normal (can't be used for RGB assets)
 
     const colored = unspentsData.unspents.filter(
-      (u) =>
+      (u: any) =>
         u.utxo?.colorable &&
         Array.isArray(u.rgb_allocations) &&
         u.rgb_allocations.length > 0
     )
     const colorable = unspentsData.unspents.filter(
-      (u) =>
+      (u: any) =>
         u.utxo?.colorable &&
         (!Array.isArray(u.rgb_allocations) || u.rgb_allocations.length <= 0)
     )
-    const normal = unspentsData.unspents.filter((u) => !u.utxo?.colorable)
+    const normal = unspentsData.unspents.filter((u: any) => !u.utxo?.colorable)
 
     const summary: UTXOSummary = {
       colorableCount: colorable.length,
       coloredCount: colored.length,
       normalCount: normal.length,
       totalColorable: colorable.reduce(
-        (sum, u) => sum + (u.utxo?.btc_amount || 0),
+        (sum: number, u: any) => sum + (u.utxo?.btc_amount || 0),
         0
       ),
       totalColored: colored.reduce(
-        (sum, u) => sum + (u.utxo?.btc_amount || 0),
+        (sum: number, u: any) => sum + (u.utxo?.btc_amount || 0),
         0
       ),
       totalNormal: normal.reduce(
-        (sum, u) => sum + (u.utxo?.btc_amount || 0),
+        (sum: number, u: any) => sum + (u.utxo?.btc_amount || 0),
         0
       ),
     }
@@ -279,7 +279,7 @@ export const UTXOManagementModal = ({
                   {t('utxoManagement.sections.colorable')}
                 </h3>
                 <div className="space-y-3">
-                  {colorableUtxos.map((unspent, index) => (
+                  {colorableUtxos.map((unspent: any, index: number) => (
                     <UTXOCard
                       index={index}
                       key={unspent.utxo?.outpoint || index}
@@ -298,7 +298,7 @@ export const UTXOManagementModal = ({
                   {t('utxoManagement.sections.colored')}
                 </h3>
                 <div className="space-y-3">
-                  {coloredUtxos.map((unspent, index) => (
+                  {coloredUtxos.map((unspent: any, index: number) => (
                     <UTXOCard
                       index={index}
                       key={unspent.utxo?.outpoint || index}
@@ -317,7 +317,7 @@ export const UTXOManagementModal = ({
                   {t('utxoManagement.sections.normal')}
                 </h3>
                 <div className="space-y-3">
-                  {normalUtxos.map((unspent, index) => (
+                  {normalUtxos.map((unspent: any, index: number) => (
                     <UTXOCard
                       index={index}
                       key={unspent.utxo?.outpoint || index}

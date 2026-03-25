@@ -130,7 +130,7 @@ export const PeerManagementModal = ({ onClose }: PeerManagementModalProps) => {
           </div>
         ) : peersData?.peers && peersData.peers.length > 0 ? (
           <div className="space-y-3">
-            {peersData.peers.map((peer) => (
+            {peersData.peers.map((peer: any) => (
               <div
                 className="bg-surface-overlay/50 rounded-xl border border-border-default p-4 
                          flex items-center justify-between group hover:border-red-500/20 hover:bg-red-500/5"

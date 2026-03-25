@@ -35,6 +35,7 @@
     "manualSwaps": "Manual Swaps",
     "nostrP2P": "Nostr P2P",
     "dca": "DCA",
+    "limitOrders": "Limit Orders",
     "helpSupport": "Help & Support",
     "getHelpSupport": "Get Help & Support",
     "menu": "Menu",
@@ -2878,6 +2879,73 @@
       "openButton": "Open USDT Channel",
       "channelOpened": "USDT channel opening initiated",
       "errorLspInfo": "Failed to get LSP info"
+    }
+  },
+  "limitOrders": {
+    "title": "Limit Orders",
+    "description": "Set a target price for any trading pair. When the market reaches your price, the swap executes automatically.",
+    "createOrder": "New Limit Order",
+    "side": {
+      "buy": "Buy",
+      "sell": "Sell"
+    },
+    "form": {
+      "pair": "Trading Pair",
+      "noPairs": "No pairs available",
+      "side": "Side",
+      "limitPrice": "Limit Price",
+      "amount": "Amount",
+      "available": "Available",
+      "estimatedTotal": "Estimated Total",
+      "expiration": "Expiration",
+      "noExpiration": "Never",
+      "submitBuy": "Place Buy Limit Order",
+      "submitSell": "Place Sell Limit Order"
+    },
+    "status": {
+      "active": "Active",
+      "paused": "Paused",
+      "filled": "Filled",
+      "expired": "Expired",
+      "cancelled": "Cancelled"
+    },
+    "tabs": {
+      "active": "Active",
+      "history": "History"
+    },
+    "metrics": {
+      "activeOrders": "Active orders",
+      "filledOrders": "Filled orders",
+      "totalExecutions": "Successful executions"
+    },
+    "orders": {
+      "activeTitle": "Active Limit Orders",
+      "historyTitle": "Filled & Closed Orders"
+    },
+    "empty": {
+      "active": "No active limit orders",
+      "history": "No order history yet"
+    },
+    "card": {
+      "limitPrice": "Limit",
+      "currentPrice": "Current",
+      "amount": "Amount",
+      "expires": "Expires",
+      "noExpiration": "No expiration",
+      "fillNow": "Fill Now",
+      "executionHistory": "Execution History"
+    },
+    "notifications": {
+      "created": "Limit order created",
+      "filled": "Limit order filled",
+      "expired": "Limit order expired",
+      "failed": "Limit order execution failed"
+    },
+    "errors": {
+      "noPair": "Please select a trading pair",
+      "invalidPrice": "Please enter a valid limit price",
+      "invalidAmount": "Please enter a valid amount",
+      "insufficientBalance": "Insufficient balance"
     }
   }
 }

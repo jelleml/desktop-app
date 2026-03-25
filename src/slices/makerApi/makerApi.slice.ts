@@ -18,6 +18,16 @@ import {
   SwapResponse as InitiateSwapResponse,
 } from 'kaleido-sdk'
 
+// RetryDelivery types removed from the new SDK - define inline
+interface RetryDeliveryRequest {
+  order_id: string
+  access_token?: string
+}
+interface RetryDeliveryResponse {
+  status: string
+  message?: string
+}
+
 // Types matching new OpenAPI schema
 
 export interface TradingLimits {
@@ -255,6 +265,19 @@ export const makerApi = createApi({
         try {
           const client = await getKaleidoClient(api.getState() as RootState)
           const res = await client.maker.initSwap(args)
+          return { data: res }
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e)
+          return { error: { data: { error: msg }, status: 500 } }
+        }
+      },
+    }),
+    retry_delivery: builder.query<RetryDeliveryResponse, RetryDeliveryRequest>({
+      queryFn: async (args, api) => {
+        try {
+          const client = await getKaleidoClient(api.getState() as RootState)
+          // retryAssetDelivery was removed from the SDK; call via escape hatch
+          const res = await (client.maker as any).retryAssetDelivery(args)
           return { data: res }
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e)

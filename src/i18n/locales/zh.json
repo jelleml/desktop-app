@@ -38,7 +38,8 @@
     "getHelpSupport": "获取帮助与支持",
     "menu": "Menu",
     "expandSidebar": "Expand sidebar",
-    "dca": "DCA"
+    "dca": "DCA",
+    "limitOrders": "限价订单"
   },
   "channels": {
     "pageTitle": "闪电钱包仪表板",
@@ -2935,6 +2936,73 @@
       "pendingUsdtChannels": "待确认的 USDT 通道",
       "pendingUsdtDescription": "新的 USDT Lightning 通道正在创建中，确认后会显示在可用余额中。",
       "pendingUsdtTitle": "新的 USDT 通道待确认"
+    }
+  },
+  "limitOrders": {
+    "title": "限价订单",
+    "description": "为任何交易对设置目标价格。当市场达到您的价格时，交换将自动执行。",
+    "createOrder": "新建限价订单",
+    "side": {
+      "buy": "买入",
+      "sell": "卖出"
+    },
+    "form": {
+      "pair": "交易对",
+      "noPairs": "没有可用的交易对",
+      "side": "方向",
+      "limitPrice": "限价",
+      "amount": "数量",
+      "available": "可用",
+      "estimatedTotal": "预估总额",
+      "expiration": "到期时间",
+      "noExpiration": "永不",
+      "submitBuy": "下达买入限价单",
+      "submitSell": "下达卖出限价单"
+    },
+    "status": {
+      "active": "活跃",
+      "paused": "已暂停",
+      "filled": "已成交",
+      "expired": "已过期",
+      "cancelled": "已取消"
+    },
+    "tabs": {
+      "active": "活跃",
+      "history": "历史"
+    },
+    "metrics": {
+      "activeOrders": "活跃订单",
+      "filledOrders": "已成交订单",
+      "totalExecutions": "成功执行次数"
+    },
+    "orders": {
+      "activeTitle": "活跃限价订单",
+      "historyTitle": "已成交和已关闭订单"
+    },
+    "empty": {
+      "active": "没有活跃的限价订单",
+      "history": "暂无订单历史"
+    },
+    "card": {
+      "limitPrice": "限价",
+      "currentPrice": "当前",
+      "amount": "数量",
+      "expires": "到期",
+      "noExpiration": "无到期时间",
+      "fillNow": "立即成交",
+      "executionHistory": "执行历史"
+    },
+    "notifications": {
+      "created": "限价订单已创建",
+      "filled": "限价订单已成交",
+      "expired": "限价订单已过期",
+      "failed": "限价订单执行失败"
+    },
+    "errors": {
+      "noPair": "请选择交易对",
+      "invalidPrice": "请输入有效的限价",
+      "invalidAmount": "请输入有效的数量",
+      "insufficientBalance": "余额不足"
     }
   }
 }

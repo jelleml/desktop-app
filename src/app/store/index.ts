@@ -3,6 +3,7 @@ import { combineReducers, configureStore } from '@reduxjs/toolkit'
 import { makerApi } from '../../slices/makerApi/makerApi.slice.ts'
 import { pairsSlice } from '../../slices/makerApi/pairs.slice.ts'
 import { dcaSlice } from '../../slices/dcaSlice'
+import { limitOrderSlice } from '../../slices/limitOrderSlice'
 import { nodeReducer } from '../../slices/node/node.slice'
 import { nodeApi } from '../../slices/nodeApi/nodeApi.slice'
 import { nodeSettingsSlice } from '../../slices/nodeSettings/nodeSettings.slice.ts'
@@ -15,6 +16,7 @@ const rootReducer = combineReducers({
   [makerApi.reducerPath]: makerApi.reducer,
   [priceApi.reducerPath]: priceApi.reducer,
   dca: dcaSlice.reducer,
+  limitOrders: limitOrderSlice.reducer,
   node: nodeReducer,
   nodeSettings: nodeSettingsSlice.reducer,
   pairs: pairsSlice.reducer,

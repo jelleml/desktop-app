@@ -173,7 +173,7 @@ export const Step2 = ({ assetId, onBack, onNext }: Props) => {
 
   useEffect(() => {
     if (assetList?.nia && assetId !== BTC_ASSET_ID && assetId) {
-      const asset = assetList.nia.find((a) => a.asset_id === assetId)
+      const asset = assetList.nia.find((a: any) => a.asset_id === assetId)
       if (asset) {
         setAssetTicker(asset.ticker ?? '')
         setAssetName(asset.name ?? '')

@@ -38,7 +38,8 @@
     "getHelpSupport": "Hilfe & Support erhalten",
     "menu": "Menu",
     "expandSidebar": "Expand sidebar",
-    "dca": "DCA"
+    "dca": "DCA",
+    "limitOrders": "Limit-Orders"
   },
   "channels": {
     "buyChannel": "Kanal kaufen",
@@ -2938,6 +2939,73 @@
       "pendingUsdtChannels": "Ausstehende USDT-Kanäle",
       "pendingUsdtDescription": "Ihr neuer USDT-Lightning-Kanal ist unterwegs und erscheint nach Bestätigung im verfügbaren Guthaben.",
       "pendingUsdtTitle": "Neuer USDT-Kanal ausstehend"
+    }
+  },
+  "limitOrders": {
+    "title": "Limit-Orders",
+    "description": "Setzen Sie einen Zielpreis für jedes Handelspaar. Wenn der Markt Ihren Preis erreicht, wird der Swap automatisch ausgeführt.",
+    "createOrder": "Neue Limit-Order",
+    "side": {
+      "buy": "Kaufen",
+      "sell": "Verkaufen"
+    },
+    "form": {
+      "pair": "Handelspaar",
+      "noPairs": "Keine Paare verfügbar",
+      "side": "Seite",
+      "limitPrice": "Limitpreis",
+      "amount": "Betrag",
+      "available": "Verfügbar",
+      "estimatedTotal": "Geschätzter Gesamtbetrag",
+      "expiration": "Ablauf",
+      "noExpiration": "Nie",
+      "submitBuy": "Kauf-Limit-Order platzieren",
+      "submitSell": "Verkauf-Limit-Order platzieren"
+    },
+    "status": {
+      "active": "Aktiv",
+      "paused": "Pausiert",
+      "filled": "Ausgeführt",
+      "expired": "Abgelaufen",
+      "cancelled": "Storniert"
+    },
+    "tabs": {
+      "active": "Aktiv",
+      "history": "Verlauf"
+    },
+    "metrics": {
+      "activeOrders": "Aktive Orders",
+      "filledOrders": "Ausgeführte Orders",
+      "totalExecutions": "Erfolgreiche Ausführungen"
+    },
+    "orders": {
+      "activeTitle": "Aktive Limit-Orders",
+      "historyTitle": "Ausgeführte & geschlossene Orders"
+    },
+    "empty": {
+      "active": "Keine aktiven Limit-Orders",
+      "history": "Noch kein Orderverlauf"
+    },
+    "card": {
+      "limitPrice": "Limit",
+      "currentPrice": "Aktuell",
+      "amount": "Betrag",
+      "expires": "Läuft ab",
+      "noExpiration": "Kein Ablauf",
+      "fillNow": "Jetzt ausführen",
+      "executionHistory": "Ausführungsverlauf"
+    },
+    "notifications": {
+      "created": "Limit-Order erstellt",
+      "filled": "Limit-Order ausgeführt",
+      "expired": "Limit-Order abgelaufen",
+      "failed": "Limit-Order-Ausführung fehlgeschlagen"
+    },
+    "errors": {
+      "noPair": "Bitte wählen Sie ein Handelspaar",
+      "invalidPrice": "Bitte geben Sie einen gültigen Limitpreis ein",
+      "invalidAmount": "Bitte geben Sie einen gültigen Betrag ein",
+      "insufficientBalance": "Unzureichendes Guthaben"
     }
   }
 }

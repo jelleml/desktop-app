@@ -169,7 +169,7 @@ export const Step2 = ({
         // If we have a previously selected asset, find and set it
         if (formData.assetId) {
           const asset = filteredAssets.find(
-            (a) => a.asset_id === formData.assetId
+            (a: any) => a.asset_id === formData.assetId
           )
           if (asset) {
             setSelectedAsset(asset)
@@ -225,7 +225,7 @@ export const Step2 = ({
 
   const handleAssetSelect = (assetId: string) => {
     const asset = takerAssetsResponse.data?.nia?.find(
-      (a) => a.asset_id === assetId
+      (a: any) => a.asset_id === assetId
     )
     if (asset) {
       setSelectedAsset(asset)

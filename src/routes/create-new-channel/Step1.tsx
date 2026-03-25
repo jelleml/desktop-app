@@ -77,8 +77,8 @@ export const Step1 = ({ onNext, formData, onFormUpdate }: Props) => {
         if (peers.peers) {
           setConnectedPeers(
             peers.peers
-              .filter((p) => p.pubkey)
-              .map((p) => ({ pubkey: p.pubkey ?? '' }))
+              .filter((p: any) => p.pubkey)
+              .map((p: any) => ({ pubkey: p.pubkey ?? '' }))
           )
         } else {
           setConnectedPeers([])
@@ -205,7 +205,7 @@ export const Step1 = ({ onNext, formData, onFormUpdate }: Props) => {
       const peers = await listPeers().unwrap()
       // Handle both pubkey-only and pubkey@host:port formats
       const pubkey = peerInfo.includes('@') ? peerInfo.split('@')[0] : peerInfo
-      return (peers.peers ?? []).some((peer) => peer.pubkey === pubkey)
+      return (peers.peers ?? []).some((peer: any) => peer.pubkey === pubkey)
     } catch (error) {
       return false
     }

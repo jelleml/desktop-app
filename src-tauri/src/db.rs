@@ -123,6 +123,20 @@ pub fn init() {
         (),
     )
     .unwrap();
+
+    // Add LimitOrders table
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS 'LimitOrders' (
+            'id' INTEGER PRIMARY KEY AUTOINCREMENT,
+            'account_id' INTEGER NOT NULL,
+            'order_id' TEXT NOT NULL,
+            'payload' TEXT NOT NULL,
+            UNIQUE(account_id, order_id),
+            FOREIGN KEY(account_id) REFERENCES Accounts(id) ON DELETE CASCADE
+        );",
+        (),
+    )
+    .unwrap();
 }
 
 // Create the database file.
@@ -505,6 +519,38 @@ pub fn delete_dca_order(account_id: i32, order_id: String) -> Result<usize, rusq
     let conn = Connection::open(get_db_path())?;
     conn.execute(
         "DELETE FROM DcaOrders WHERE account_id = ?1 AND order_id = ?2",
+        rusqlite::params![account_id, order_id],
+    )
+}
+
+pub fn upsert_limit_order(
+    account_id: i32,
+    order_id: String,
+    payload: String,
+) -> Result<usize, rusqlite::Error> {
+    let conn = Connection::open(get_db_path())?;
+    conn.execute(
+        "INSERT INTO LimitOrders (account_id, order_id, payload) VALUES (?1, ?2, ?3)
+         ON CONFLICT(account_id, order_id) DO UPDATE SET payload = excluded.payload",
+        rusqlite::params![account_id, order_id, payload],
+    )
+}
+
+pub fn get_limit_orders(account_id: i32) -> Result<Vec<String>, rusqlite::Error> {
+    let conn = Connection::open(get_db_path())?;
+    let mut stmt =
+        conn.prepare("SELECT payload FROM LimitOrders WHERE account_id = ?1 ORDER BY id ASC")?;
+    let payloads = stmt
+        .query_map([account_id], |row| row.get(0))?
+        .map(|r| r.unwrap())
+        .collect();
+    Ok(payloads)
+}
+
+pub fn delete_limit_order(account_id: i32, order_id: String) -> Result<usize, rusqlite::Error> {
+    let conn = Connection::open(get_db_path())?;
+    conn.execute(
+        "DELETE FROM LimitOrders WHERE account_id = ?1 AND order_id = ?2",
         rusqlite::params![account_id, order_id],
     )
 }
