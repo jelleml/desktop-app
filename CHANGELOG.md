@@ -1,27 +1,39 @@
-## [Version 0.4.0] - TBD
+## [Version 0.4.0] - 2026-04-08
 
 ### 🚀 Features
+- **Limit Orders**: Added limit order trading with Tauri-backed persistence, form validation, and scheduler integration
 - **Dollar-Cost Averaging (DCA)**: Added automated BTC buying with scheduled and price-target execution modes using USDT Lightning balance
 - **Redesigned Buy Channel Flow**: Reworked the channel purchase and order flow with richer payment states, improved summaries, wallet funding guidance, and order restart handling
 - **Desktop Node Lifecycle Controls**: Added stronger local node startup, readiness, tray, background-running, and shutdown behavior for desktop usage
 - **Local or Remote Node Setup**: Expanded setup and unlock flows for both managed local nodes and remote node connections
+- **Port Conflict Resolution**: Automatically detect and resolve port conflicts when starting the local node
 - **Expanded Internationalization**: Broadened multi-language coverage across trading, wallet history, setup, and channel management flows
 
 ### 🔧 Improvements
+- **Trading Page Refactor**: Extracted market-maker and limit-orders into separate view components for better maintainability
+- **Channel Order Payment Monitoring**: Improved channel order payment tracking, persistence, and duration selector
+- **DCA and Limit Order Scheduler Gating**: Schedulers now only run when the node is unlocked, preventing errors on locked nodes
 - **DCA Dashboard and Execution Reliability**: Improved order persistence, account-aware hydration, retry behavior, queueing, timeout handling, and DCA status visibility
 - **Trading Experience Refresh**: Updated market-maker and swap surfaces with better liquidity visibility, improved asset selection, clearer connection states, and stronger error messaging
 - **Wallet and Channel UX**: Refined dashboard, channel list, transaction history, deposit, withdrawal, backup, and support surfaces for better clarity and usability
 - **Shared Liquidity Components**: Extracted reusable liquidity, quote, and order-summary UI primitives used across channel purchase and trading flows
 - **Tooling and CI Checks**: Standardized frontend format, lint, type-check, and PR verification commands for more consistent local and CI validation
+- **SDK Migration**: Migrated to kaleido-sdk v0.1.0
 
 ### 🐛 Bug Fixes
+- **Unlock Timeout Extended**: Increased unlock retry timeout from ~3 minutes to ~1 hour so slow-syncing nodes no longer hit false "maximum attempts reached" errors
+- **Unlock Timeout Error Handling**: Fixed missing timeout error detection in the unlock retry loop that could cause premature failures
 - **Node Readiness and Unlock Handling**: Fixed cases where node startup or unlock could appear stalled without surfacing useful progress or retry behavior
 - **Tray and Window Closing Behavior**: Fixed desktop close flows so the app can hide to tray, keep the node running in the background, or shut down cleanly before exit
 - **Update Detection**: Improved update checks to avoid surfacing non-newer releases as available updates
 - **Channel and Trading State Refresh**: Reduced stale UI states around channel availability, payment progress, and trading readiness
+- **CoinGecko Parsing**: Hardened CoinGecko price data parsing to handle unexpected responses
 
 ### 🏗️ Infrastructure
 - **Dependency Updates**: Refreshed frontend and Tauri-related dependencies and aligned project scripts with the current toolchain
+- **Security Fixes**: Updated rustls-webpki (0.103.9 → 0.103.10) and tar (0.4.44 → 0.4.45) to patch known vulnerabilities
+- **Test Coverage**: Added unit tests for channel order utilities
+- **Code Cleanup**: Removed dead code and unused layout configuration across desktop app flows
 - **Build and Release Readiness**: Updated documentation and project configuration to match the current Tauri 2 and pnpm-based workflow
 
 ## [Version 0.3.2] - 2025-11-10
