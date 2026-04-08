@@ -1,25 +1,12 @@
 import { Plus, Loader, Zap, Wallet, Paintbrush } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 
 import { CREATEUTXOS_PATH } from '../../app/router/paths'
 import { formatBitcoinAmount } from '../../helpers/number'
-import { nodeApi, Assignment } from '../../slices/nodeApi/nodeApi.slice'
-
-// Helper function to extract amount from assignment
-const getAssignmentAmount = (assignment: Assignment): number => {
-  switch (assignment.type) {
-    case 'Fungible':
-      return assignment.value
-    case 'InflationRight':
-      return assignment.value
-    case 'Any':
-    case 'NonFungible':
-    case 'ReplaceRight':
-    default:
-      return 0
-  }
-}
+import { nodeApi } from '../../slices/nodeApi/nodeApi.slice'
+import { getAssignmentAmount } from '../../utils/rgbUtils'
 
 interface UTXOManagementModalProps {
   onClose: () => void
@@ -40,15 +27,13 @@ export const UTXOManagementModal = ({
   bitcoinUnit,
 }: UTXOManagementModalProps) => {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [listUnspents, { data: unspentsData, isLoading }] =
     nodeApi.useLazyListUnspentsQuery()
 
   useEffect(() => {
-    listUnspents({ skip_sync: false })
-    const intervalId = setInterval(
-      () => listUnspents({ skip_sync: false }),
-      10000
-    )
+    listUnspents()
+    const intervalId = setInterval(() => listUnspents(), 10000)
     return () => clearInterval(intervalId)
   }, [listUnspents])
 
@@ -75,25 +60,34 @@ export const UTXOManagementModal = ({
     // 3. Normal (can't be used for RGB assets)
 
     const colored = unspentsData.unspents.filter(
-      (u) =>
-        u.utxo.colorable &&
+      (u: any) =>
+        u.utxo?.colorable &&
         Array.isArray(u.rgb_allocations) &&
         u.rgb_allocations.length > 0
     )
     const colorable = unspentsData.unspents.filter(
-      (u) =>
-        u.utxo.colorable &&
+      (u: any) =>
+        u.utxo?.colorable &&
         (!Array.isArray(u.rgb_allocations) || u.rgb_allocations.length <= 0)
     )
-    const normal = unspentsData.unspents.filter((u) => !u.utxo.colorable)
+    const normal = unspentsData.unspents.filter((u: any) => !u.utxo?.colorable)
 
     const summary: UTXOSummary = {
       colorableCount: colorable.length,
       coloredCount: colored.length,
       normalCount: normal.length,
-      totalColorable: colorable.reduce((sum, u) => sum + u.utxo.btc_amount, 0),
-      totalColored: colored.reduce((sum, u) => sum + u.utxo.btc_amount, 0),
-      totalNormal: normal.reduce((sum, u) => sum + u.utxo.btc_amount, 0),
+      totalColorable: colorable.reduce(
+        (sum: number, u: any) => sum + (u.utxo?.btc_amount || 0),
+        0
+      ),
+      totalColored: colored.reduce(
+        (sum: number, u: any) => sum + (u.utxo?.btc_amount || 0),
+        0
+      ),
+      totalNormal: normal.reduce(
+        (sum: number, u: any) => sum + (u.utxo?.btc_amount || 0),
+        0
+      ),
     }
 
     return {
@@ -110,17 +104,17 @@ export const UTXOManagementModal = ({
   }
 
   const getUtxoStatusLabel = (unspent: any) => {
-    if (!unspent.utxo.colorable) {
-      return 'Normal'
+    if (!unspent.utxo?.colorable) {
+      return t('utxoManagement.status.normal')
     }
     if (unspent.rgb_allocations && unspent.rgb_allocations.length > 0) {
-      return 'Colored'
+      return t('utxoManagement.status.colored')
     }
-    return 'Colorable'
+    return t('utxoManagement.status.colorable')
   }
 
   const getUtxoStatusStyle = (unspent: any) => {
-    if (!unspent.utxo.colorable) {
+    if (!unspent.utxo?.colorable) {
       return 'bg-blue-500/20 text-blue-400'
     }
     if (unspent.rgb_allocations && unspent.rgb_allocations.length > 0) {
@@ -131,12 +125,12 @@ export const UTXOManagementModal = ({
 
   const UTXOCard = ({ unspent }: { unspent: any; index: number }) => (
     <div
-      className="bg-slate-800/50 rounded-xl border border-slate-700 p-4"
+      className="bg-surface-overlay/50 rounded-xl border border-border-default p-4"
       key={unspent.utxo.outpoint}
     >
       <div className="flex justify-between items-start mb-2">
-        <div className="text-sm font-medium text-slate-300">
-          {unspent.utxo.outpoint.split(':')[0]}
+        <div className="text-sm font-medium text-content-secondary">
+          {unspent.utxo?.outpoint?.split(':')[0]}
         </div>
         <div
           className={`px-2 py-1 rounded-lg text-xs font-medium ${getUtxoStatusStyle(unspent)}`}
@@ -145,15 +139,20 @@ export const UTXOManagementModal = ({
         </div>
       </div>
       <div className="text-lg font-medium text-white">
-        {formatBitcoinAmount(parseInt(unspent.utxo.btc_amount), bitcoinUnit)}{' '}
+        {formatBitcoinAmount(
+          parseInt(unspent.utxo?.btc_amount || '0'),
+          bitcoinUnit
+        )}{' '}
         {bitcoinUnit}
       </div>
       {unspent.rgb_allocations && unspent.rgb_allocations.length > 0 && (
-        <div className="mt-2 pt-2 border-t border-slate-700">
-          <div className="text-sm text-slate-400">RGB Allocations:</div>
+        <div className="mt-2 pt-2 border-t border-border-default">
+          <div className="text-sm text-content-secondary">
+            {t('utxoManagement.card.rgbAllocations')}
+          </div>
           {unspent.rgb_allocations.map((allocation: any, i: number) => (
             <div
-              className="text-sm text-slate-300 flex justify-between"
+              className="text-sm text-content-secondary flex justify-between"
               key={i}
             >
               <span className="truncate">{allocation.asset_id}</span>
@@ -171,16 +170,54 @@ export const UTXOManagementModal = ({
     }
   }
 
+  const summaryCards = [
+    {
+      bullets: t('utxoManagement.summary.colorable.bullets', {
+        returnObjects: true,
+      }) as string[],
+      count: summary.colorableCount,
+      dotClass: 'bg-green-500',
+      icon: <Zap className="w-5 h-5 text-green-500" />,
+      key: 'colorable',
+      title: t('utxoManagement.summary.colorable.title'),
+      total: summary.totalColorable,
+    },
+    {
+      bullets: t('utxoManagement.summary.colored.bullets', {
+        returnObjects: true,
+      }) as string[],
+      count: summary.coloredCount,
+      dotClass: 'bg-purple-500',
+      icon: <Paintbrush className="w-5 h-5 text-purple-500" />,
+      key: 'colored',
+      title: t('utxoManagement.summary.colored.title'),
+      total: summary.totalColored,
+    },
+    {
+      bullets: t('utxoManagement.summary.normal.bullets', {
+        returnObjects: true,
+      }) as string[],
+      count: summary.normalCount,
+      dotClass: 'bg-blue-500',
+      icon: <Wallet className="w-5 h-5 text-blue-500" />,
+      key: 'normal',
+      title: t('utxoManagement.summary.normal.title'),
+      total: summary.totalNormal,
+    },
+  ]
+
   return (
     <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-50 pt-20"
       onClick={handleBackdropClick}
     >
-      <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6 max-w-2xl w-full m-4 max-h-[calc(100vh-120px)] overflow-y-auto">
+      <div className="bg-surface-base rounded-2xl border border-border-subtle p-6 max-w-2xl w-full m-4 max-h-[calc(100vh-120px)] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">UTXO Management</h2>
+          <h2 className="text-2xl font-bold text-white">
+            {t('utxoManagement.title')}
+          </h2>
           <button
-            className="text-slate-400 hover:text-white transition-colors"
+            className="text-content-secondary hover:text-white transition-colors"
             onClick={onClose}
           >
             ✕
@@ -189,88 +226,43 @@ export const UTXOManagementModal = ({
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Zap className="w-5 h-5 text-green-500" />
-              <h3 className="text-lg font-medium text-white">
-                Colorable UTXOs
-              </h3>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-2 text-sm text-slate-300">
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-                <span>UTXO RGB ready not yet allocated</span>
+          {summaryCards.map((card) => (
+            <div
+              className="bg-surface-overlay/50 rounded-xl border border-border-default p-4"
+              key={card.key}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                {card.icon}
+                <h3 className="text-lg font-medium text-white">{card.title}</h3>
               </div>
-              <div className="flex items-center gap-2 text-sm text-slate-300">
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-                <span>Receive On-chain RGB Assets</span>
+              <div className="flex flex-col gap-1.5">
+                {card.bullets.map((bullet) => (
+                  <div
+                    className="flex items-center gap-2 text-sm text-content-secondary"
+                    key={bullet}
+                  >
+                    <div className={`w-2 h-2 rounded-full ${card.dotClass}`} />
+                    <span>{bullet}</span>
+                  </div>
+                ))}
               </div>
-            </div>
-            <div className="text-2xl font-bold text-white mt-3">
-              {formatBitcoinAmount(summary.totalColorable, bitcoinUnit)}{' '}
-              {bitcoinUnit}
-            </div>
-            <div className="text-sm text-slate-400 mt-1">
-              {summary.colorableCount} UTXOs
-            </div>
-          </div>
-
-          <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Paintbrush className="w-5 h-5 text-purple-500" />
-              <h3 className="text-lg font-medium text-white">Colored UTXOs</h3>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-2 text-sm text-slate-300">
-                <div className="w-2 h-2 rounded-full bg-purple-500" />
-                <span>Open RGB Lightning Channels</span>
+              <div className="text-2xl font-bold text-white mt-3">
+                {formatBitcoinAmount(card.total, bitcoinUnit)} {bitcoinUnit}
               </div>
-              <div className="flex items-center gap-2 text-sm text-slate-300">
-                <div className="w-2 h-2 rounded-full bg-purple-500" />
-                <span>Send On-chain RGB Assets</span>
+              <div className="text-sm text-content-secondary mt-1">
+                {t('utxoManagement.summary.countLabel', { count: card.count })}
               </div>
             </div>
-            <div className="text-2xl font-bold text-white mt-3">
-              {formatBitcoinAmount(summary.totalColored, bitcoinUnit)}{' '}
-              {bitcoinUnit}
-            </div>
-            <div className="text-sm text-slate-400 mt-1">
-              {summary.coloredCount} UTXOs
-            </div>
-          </div>
-
-          <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Wallet className="w-5 h-5 text-blue-500" />
-              <h3 className="text-lg font-medium text-white">Normal UTXOs</h3>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-2 text-sm text-slate-300">
-                <div className="w-2 h-2 rounded-full bg-blue-500" />
-                <span>Open Bitcoin Lightning Channels</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-slate-300">
-                <div className="w-2 h-2 rounded-full bg-blue-500" />
-                <span>Regular transactions</span>
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-white mt-3">
-              {formatBitcoinAmount(summary.totalNormal, bitcoinUnit)}{' '}
-              {bitcoinUnit}
-            </div>
-            <div className="text-sm text-slate-400 mt-1">
-              {summary.normalCount} UTXOs
-            </div>
-          </div>
+          ))}
         </div>
 
         <button
-          className="w-full mb-6 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl 
+          className="w-full mb-6 px-4 py-3 bg-primary hover:bg-primary-emphasis text-primary-foreground rounded-xl 
                    font-medium transition-colors flex items-center justify-center gap-2"
           onClick={handleCreateUTXOs}
         >
           <Plus className="w-5 h-5" />
-          Create New UTXOs
+          {t('utxoManagement.actions.create')}
         </button>
 
         {isLoading ? (
@@ -284,13 +276,13 @@ export const UTXOManagementModal = ({
               <div>
                 <h3 className="text-lg font-medium text-white mb-3 flex items-center gap-2">
                   <Zap className="w-5 h-5 text-green-500" />
-                  Colorable UTXOs
+                  {t('utxoManagement.sections.colorable')}
                 </h3>
                 <div className="space-y-3">
-                  {colorableUtxos.map((unspent, index) => (
+                  {colorableUtxos.map((unspent: any, index: number) => (
                     <UTXOCard
                       index={index}
-                      key={unspent.utxo.outpoint}
+                      key={unspent.utxo?.outpoint || index}
                       unspent={unspent}
                     />
                   ))}
@@ -303,13 +295,13 @@ export const UTXOManagementModal = ({
               <div>
                 <h3 className="text-lg font-medium text-white mb-3 flex items-center gap-2">
                   <Paintbrush className="w-5 h-5 text-purple-500" />
-                  Colored UTXOs
+                  {t('utxoManagement.sections.colored')}
                 </h3>
                 <div className="space-y-3">
-                  {coloredUtxos.map((unspent, index) => (
+                  {coloredUtxos.map((unspent: any, index: number) => (
                     <UTXOCard
                       index={index}
-                      key={unspent.utxo.outpoint}
+                      key={unspent.utxo?.outpoint || index}
                       unspent={unspent}
                     />
                   ))}
@@ -322,13 +314,13 @@ export const UTXOManagementModal = ({
               <div>
                 <h3 className="text-lg font-medium text-white mb-3 flex items-center gap-2">
                   <Wallet className="w-5 h-5 text-blue-500" />
-                  Normal UTXOs
+                  {t('utxoManagement.sections.normal')}
                 </h3>
                 <div className="space-y-3">
-                  {normalUtxos.map((unspent, index) => (
+                  {normalUtxos.map((unspent: any, index: number) => (
                     <UTXOCard
                       index={index}
-                      key={unspent.utxo.outpoint}
+                      key={unspent.utxo?.outpoint || index}
                       unspent={unspent}
                     />
                   ))}
@@ -337,8 +329,8 @@ export const UTXOManagementModal = ({
             )}
           </div>
         ) : (
-          <div className="text-center py-8 text-slate-400">
-            No UTXOs found. Create some to get started.
+          <div className="text-center py-8 text-content-secondary">
+            {t('utxoManagement.empty')}
           </div>
         )}
       </div>

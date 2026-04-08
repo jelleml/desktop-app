@@ -3,7 +3,7 @@
     "beforeBuildCommand": "pnpm build",
     "beforeDevCommand": "pnpm dev",
     "frontendDist": "../dist",
-    "devUrl": "http://localhost:1420"
+    "devUrl": "http://127.0.0.1:1420"
   },
   "bundle": {
     "active": true,
@@ -48,7 +48,7 @@
   },
   "productName": "KaleidoSwap",
   "mainBinaryName": "KaleidoSwap",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "identifier": "com.kaleidoswap.dev",
   "plugins": {
     "updater": {
@@ -72,9 +72,11 @@
         "minWidth": 800,
         "resizable": true,
         "title": "KaleidoSwap",
+        "titleBarStyle": "Visible",
         "visible": false,
         "width": 1200,
-        "useHttpsScheme": true
+        "useHttpsScheme": true,
+        "backgroundColor": "#1E1F28"
       },
       {
         "alwaysOnTop": false,

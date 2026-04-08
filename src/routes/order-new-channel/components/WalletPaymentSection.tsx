@@ -1,5 +1,6 @@
 import { AlertTriangle } from 'lucide-react'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { ClipLoader } from 'react-spinners'
 
 import { formatBitcoinAmount } from '../../../helpers/number'
@@ -37,6 +38,7 @@ export const WalletPaymentSection: React.FC<WalletPaymentSectionProps> = ({
   onCustomFeeChange,
   onPayClick,
 }) => {
+  const { t } = useTranslation()
   const hasBalanceData =
     !isLoadingData &&
     typeof outboundLiquidity === 'number' &&
@@ -46,7 +48,9 @@ export const WalletPaymentSection: React.FC<WalletPaymentSectionProps> = ({
     return (
       <div className="flex items-center justify-center gap-3 p-8">
         <ClipLoader color="#3B82F6" size={24} />
-        <span className="text-gray-400">Loading wallet balance...</span>
+        <span className="text-content-secondary">
+          {t('orderChannel.step3.loadingBalance')}
+        </span>
       </div>
     )
   }
@@ -67,24 +71,26 @@ export const WalletPaymentSection: React.FC<WalletPaymentSectionProps> = ({
   return (
     <div className="mb-6">
       {/* Balance Header */}
-      <div className="flex items-center justify-between mb-4 p-4 bg-gray-900/50 rounded-xl">
+      <div className="flex items-center justify-between mb-4 p-4 bg-surface-base/50 rounded-xl">
         <label className="flex items-center space-x-3">
           <input
             checked={useWalletFunds}
-            className="form-checkbox h-5 w-5 text-blue-500 rounded border-gray-600 bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="form-checkbox h-5 w-5 text-blue-500 rounded border-border-default bg-surface-high disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={insufficientBalance}
             onChange={(e) => onUseWalletFundsChange(e.target.checked)}
             type="checkbox"
           />
           <span
-            className={`font-medium ${insufficientBalance ? 'text-gray-500' : 'text-white'}`}
+            className={`font-medium ${insufficientBalance ? 'text-content-tertiary' : 'text-white'}`}
           >
-            Pay with Wallet
+            {t('orderChannel.step3.payWithWallet')}
           </span>
         </label>
         <div className="text-right">
-          <div className="text-sm text-gray-400">
-            {paymentMethod === 'lightning' ? 'Max Sendable' : 'Available'}
+          <div className="text-sm text-content-secondary">
+            {paymentMethod === 'lightning'
+              ? t('orderChannel.step3.maxSendable')
+              : t('orderChannel.step3.available')}
           </div>
           <div className="text-white font-medium">
             {formatBitcoinAmount(
@@ -105,10 +111,10 @@ export const WalletPaymentSection: React.FC<WalletPaymentSectionProps> = ({
             <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
             <div>
               <h4 className="text-red-500 font-medium text-sm">
-                Insufficient Balance
+                {t('orderChannel.step3.insufficientBalance')}
               </h4>
-              <p className="text-gray-400 text-xs mt-1">
-                Required:{' '}
+              <p className="text-content-secondary text-xs mt-1">
+                {t('orderChannel.step3.required')}:{' '}
                 {formatBitcoinAmount(
                   currentPayment?.order_total_sat || 0,
                   bitcoinUnit
@@ -135,18 +141,22 @@ export const WalletPaymentSection: React.FC<WalletPaymentSectionProps> = ({
 
           {/* Pay Button */}
           <button
-            className="w-full px-6 py-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 font-medium bg-blue-500 hover:bg-blue-600 text-white"
+            className="w-full px-6 py-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 font-medium bg-primary hover:bg-primary-emphasis text-primary-foreground"
             onClick={onPayClick}
           >
             <span>{paymentMethod === 'lightning' ? '⚡' : '₿'}</span>
-            Pay{' '}
+            {t('orderChannel.step3.pay')}{' '}
             {formatBitcoinAmount(
               currentPayment?.order_total_sat || 0,
               bitcoinUnit
             )}{' '}
             {bitcoinUnit}
             <span className="text-xs opacity-75">
-              ({paymentMethod === 'lightning' ? 'Lightning' : 'On-chain'})
+              (
+              {paymentMethod === 'lightning'
+                ? t('orderChannel.step3.lightning')
+                : t('orderChannel.step3.onchain')}
+              )
             </span>
           </button>
         </div>

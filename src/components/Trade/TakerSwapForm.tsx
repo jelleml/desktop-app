@@ -1,9 +1,10 @@
 import { RefreshCw, Wallet, Info } from 'lucide-react'
 import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'react-toastify'
 
-import { useAppSelector } from '../../app/store/hooks'
+import { useSettings } from '../../hooks/useSettings'
 import { getAssetPrecision } from '../../helpers/number'
 import { nodeApi } from '../../slices/nodeApi/nodeApi.slice'
 
@@ -22,6 +23,7 @@ export const TakerSwapForm: React.FC<TakerSwapFormProps> = ({
   formatAmount,
   getAssetPrecision: propsGetAssetPrecision,
 }) => {
+  const { t } = useTranslation()
   const [swapDetails, setSwapDetails] = useState<any>(null)
   const [isWhitelisting, setIsWhitelisting] = useState(false)
   const [isDecoding, setIsDecoding] = useState(false)
@@ -41,10 +43,10 @@ export const TakerSwapForm: React.FC<TakerSwapFormProps> = ({
   })
 
   const swapString = watch('swapString')
-  const bitcoinUnit = useAppSelector((state) => state.settings.bitcoinUnit)
+  const { bitcoinUnit } = useSettings()
 
   const [assetBalance] = nodeApi.endpoints.assetBalance.useLazyQuery()
-  const [executeTaker] = nodeApi.endpoints.taker.useLazyQuery()
+  const [executeTaker] = nodeApi.useTakerMutation()
   const { data: nodeInfoData } = nodeApi.endpoints.nodeInfo.useQuery()
 
   // Manual decode function for swap strings
@@ -74,7 +76,12 @@ export const TakerSwapForm: React.FC<TakerSwapFormProps> = ({
       }
     } catch (error) {
       console.error('Failed to decode swap string:', error)
-      throw new Error('Invalid swap string format. Please check and try again.')
+      throw new Error(
+        'Invalid swap string format. Please check and try again.',
+        {
+          cause: error,
+        }
+      )
     }
   }
 
@@ -108,10 +115,10 @@ export const TakerSwapForm: React.FC<TakerSwapFormProps> = ({
       }
 
       setAssetBalances(newBalances)
-      toast.success('Asset balances updated')
+      toast.success(t('trade.taker.balancesUpdated'))
     } catch (error) {
       console.error('Failed to fetch asset balances:', error)
-      toast.error('Failed to fetch asset balances')
+      toast.error(t('trade.taker.balancesFailed'))
     } finally {
       setIsLoadingBalances(false)
       setIsRefreshing(false)
@@ -156,7 +163,7 @@ export const TakerSwapForm: React.FC<TakerSwapFormProps> = ({
 
   const onWhitelistMaker = async () => {
     if (!swapString) {
-      toast.error('Please enter a swap string')
+      toast.error(t('trade.taker.missingSwapString'))
       return
     }
 
@@ -167,11 +174,11 @@ export const TakerSwapForm: React.FC<TakerSwapFormProps> = ({
         swapstring: swapString,
       })
 
-      toast.success('Trade whitelisted successfully')
+      toast.success(t('trade.taker.whitelistSuccess'))
       setWhitelistSuccess(true)
     } catch (error) {
       console.error('Failed to whitelist trade:', error)
-      toast.error('Failed to whitelist trade. Please try again.')
+      toast.error(t('trade.taker.whitelistFailed'))
     } finally {
       setIsWhitelisting(false)
     }
@@ -198,53 +205,56 @@ export const TakerSwapForm: React.FC<TakerSwapFormProps> = ({
   // Get asset ticker for display
   const getAssetTicker = (assetId: string) => {
     if (assetId === 'BTC') return bitcoinUnit === 'SAT' ? 'SAT' : 'BTC'
-    const asset = assetsData?.nia.find((a) => a.asset_id === assetId)
+    const asset = assetsData?.nia?.find((a: any) => a.asset_id === assetId)
     return asset ? asset.ticker || asset.name : assetId
   }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-1 mb-4">
-        <h2 className="text-xl font-semibold text-white">Receive Swap</h2>
-        <p className="text-sm text-slate-400">
-          Whitelist incoming atomic swaps as a taker
+        <h2 className="text-xl font-semibold text-white">
+          {t('tradeManual.takerForm.title')}
+        </h2>
+        <p className="text-sm text-content-secondary">
+          {t('tradeManual.takerForm.description')}
         </p>
       </div>
 
-      <div className="bg-slate-800/50 rounded-lg p-4 mb-6 border border-slate-700/50 swap-card">
+      <div className="bg-surface-overlay/50 rounded-lg p-4 mb-6 border border-border-default/50 swap-card">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-xs font-bold text-white step-indicator">
               1
             </div>
             <h3 className="text-md font-medium text-white">
-              Paste Swap String
+              {t('tradeManual.takerForm.pasteTitle')}
             </h3>
           </div>
           <button
-            className="p-2 rounded-lg hover:bg-slate-700 transition-colors"
+            className="p-2 rounded-lg hover:bg-surface-high transition-colors"
             disabled={isRefreshing || !swapDetails}
             onClick={fetchAssetBalances}
             title="Refresh balances"
           >
             <RefreshCw
-              className={`w-4 h-4 text-slate-400 ${isRefreshing ? 'animate-spin' : ''}`}
+              className={`w-4 h-4 text-content-secondary ${isRefreshing ? 'animate-spin' : ''}`}
             />
           </button>
         </div>
-        <p className="text-sm text-slate-400 ml-8 mb-4">
-          Paste the swap string from the maker to automatically decode and view
-          the swap details.
+        <p className="text-sm text-content-secondary ml-8 mb-4">
+          {t('tradeManual.takerForm.info.pasteDescription')}
         </p>
 
         <div className="space-y-6">
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-slate-300">
-              Swap String
+            <label className="text-sm font-medium text-content-secondary">
+              {t('tradeManual.takerForm.labels.swapString')}
             </label>
             <textarea
-              className={`w-full px-4 py-3 bg-slate-800 border ${decodeError ? 'border-red-500' : 'border-slate-700'} rounded-lg text-white focus:outline-none focus:border-blue-500 input-animate h-24 font-mono text-xs`}
-              placeholder="Paste the swap string here..."
+              className={`w-full px-4 py-3 bg-surface-overlay border ${decodeError ? 'border-red-500' : 'border-border-default'} rounded-lg text-white focus:outline-none focus:border-blue-500 input-animate h-24 font-mono text-xs`}
+              placeholder={t(
+                'tradeManual.takerForm.placeholders.pasteSwapString'
+              )}
               {...register('swapString', { required: true })}
               disabled={whitelistSuccess}
             />
@@ -253,7 +263,7 @@ export const TakerSwapForm: React.FC<TakerSwapFormProps> = ({
             )}
             {isDecoding && (
               <p className="mt-1 text-xs text-blue-400">
-                Decoding swap string...
+                {t('tradeManual.takerForm.info.decoding')}
               </p>
             )}
           </div>
@@ -261,41 +271,43 @@ export const TakerSwapForm: React.FC<TakerSwapFormProps> = ({
       </div>
 
       {swapDetails && (
-        <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 swap-card swap-initiated">
+        <div className="bg-surface-overlay/50 rounded-lg p-4 border border-border-default/50 swap-card swap-initiated">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-xs font-bold text-white step-indicator">
               2
             </div>
             <h3 className="text-md font-medium text-white">
-              Review Swap Details
+              {t('tradeManual.takerForm.review.title')}
             </h3>
           </div>
-          <p className="text-sm text-slate-400 ml-8 mb-4">
-            Review the swap details before whitelisting the trade.
+          <p className="text-sm text-content-secondary ml-8 mb-4">
+            {t('tradeManual.takerForm.info.reviewDescription')}
           </p>
 
-          <div className="bg-slate-900/50 p-4 rounded-lg mb-6">
+          <div className="bg-surface-base/50 p-4 rounded-lg mb-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-sm font-medium text-slate-300 mb-1">
-                    You Receive
+                  <h4 className="text-sm font-medium text-content-secondary mb-1">
+                    {t('tradeManual.takerForm.review.youReceive')}
                   </h4>
                   <div className="flex items-center gap-2">
                     <div className="text-lg font-semibold text-white">
                       {formatAmount(swapDetails.qty_to, swapDetails.to_asset)}
                     </div>
-                    <div className="text-md text-slate-400">
+                    <div className="text-md text-content-secondary">
                       {getAssetTicker(swapDetails.to_asset)}
                     </div>
                   </div>
                   {assetBalances[swapDetails.to_asset] && (
-                    <div className="flex items-center gap-1 text-xs text-slate-400 mt-1 asset-balance">
+                    <div className="flex items-center gap-1 text-xs text-content-secondary mt-1 asset-balance">
                       <Wallet className="w-3 h-3" />
-                      <span>Current Balance: </span>
-                      <span className="font-medium text-slate-300">
+                      <span>
+                        {t('tradeManual.takerForm.review.currentBalance')}:{' '}
+                      </span>
+                      <span className="font-medium text-content-secondary">
                         {isLoadingBalances
-                          ? 'Loading...'
+                          ? t('tradeManual.takerForm.info.loading')
                           : `${formatBalanceDisplay(swapDetails.to_asset, assetBalances[swapDetails.to_asset].offChain)} ${getAssetTicker(swapDetails.to_asset)}`}
                       </span>
                     </div>
@@ -305,8 +317,8 @@ export const TakerSwapForm: React.FC<TakerSwapFormProps> = ({
 
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-sm font-medium text-slate-300 mb-1">
-                    You Send
+                  <h4 className="text-sm font-medium text-content-secondary mb-1">
+                    {t('tradeManual.takerForm.review.youSend')}
                   </h4>
                   <div className="flex items-center gap-2">
                     <div className="text-lg font-semibold text-white">
@@ -315,17 +327,19 @@ export const TakerSwapForm: React.FC<TakerSwapFormProps> = ({
                         swapDetails.from_asset
                       )}
                     </div>
-                    <div className="text-md text-slate-400">
+                    <div className="text-md text-content-secondary">
                       {getAssetTicker(swapDetails.from_asset)}
                     </div>
                   </div>
                   {assetBalances[swapDetails.from_asset] && (
-                    <div className="flex items-center gap-1 text-xs text-slate-400 mt-1 asset-balance">
+                    <div className="flex items-center gap-1 text-xs text-content-secondary mt-1 asset-balance">
                       <Wallet className="w-3 h-3" />
-                      <span>Current Balance: </span>
-                      <span className="font-medium text-slate-300">
+                      <span>
+                        {t('tradeManual.takerForm.review.currentBalance')}:{' '}
+                      </span>
+                      <span className="font-medium text-content-secondary">
                         {isLoadingBalances
-                          ? 'Loading...'
+                          ? t('tradeManual.takerForm.info.loading')
                           : `${formatBalanceDisplay(swapDetails.from_asset, assetBalances[swapDetails.from_asset].offChain)} ${getAssetTicker(swapDetails.from_asset)}`}
                       </span>
                     </div>
@@ -338,27 +352,30 @@ export const TakerSwapForm: React.FC<TakerSwapFormProps> = ({
               <div className="flex items-center gap-2 text-xs text-blue-400">
                 <Info className="h-4 w-4 text-blue-500 flex-shrink-0" />
                 <p>
-                  <strong>Important:</strong> For the swap to succeed, you need
-                  sufficient liquidity in the lightning channels between you and
-                  the maker for both assets involved. This includes Bitcoin
-                  liquidity for routing payments.
+                  <strong>Important:</strong>{' '}
+                  {t('tradeManual.takerForm.info.liquidityWarning')}
                 </p>
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-slate-700">
-              <h4 className="text-sm font-medium text-slate-300 mb-2">
-                Additional Details
+            <div className="mt-4 pt-4 border-t border-border-default">
+              <h4 className="text-sm font-medium text-content-secondary mb-2">
+                {t('tradeManual.takerForm.review.additionalDetails')}
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col">
-                  <span className="text-xs text-slate-400">Timeout</span>
+                  <span className="text-xs text-content-secondary">
+                    {t('tradeManual.takerForm.review.timeout')}
+                  </span>
                   <span className="text-sm text-white">
-                    {swapDetails.timeout_sec} seconds
+                    {swapDetails.timeout_sec}{' '}
+                    {t('tradeManual.takerForm.review.seconds')}
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xs text-slate-400">Payment Hash</span>
+                  <span className="text-xs text-content-secondary">
+                    Payment Hash
+                  </span>
                   <span className="text-sm text-white font-mono truncate">
                     {swapDetails.payment_hash}
                   </span>
@@ -374,35 +391,30 @@ export const TakerSwapForm: React.FC<TakerSwapFormProps> = ({
                   <div className="flex items-center gap-2 text-xs text-red-400">
                     <Info className="h-4 w-4 text-red-500 flex-shrink-0" />
                     <p>
-                      Warning: You don't have enough{' '}
-                      {getAssetTicker(swapDetails.from_asset)} to complete this
-                      swap. The swap will fail if you proceed without sufficient
-                      funds.
+                      Warning:{' '}
+                      {t(
+                        'tradeManual.takerForm.info.insufficientBalanceWarning',
+                        { asset: getAssetTicker(swapDetails.from_asset) }
+                      )}
                     </p>
                   </div>
                 </div>
               )}
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-slate-400 p-3 bg-slate-800/30 rounded-xl border border-slate-700 mb-4">
+          <div className="flex items-center gap-2 text-xs text-content-secondary p-3 bg-surface-overlay/30 rounded-xl border border-border-default mb-4">
             <Info className="h-4 w-4 text-blue-500 flex-shrink-0" />
-            <p>
-              After whitelisting, inform the maker that they can now execute the
-              swap. The assets will be exchanged automatically once they
-              execute. Ensure you have sufficient liquidity of both assets and
-              Bitcoin in the lightning channels between you and the maker for
-              the swap to succeed.
-            </p>
+            <p>{t('tradeManual.takerForm.info.whitelistInfo')}</p>
           </div>
 
           <div className="flex gap-3">
             <button
-              className="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors button-animate"
+              className="flex-1 px-4 py-3 bg-surface-high hover:bg-surface-elevated text-white rounded-lg transition-colors button-animate"
               disabled={isWhitelisting}
               onClick={resetForm}
               type="button"
             >
-              Reset
+              {t('tradeManual.takerForm.buttons.reset')}
             </button>
 
             <button
@@ -414,12 +426,12 @@ export const TakerSwapForm: React.FC<TakerSwapFormProps> = ({
               {isWhitelisting ? (
                 <div className="flex items-center justify-center gap-2">
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Whitelisting...</span>
+                  <span>{t('tradeManual.takerForm.buttons.whitelisting')}</span>
                 </div>
               ) : whitelistSuccess ? (
-                'Whitelisted Successfully'
+                t('tradeManual.takerForm.buttons.whitelistedSuccessfully')
               ) : (
-                'Whitelist Trade'
+                t('tradeManual.takerForm.buttons.whitelist')
               )}
             </button>
           </div>
@@ -429,32 +441,35 @@ export const TakerSwapForm: React.FC<TakerSwapFormProps> = ({
               <div className="flex items-center gap-2 text-xs text-emerald-400">
                 <Info className="h-4 w-4 text-emerald-500 flex-shrink-0" />
                 <p>
-                  <strong>Trade has been whitelisted successfully.</strong>{' '}
-                  Please inform the maker that you are ready to swap. The assets
-                  will be exchanged automatically once they execute the swap.
+                  <strong>
+                    {t('tradeManual.takerForm.success.whitelisted')}
+                  </strong>{' '}
+                  {t('tradeManual.takerForm.success.whitelistedMessage')}
                 </p>
               </div>
 
               {nodeInfoData?.pubkey && (
-                <div className="mt-3 p-2 bg-slate-800/50 rounded border border-slate-700/50">
+                <div className="mt-3 p-2 bg-surface-overlay/50 rounded border border-border-default/50">
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs text-slate-400">
-                      Your Node Public Key (needed by maker):
+                    <span className="text-xs text-content-secondary">
+                      {t('tradeManual.takerForm.success.yourNodePubkey')}
                     </span>
                     <div className="flex items-center gap-2">
-                      <code className="text-xs text-emerald-300 font-mono bg-slate-900/50 p-1.5 rounded flex-1 overflow-x-auto">
+                      <code className="text-xs text-emerald-300 font-mono bg-surface-base/50 p-1.5 rounded flex-1 overflow-x-auto">
                         {nodeInfoData.pubkey}
                       </code>
                       <button
-                        className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 transition-colors"
+                        className="p-1.5 rounded bg-surface-high hover:bg-surface-elevated transition-colors"
                         onClick={() => {
-                          navigator.clipboard.writeText(nodeInfoData.pubkey)
-                          toast.success('Public key copied to clipboard')
+                          navigator.clipboard.writeText(
+                            nodeInfoData.pubkey ?? ''
+                          )
+                          toast.success(t('trade.taker.pubkeyCopied'))
                         }}
                         title="Copy to clipboard"
                       >
                         <svg
-                          className="text-slate-300"
+                          className="text-content-secondary"
                           fill="none"
                           height="14"
                           stroke="currentColor"

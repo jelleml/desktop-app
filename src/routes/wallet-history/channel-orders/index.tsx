@@ -18,9 +18,9 @@ import {
   Coins,
   Activity,
   Info,
-  RotateCw,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'react-toastify'
 
 import { IconButton, Card } from '../../../components/ui'
@@ -42,43 +42,115 @@ interface ChannelOrder {
   payload: string
 }
 
-const AVAILABLE_COLUMNS = [
-  { key: 'order_id', label: 'Order ID', type: 'default' },
-  { key: 'created_at', label: 'Created At', type: 'default' },
-  { key: 'amount_paid', label: 'Amount Paid', type: 'default' },
-  { key: 'fees_paid', label: 'Fees Paid', type: 'default' },
-  { key: 'status', label: 'Status', type: 'default' },
+type OrderDeliveryMetadata = {
+  asset_delivery_error?: string | null
+  asset_delivery_status?: string | null
+}
+
+const getOrderDeliveryMetadata = (
+  orderData?: Lsps1CreateOrderResponse
+): OrderDeliveryMetadata =>
+  (orderData as
+    | (Lsps1CreateOrderResponse & OrderDeliveryMetadata)
+    | undefined) || {}
+
+const getAvailableColumns = (t: any) => [
+  {
+    key: 'order_id',
+    label: t('components.walletHistory.channelOrders.columnHeaders.orderId'),
+    type: 'default',
+  },
+  {
+    key: 'created_at',
+    label: t('components.walletHistory.channelOrders.columnHeaders.createdAt'),
+    type: 'default',
+  },
+  {
+    key: 'amount_paid',
+    label: t('components.walletHistory.channelOrders.columnHeaders.amountPaid'),
+    type: 'default',
+  },
+  {
+    key: 'fees_paid',
+    label: t('components.walletHistory.channelOrders.columnHeaders.feesPaid'),
+    type: 'default',
+  },
+  {
+    key: 'status',
+    label: t('components.walletHistory.channelOrders.columnHeaders.status'),
+    type: 'default',
+  },
   {
     key: 'client_balance_sat',
-    label: 'Client Balance (sats)',
+    label: t(
+      'components.walletHistory.channelOrders.columnHeaders.clientBalance'
+    ),
     type: 'payload',
   },
-  { key: 'lsp_balance_sat', label: 'LSP Balance (sats)', type: 'payload' },
+  {
+    key: 'lsp_balance_sat',
+    label: t('components.walletHistory.channelOrders.columnHeaders.lspBalance'),
+    type: 'payload',
+  },
   {
     key: 'channel_expiry_blocks',
-    label: 'Channel Expiry (blocks)',
+    label: t(
+      'components.walletHistory.channelOrders.columnHeaders.channelExpiry'
+    ),
     type: 'payload',
   },
   {
     key: 'required_channel_confirmations',
-    label: 'Required Confirmations',
+    label: t(
+      'components.walletHistory.channelOrders.columnHeaders.requiredConfirmations'
+    ),
     type: 'payload',
   },
   {
     key: 'funding_confirms_within_blocks',
-    label: 'Funding Confirms Within',
+    label: t(
+      'components.walletHistory.channelOrders.columnHeaders.fundingConfirmsWithin'
+    ),
     type: 'payload',
   },
-  { key: 'announce_channel', label: 'Announce Channel', type: 'payload' },
-  { key: 'asset_id', label: 'Asset ID', type: 'payload' },
-  { key: 'lsp_asset_amount', label: 'LSP Asset Amount', type: 'payload' },
-  { key: 'client_asset_amount', label: 'Client Asset Amount', type: 'payload' },
+  {
+    key: 'announce_channel',
+    label: t(
+      'components.walletHistory.channelOrders.columnHeaders.announceChannel'
+    ),
+    type: 'payload',
+  },
+  {
+    key: 'asset_id',
+    label: t('components.walletHistory.channelOrders.columnHeaders.assetId'),
+    type: 'payload',
+  },
+  {
+    key: 'lsp_asset_amount',
+    label: t(
+      'components.walletHistory.channelOrders.columnHeaders.lspAssetAmount'
+    ),
+    type: 'payload',
+  },
+  {
+    key: 'client_asset_amount',
+    label: t(
+      'components.walletHistory.channelOrders.columnHeaders.clientAssetAmount'
+    ),
+    type: 'payload',
+  },
   {
     key: 'asset_delivery_status',
-    label: 'Asset Delivery Status',
+    label: t(
+      'components.walletHistory.channelOrders.columnHeaders.assetDeliveryStatus'
+    ),
     type: 'default',
   },
-  { key: 'actions', label: 'Actions', type: 'default' },
+  {
+    key: 'actions',
+    label: t('components.walletHistory.channelOrders.columnHeaders.actions'),
+    type: 'default',
+  },
 ]
 
 const DEFAULT_COLUMNS = [
@@ -98,18 +170,8 @@ const OrderDetailCard: React.FC<{
   orderData: Lsps1CreateOrderResponse | undefined
   orderStatus: string
   onDelete: () => void
-  onRetryDelivery?: () => void
-  isRetrying?: boolean
-}> = ({
-  isOpen,
-  onClose,
-  order,
-  orderData,
-  orderStatus,
-  onDelete,
-  onRetryDelivery,
-  isRetrying = false,
-}) => {
+}> = ({ isOpen, onClose, order, orderData, orderStatus, onDelete }) => {
+  const { t } = useTranslation()
   if (!isOpen) return null
 
   const getStatusIcon = (status: string) => {
@@ -121,7 +183,7 @@ const OrderDetailCard: React.FC<{
       case 'CREATED':
         return <Clock className="w-5 h-5 text-yellow-500" />
       default:
-        return <AlertCircle className="w-5 h-5 text-gray-500" />
+        return <AlertCircle className="w-5 h-5 text-content-tertiary" />
     }
   }
 
@@ -134,7 +196,7 @@ const OrderDetailCard: React.FC<{
       case 'CREATED':
         return 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'
       default:
-        return 'bg-gray-500/10 border-gray-500/30 text-gray-400'
+        return 'bg-surface-high/10 border-border-default/30 text-content-secondary'
     }
   }
 
@@ -153,28 +215,31 @@ const OrderDetailCard: React.FC<{
   const bolt11Fee = (orderData?.payment as any)?.bolt11?.fee_total_sat
   const onchainFee = (orderData?.payment as any)?.onchain?.fee_total_sat
   const feePaid = bolt11Fee || onchainFee
+  const delivery = getOrderDeliveryMetadata(orderData)
 
   return (
     <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-slate-900 rounded-xl border border-slate-700/70 shadow-2xl max-w-3xl w-full my-8">
+      <div className="bg-surface-base rounded-xl border border-border-default/70 shadow-2xl max-w-3xl w-full my-8">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-700/70">
+        <div className="flex items-center justify-between p-6 border-b border-border-default/70">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-lg bg-blue-500/10">
               <Info className="w-6 h-6 text-blue-500" />
             </div>
             <div>
               <h3 className="text-xl font-semibold text-white">
-                Channel Order Details
+                {t('components.walletHistory.channelOrders.detailsModal.title')}
               </h3>
-              <p className="text-sm text-slate-400 mt-0.5">
-                Complete order information
+              <p className="text-sm text-content-secondary mt-0.5">
+                {t(
+                  'components.walletHistory.channelOrders.detailsModal.subtitle'
+                )}
               </p>
             </div>
           </div>
           <button
             aria-label="Close modal"
-            className="p-2 rounded-full hover:bg-slate-800 text-gray-400 hover:text-white transition-colors"
+            className="p-2 rounded-full hover:bg-surface-overlay text-content-secondary hover:text-white transition-colors"
             onClick={onClose}
           >
             <X className="w-5 h-5" />
@@ -191,7 +256,9 @@ const OrderDetailCard: React.FC<{
               {getStatusIcon(orderStatus)}
               <div>
                 <div className="text-sm font-medium uppercase tracking-wide">
-                  Order Status
+                  {t(
+                    'components.walletHistory.channelOrders.sections.orderStatus'
+                  )}
                 </div>
                 <div className="text-lg font-bold mt-0.5">{orderStatus}</div>
               </div>
@@ -199,11 +266,13 @@ const OrderDetailCard: React.FC<{
           </div>
 
           {/* Order ID Section */}
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+          <div className="bg-surface-overlay/50 rounded-lg p-4 border border-border-default">
             <div className="flex items-start gap-3">
-              <Hash className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
+              <Hash className="w-5 h-5 text-content-secondary mt-0.5 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <div className="text-sm text-slate-400 mb-1">Order ID</div>
+                <div className="text-sm text-content-secondary mb-1">
+                  {t('components.walletHistory.channelOrders.sections.orderId')}
+                </div>
                 <div className="font-mono text-white text-sm break-all">
                   {order.order_id}
                 </div>
@@ -212,94 +281,123 @@ const OrderDetailCard: React.FC<{
           </div>
 
           {/* Payment Information */}
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+          <div className="bg-surface-overlay/50 rounded-lg p-4 border border-border-default">
             <div className="flex items-center gap-2 mb-4">
               <Coins className="w-5 h-5 text-blue-400" />
               <h4 className="text-lg font-semibold text-white">
-                Payment Information
+                {t(
+                  'components.walletHistory.channelOrders.sections.paymentInformation'
+                )}
               </h4>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <div className="text-sm text-slate-400 mb-1">Amount Paid</div>
+                <div className="text-sm text-content-secondary mb-1">
+                  {t(
+                    'components.walletHistory.channelOrders.fields.amountPaid'
+                  )}
+                </div>
                 <div className="text-xl font-bold text-white">
-                  {amountPaid ? `${amountPaid.toLocaleString()} sats` : 'N/A'}
+                  {amountPaid
+                    ? `${amountPaid.toLocaleString()} ${t('components.walletHistory.channelOrders.units.sats')}`
+                    : t('components.walletHistory.channelOrders.units.na')}
                 </div>
               </div>
               <div>
-                <div className="text-sm text-slate-400 mb-1">Fees Paid</div>
-                <div className="text-xl font-bold text-slate-300">
-                  {feePaid ? `${feePaid.toLocaleString()} sats` : 'N/A'}
+                <div className="text-sm text-content-secondary mb-1">
+                  {t('components.walletHistory.channelOrders.fields.feesPaid')}
+                </div>
+                <div className="text-xl font-bold text-content-secondary">
+                  {feePaid
+                    ? `${feePaid.toLocaleString()} ${t('components.walletHistory.channelOrders.units.sats')}`
+                    : t('components.walletHistory.channelOrders.units.na')}
                 </div>
               </div>
             </div>
           </div>
 
           {/* Channel Configuration */}
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+          <div className="bg-surface-overlay/50 rounded-lg p-4 border border-border-default">
             <div className="flex items-center gap-2 mb-4">
               <Activity className="w-5 h-5 text-purple-400" />
               <h4 className="text-lg font-semibold text-white">
-                Channel Configuration
+                {t(
+                  'components.walletHistory.channelOrders.sections.channelConfiguration'
+                )}
               </h4>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <div className="text-sm text-slate-400 mb-1">
-                  Client Balance
+                <div className="text-sm text-content-secondary mb-1">
+                  {t(
+                    'components.walletHistory.channelOrders.fields.clientBalance'
+                  )}
                 </div>
                 <div className="text-base font-semibold text-white">
                   {payload.client_balance_sat
-                    ? `${payload.client_balance_sat.toLocaleString()} sats`
-                    : 'N/A'}
+                    ? `${payload.client_balance_sat.toLocaleString()} ${t('components.walletHistory.channelOrders.units.sats')}`
+                    : t('components.walletHistory.channelOrders.units.na')}
                 </div>
               </div>
               <div>
-                <div className="text-sm text-slate-400 mb-1">LSP Balance</div>
+                <div className="text-sm text-content-secondary mb-1">
+                  {t(
+                    'components.walletHistory.channelOrders.fields.lspBalance'
+                  )}
+                </div>
                 <div className="text-base font-semibold text-white">
                   {payload.lsp_balance_sat
-                    ? `${payload.lsp_balance_sat.toLocaleString()} sats`
-                    : 'N/A'}
+                    ? `${payload.lsp_balance_sat.toLocaleString()} ${t('components.walletHistory.channelOrders.units.sats')}`
+                    : t('components.walletHistory.channelOrders.units.na')}
                 </div>
               </div>
               <div>
-                <div className="text-sm text-slate-400 mb-1">
-                  Channel Expiry
+                <div className="text-sm text-content-secondary mb-1">
+                  {t(
+                    'components.walletHistory.channelOrders.fields.channelExpiry'
+                  )}
                 </div>
                 <div className="text-base font-semibold text-white">
                   {payload.channel_expiry_blocks
-                    ? `${payload.channel_expiry_blocks} blocks`
-                    : 'N/A'}
+                    ? `${payload.channel_expiry_blocks} ${t('components.walletHistory.channelOrders.units.blocks')}`
+                    : t('components.walletHistory.channelOrders.units.na')}
                 </div>
               </div>
               <div>
-                <div className="text-sm text-slate-400 mb-1">
-                  Required Confirmations
+                <div className="text-sm text-content-secondary mb-1">
+                  {t(
+                    'components.walletHistory.channelOrders.fields.requiredConfirmations'
+                  )}
                 </div>
                 <div className="text-base font-semibold text-white">
-                  {payload.required_channel_confirmations ?? 'N/A'}
+                  {payload.required_channel_confirmations ??
+                    t('components.walletHistory.channelOrders.units.na')}
                 </div>
               </div>
               <div>
-                <div className="text-sm text-slate-400 mb-1">
-                  Funding Confirms Within
+                <div className="text-sm text-content-secondary mb-1">
+                  {t(
+                    'components.walletHistory.channelOrders.fields.fundingConfirmsWithin'
+                  )}
                 </div>
                 <div className="text-base font-semibold text-white">
                   {payload.funding_confirms_within_blocks
-                    ? `${payload.funding_confirms_within_blocks} blocks`
-                    : 'N/A'}
+                    ? `${payload.funding_confirms_within_blocks} ${t('components.walletHistory.channelOrders.units.blocks')}`
+                    : t('components.walletHistory.channelOrders.units.na')}
                 </div>
               </div>
               <div>
-                <div className="text-sm text-slate-400 mb-1">
-                  Announce Channel
+                <div className="text-sm text-content-secondary mb-1">
+                  {t(
+                    'components.walletHistory.channelOrders.fields.announceChannel'
+                  )}
                 </div>
                 <div className="text-base font-semibold text-white">
                   {payload.announce_channel !== undefined
                     ? payload.announce_channel
-                      ? 'Yes'
-                      : 'No'
-                    : 'N/A'}
+                      ? t('common.yes')
+                      : t('common.no')
+                    : t('components.walletHistory.channelOrders.units.na')}
                 </div>
               </div>
             </div>
@@ -309,17 +407,23 @@ const OrderDetailCard: React.FC<{
           {(payload.asset_id ||
             payload.lsp_asset_amount ||
             payload.client_asset_amount) && (
-            <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+            <div className="bg-surface-overlay/50 rounded-lg p-4 border border-border-default">
               <div className="flex items-center gap-2 mb-4">
                 <Zap className="w-5 h-5 text-orange-400" />
                 <h4 className="text-lg font-semibold text-white">
-                  Asset Information
+                  {t(
+                    'components.walletHistory.channelOrders.sections.assetInformation'
+                  )}
                 </h4>
               </div>
               <div className="space-y-3">
                 {payload.asset_id && (
                   <div>
-                    <div className="text-sm text-slate-400 mb-1">Asset ID</div>
+                    <div className="text-sm text-content-secondary mb-1">
+                      {t(
+                        'components.walletHistory.channelOrders.fields.assetId'
+                      )}
+                    </div>
                     <div className="font-mono text-sm text-white break-all">
                       {payload.asset_id}
                     </div>
@@ -328,8 +432,10 @@ const OrderDetailCard: React.FC<{
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {payload.client_asset_amount && (
                     <div>
-                      <div className="text-sm text-slate-400 mb-1">
-                        Client Asset Amount
+                      <div className="text-sm text-content-secondary mb-1">
+                        {t(
+                          'components.walletHistory.channelOrders.fields.clientAssetAmount'
+                        )}
                       </div>
                       <div className="text-base font-semibold text-white">
                         {payload.client_asset_amount.toLocaleString()}
@@ -338,8 +444,10 @@ const OrderDetailCard: React.FC<{
                   )}
                   {payload.lsp_asset_amount && (
                     <div>
-                      <div className="text-sm text-slate-400 mb-1">
-                        LSP Asset Amount
+                      <div className="text-sm text-content-secondary mb-1">
+                        {t(
+                          'components.walletHistory.channelOrders.fields.lspAssetAmount'
+                        )}
                       </div>
                       <div className="text-base font-semibold text-white">
                         {payload.lsp_asset_amount.toLocaleString()}
@@ -349,43 +457,26 @@ const OrderDetailCard: React.FC<{
                 </div>
 
                 {/* Asset Delivery Status */}
-                {orderData?.asset_delivery_status &&
-                  orderData.asset_delivery_status !== 'NOT_REQUIRED' && (
-                    <div className="mt-4 pt-4 border-t border-slate-700">
+                {delivery.asset_delivery_status &&
+                  delivery.asset_delivery_status !== 'NOT_REQUIRED' && (
+                    <div className="mt-4 pt-4 border-t border-border-default">
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-sm text-slate-400 mb-1">
-                            Delivery Status
+                          <div className="text-sm text-content-secondary mb-1">
+                            {t(
+                              'components.walletHistory.channelOrders.fields.deliveryStatus'
+                            )}
                           </div>
                           <div className="text-base font-semibold text-white">
-                            {orderData.asset_delivery_status}
+                            {delivery.asset_delivery_status}
                           </div>
-                          {orderData.asset_delivery_error && (
+                          {delivery.asset_delivery_error && (
                             <div className="text-xs text-red-400 mt-1">
-                              Error: {orderData.asset_delivery_error}
+                              {t('common.error')}:{' '}
+                              {delivery.asset_delivery_error}
                             </div>
                           )}
                         </div>
-                        {orderData.asset_delivery_status === 'PENDING' &&
-                          onRetryDelivery && (
-                            <button
-                              className="flex items-center gap-2 px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                              disabled={isRetrying}
-                              onClick={onRetryDelivery}
-                            >
-                              {isRetrying ? (
-                                <>
-                                  <LoaderIcon className="w-4 h-4 animate-spin" />
-                                  Retrying...
-                                </>
-                              ) : (
-                                <>
-                                  <RotateCw className="w-4 h-4" />
-                                  Retry Delivery
-                                </>
-                              )}
-                            </button>
-                          )}
                       </div>
                     </div>
                   )}
@@ -395,15 +486,23 @@ const OrderDetailCard: React.FC<{
 
           {/* Timeline */}
           {orderData?.created_at && (
-            <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+            <div className="bg-surface-overlay/50 rounded-lg p-4 border border-border-default">
               <div className="flex items-center gap-2 mb-3">
                 <Calendar className="w-5 h-5 text-green-400" />
-                <h4 className="text-lg font-semibold text-white">Timeline</h4>
+                <h4 className="text-lg font-semibold text-white">
+                  {t(
+                    'components.walletHistory.channelOrders.sections.timeline'
+                  )}
+                </h4>
               </div>
               <div className="flex items-center gap-3">
-                <Clock className="w-4 h-4 text-slate-400" />
+                <Clock className="w-4 h-4 text-content-secondary" />
                 <div>
-                  <div className="text-sm text-slate-400">Created At</div>
+                  <div className="text-sm text-content-secondary">
+                    {t(
+                      'components.walletHistory.channelOrders.fields.createdAt'
+                    )}
+                  </div>
                   <div className="text-base font-medium text-white">
                     {new Date(orderData.created_at).toLocaleString()}
                   </div>
@@ -414,12 +513,12 @@ const OrderDetailCard: React.FC<{
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-slate-700/70">
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-border-default/70">
           <button
-            className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+            className="px-4 py-2 text-content-secondary hover:text-white hover:bg-surface-overlay rounded-lg transition-colors"
             onClick={onClose}
           >
-            Close
+            {t('components.walletHistory.channelOrders.detailsModal.close')}
           </button>
           <button
             className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center gap-2"
@@ -429,7 +528,9 @@ const OrderDetailCard: React.FC<{
             }}
           >
             <Trash2 className="w-4 h-4" />
-            Delete Order
+            {t(
+              'components.walletHistory.channelOrders.detailsModal.deleteOrder'
+            )}
           </button>
         </div>
       </div>
@@ -444,24 +545,25 @@ const DeleteConfirmationModal: React.FC<{
   onConfirm: () => void
   orderId: string
 }> = ({ isOpen, onClose, onConfirm, orderId }) => {
+  const { t } = useTranslation()
   if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-900 rounded-xl border border-slate-700/70 shadow-xl max-w-md w-full">
+      <div className="bg-surface-base rounded-xl border border-border-default/70 shadow-xl max-w-md w-full">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-700/70">
+        <div className="flex items-center justify-between p-4 border-b border-border-default/70">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-red-500/10">
               <AlertTriangle className="w-5 h-5 text-red-500" />
             </div>
             <h3 className="text-lg font-semibold text-white">
-              Delete Channel Order
+              {t('components.walletHistory.channelOrders.deleteModal.title')}
             </h3>
           </div>
           <button
             aria-label="Close modal"
-            className="p-2 rounded-full hover:bg-slate-800 text-gray-400 hover:text-white transition-colors"
+            className="p-2 rounded-full hover:bg-surface-overlay text-content-secondary hover:text-white transition-colors"
             onClick={onClose}
           >
             <X className="w-5 h-5" />
@@ -470,13 +572,16 @@ const DeleteConfirmationModal: React.FC<{
 
         {/* Content */}
         <div className="p-4">
-          <p className="text-slate-300 mb-4">
-            Are you sure you want to delete this channel order? This action
-            cannot be undone.
+          <p className="text-content-secondary mb-4">
+            {t('components.walletHistory.channelOrders.deleteModal.message')}
           </p>
-          <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
+          <div className="bg-surface-overlay/50 rounded-lg p-3 border border-border-default">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-400">Order ID:</span>
+              <span className="text-sm text-content-secondary">
+                {t(
+                  'components.walletHistory.channelOrders.deleteModal.orderId'
+                )}
+              </span>
               <span className="text-sm font-mono text-white break-all">
                 {orderId}
               </span>
@@ -485,19 +590,19 @@ const DeleteConfirmationModal: React.FC<{
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 p-4 border-t border-slate-700/70">
+        <div className="flex items-center justify-end gap-3 p-4 border-t border-border-default/70">
           <button
-            className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+            className="px-4 py-2 text-content-secondary hover:text-white hover:bg-surface-overlay rounded-lg transition-colors"
             onClick={onClose}
           >
-            Cancel
+            {t('components.walletHistory.channelOrders.deleteModal.cancel')}
           </button>
           <button
             className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center gap-2"
             onClick={onConfirm}
           >
             <Trash2 className="w-4 h-4" />
-            Delete Order
+            {t('components.walletHistory.channelOrders.deleteModal.delete')}
           </button>
         </div>
       </div>
@@ -506,6 +611,7 @@ const DeleteConfirmationModal: React.FC<{
 }
 
 export const Component = () => {
+  const { t } = useTranslation()
   const [orders, setOrders] = useState<ChannelOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -522,11 +628,8 @@ export const Component = () => {
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null)
   const [showDetailCard, setShowDetailCard] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<ChannelOrder | null>(null)
-  const [retryingOrders, setRetryingOrders] = useState<Set<string>>(new Set())
 
   const [getOrderRequest] = makerApi.endpoints.get_order.useLazyQuery()
-  const [retryDeliveryRequest] =
-    makerApi.endpoints.retry_delivery.useLazyQuery()
 
   const fetchOrders = async () => {
     try {
@@ -557,7 +660,16 @@ export const Component = () => {
 
       for (const order of orders) {
         try {
-          const response = await getOrderRequest({ order_id: order.order_id })
+          const payload = JSON.parse(order.payload || '{}')
+          const accessToken = payload.access_token || payload.token
+          if (!accessToken) {
+            continue
+          }
+
+          const response = await getOrderRequest({
+            access_token: accessToken,
+            order_id: order.order_id,
+          })
           if (response.data) {
             statuses[order.order_id] = response.data.order_state
             data[order.order_id] = response.data
@@ -593,14 +705,18 @@ export const Component = () => {
 
     try {
       await invoke('delete_channel_order', { orderId: orderToDelete })
-      toast.success('Channel order deleted successfully')
+      toast.success(
+        t('components.walletHistory.channelOrders.messages.deleteSuccess')
+      )
       await fetchOrders() // Refresh the list
       setShowDeleteModal(false)
       setOrderToDelete(null)
     } catch (err) {
       console.error('Error deleting channel order:', err)
       toast.error(
-        err instanceof Error ? err.message : 'Failed to delete channel order'
+        err instanceof Error
+          ? err.message
+          : t('components.walletHistory.channelOrders.messages.deleteFailed')
       )
       setShowDeleteModal(false)
       setOrderToDelete(null)
@@ -620,53 +736,6 @@ export const Component = () => {
   const closeDetailCard = () => {
     setShowDetailCard(false)
     setSelectedOrder(null)
-  }
-
-  const handleRetryDelivery = async (orderId: string) => {
-    setRetryingOrders((prev) => new Set(prev).add(orderId))
-
-    try {
-      const response = await retryDeliveryRequest({ order_id: orderId })
-
-      if (response.data) {
-        const { status, message } = response.data
-
-        switch (status) {
-          case 'processing':
-            toast.success(message || 'Retry request queued successfully')
-            // Refresh order status after a short delay
-            setTimeout(async () => {
-              await fetchOrders()
-            }, 2000)
-            break
-          case 'not_found':
-            toast.error(message || 'Order not found')
-            break
-          case 'no_pending_delivery':
-            toast.info(message || 'No pending delivery to retry')
-            break
-          case 'error':
-            toast.error(message || 'Failed to retry delivery')
-            break
-          default:
-            toast.info(message || 'Unknown response')
-        }
-      } else if (response.error) {
-        console.error('Error retrying delivery:', response.error)
-        toast.error('Failed to retry delivery')
-      }
-    } catch (err) {
-      console.error('Error retrying delivery:', err)
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to retry delivery'
-      )
-    } finally {
-      setRetryingOrders((prev) => {
-        const newSet = new Set(prev)
-        newSet.delete(orderId)
-        return newSet
-      })
-    }
   }
 
   const handleColumnToggle = (columnKey: string) => {
@@ -692,7 +761,9 @@ export const Component = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="text-gray-400">Loading channel orders...</div>
+        <div className="text-content-secondary">
+          {t('components.walletHistory.channelOrders.loading')}
+        </div>
       </div>
     )
   }
@@ -700,34 +771,40 @@ export const Component = () => {
   if (error) {
     return (
       <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
-        <div className="text-red-400">Error: {error}</div>
+        <div className="text-red-400">
+          {t('components.walletHistory.channelOrders.messages.error', {
+            error,
+          })}
+        </div>
         <button
           className="mt-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
           onClick={handleRefresh}
         >
-          Retry
+          {t('components.walletHistory.channelOrders.messages.retry')}
         </button>
       </div>
     )
   }
 
   return (
-    <Card className="bg-gray-800/50 border border-gray-700/50">
+    <Card className="bg-surface-overlay/50 border border-border-default/50">
       <div className="flex justify-between items-center flex-wrap gap-4 mb-6">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-lg bg-blue-500/10">
             <Zap className="h-6 w-6 text-blue-500" />
           </div>
-          <h2 className="text-xl font-bold text-white">Channel Orders</h2>
+          <h2 className="text-xl font-bold text-white">
+            {t('components.walletHistory.channelOrders.title')}
+          </h2>
         </div>
 
         <div className="flex items-center gap-2">
           <button
-            className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm"
+            className="flex items-center gap-2 px-3 py-2 bg-surface-high hover:bg-surface-elevated text-white rounded-lg transition-colors text-sm"
             onClick={() => setShowColumnSelector(!showColumnSelector)}
           >
             <Settings className="w-4 h-4" />
-            Columns
+            {t('components.walletHistory.channelOrders.columns')}
           </button>
           <IconButton
             aria-label="Refresh"
@@ -747,29 +824,33 @@ export const Component = () => {
 
       {/* Column Selector */}
       {showColumnSelector && (
-        <div className="mb-6 p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+        <div className="mb-6 p-4 bg-surface-high/50 rounded-lg border border-border-default">
           <div className="flex justify-between items-center mb-3">
-            <h3 className="text-lg font-semibold text-white">Select Columns</h3>
+            <h3 className="text-lg font-semibold text-white">
+              {t('components.walletHistory.channelOrders.selectColumns')}
+            </h3>
             <button
-              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
+              className="px-3 py-1 bg-primary hover:bg-primary-emphasis text-primary-foreground rounded text-sm transition-colors"
               onClick={resetToDefaults}
             >
-              Reset to Defaults
+              {t('components.walletHistory.channelOrders.resetToDefaults')}
             </button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {AVAILABLE_COLUMNS.map((column) => (
+            {getAvailableColumns(t).map((column) => (
               <label
                 className="flex items-center space-x-2 cursor-pointer"
                 key={column.key}
               >
                 <input
                   checked={selectedColumns.includes(column.key)}
-                  className="form-checkbox h-4 w-4 text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+                  className="form-checkbox h-4 w-4 text-blue-500 bg-surface-high border-border-default rounded focus:ring-blue-500 focus:ring-2"
                   onChange={() => handleColumnToggle(column.key)}
                   type="checkbox"
                 />
-                <span className="text-sm text-gray-300">{column.label}</span>
+                <span className="text-sm text-content-secondary">
+                  {column.label}
+                </span>
               </label>
             ))}
           </div>
@@ -780,12 +861,14 @@ export const Component = () => {
       <div className="mb-6">
         <div className="relative max-w-md">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-gray-400" />
+            <Search className="h-4 w-4 text-content-secondary" />
           </div>
           <input
-            className="block w-full pl-9 pr-3 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="block w-full pl-9 pr-3 py-2 border border-border-default rounded-lg bg-surface-overlay text-white placeholder-content-secondary focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by Order ID..."
+            placeholder={t(
+              'components.walletHistory.channelOrders.searchPlaceholder'
+            )}
             type="text"
             value={searchTerm}
           />
@@ -793,34 +876,55 @@ export const Component = () => {
       </div>
 
       {filteredOrders.length === 0 ? (
-        <div className="text-center py-8 text-slate-400 bg-slate-800/30 rounded-lg border border-slate-700">
+        <div className="text-center py-8 text-content-secondary bg-surface-overlay/30 rounded-lg border border-border-default">
           {orders.length === 0 ? (
-            <p>No channel orders found.</p>
+            <p>{t('components.walletHistory.channelOrders.noOrders')}</p>
           ) : (
-            <p>No orders found matching your search.</p>
+            <p>{t('components.walletHistory.channelOrders.noOrdersSearch')}</p>
           )}
         </div>
       ) : (
         <Table
           columns={selectedColumns.map((columnKey) => {
-            const column = AVAILABLE_COLUMNS.find(
+            const column = getAvailableColumns(t).find(
               (col) => col.key === columnKey
             )
             return {
               accessor: (order: ChannelOrder) => {
                 const currentOrderData = orderData[order.order_id]
+                const delivery = getOrderDeliveryMetadata(currentOrderData)
                 const orderStatus = orderStatuses[order.order_id] || 'Unknown'
 
                 const getStatusBadge = (status: string) => {
                   switch (status) {
                     case 'COMPLETED':
-                      return renderStatusBadge('Completed', 'success')
+                      return renderStatusBadge(
+                        t(
+                          'components.walletHistory.channelOrders.status.completed'
+                        ),
+                        'success'
+                      )
                     case 'FAILED':
-                      return renderStatusBadge('Failed', 'danger')
+                      return renderStatusBadge(
+                        t(
+                          'components.walletHistory.channelOrders.status.failed'
+                        ),
+                        'danger'
+                      )
                     case 'CREATED':
-                      return renderStatusBadge('Created', 'warning')
+                      return renderStatusBadge(
+                        t(
+                          'components.walletHistory.channelOrders.status.created'
+                        ),
+                        'warning'
+                      )
                     default:
-                      return renderStatusBadge('Unknown', 'default')
+                      return renderStatusBadge(
+                        t(
+                          'components.walletHistory.channelOrders.status.unknown'
+                        ),
+                        'default'
+                      )
                   }
                 }
 
@@ -842,7 +946,7 @@ export const Component = () => {
                     return (
                       <span className="font-semibold text-white">
                         {amount
-                          ? `${amount.toLocaleString()} sats`
+                          ? `${amount.toLocaleString()} ${t('components.walletHistory.channelOrders.units.sats')}`
                           : renderEmptyField()}
                       </span>
                     )
@@ -855,9 +959,9 @@ export const Component = () => {
                       ?.onchain?.fee_total_sat
                     const fee = bolt11Fee || onchainFee
                     return (
-                      <span className="text-slate-300">
+                      <span className="text-content-secondary">
                         {fee
-                          ? `${fee.toLocaleString()} sats`
+                          ? `${fee.toLocaleString()} ${t('components.walletHistory.channelOrders.units.sats')}`
                           : renderEmptyField()}
                       </span>
                     )
@@ -871,8 +975,7 @@ export const Component = () => {
                   case 'status':
                     return getStatusBadge(orderStatus)
                   case 'asset_delivery_status': {
-                    const deliveryStatus =
-                      currentOrderData?.asset_delivery_status
+                    const deliveryStatus = delivery.asset_delivery_status
                     if (!deliveryStatus || deliveryStatus === 'NOT_REQUIRED') {
                       return renderEmptyField()
                     }
@@ -880,15 +983,40 @@ export const Component = () => {
                     const getDeliveryStatusBadge = (status: string) => {
                       switch (status) {
                         case 'COMPLETED':
-                          return renderStatusBadge('Delivered', 'success')
+                          return renderStatusBadge(
+                            t(
+                              'components.walletHistory.channelOrders.deliveryStatus.delivered'
+                            ),
+                            'success'
+                          )
                         case 'PENDING':
-                          return renderStatusBadge('Pending', 'warning')
+                          return renderStatusBadge(
+                            t(
+                              'components.walletHistory.channelOrders.deliveryStatus.pending'
+                            ),
+                            'warning'
+                          )
                         case 'IN_PROGRESS':
-                          return renderStatusBadge('In Progress', 'info')
+                          return renderStatusBadge(
+                            t(
+                              'components.walletHistory.channelOrders.deliveryStatus.inProgress'
+                            ),
+                            'info'
+                          )
                         case 'FAILED':
-                          return renderStatusBadge('Failed', 'danger')
+                          return renderStatusBadge(
+                            t(
+                              'components.walletHistory.channelOrders.deliveryStatus.failed'
+                            ),
+                            'danger'
+                          )
                         case 'RATE_CHANGED':
-                          return renderStatusBadge('Rate Changed', 'warning')
+                          return renderStatusBadge(
+                            t(
+                              'components.walletHistory.channelOrders.deliveryStatus.rateChanged'
+                            ),
+                            'warning'
+                          )
                         default:
                           return renderStatusBadge(status, 'default')
                       }
@@ -897,39 +1025,17 @@ export const Component = () => {
                     return getDeliveryStatusBadge(deliveryStatus)
                   }
                   case 'actions': {
-                    const hasPendingDelivery =
-                      currentOrderData?.client_asset_amount &&
-                      currentOrderData.client_asset_amount > 0 &&
-                      currentOrderData?.asset_delivery_status === 'PENDING'
-
-                    const isRetrying = retryingOrders.has(order.order_id)
-
                     return (
                       <div className="flex items-center justify-center gap-2">
-                        {hasPendingDelivery && (
-                          <button
-                            className="flex items-center justify-center w-8 h-8 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={isRetrying}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleRetryDelivery(order.order_id)
-                            }}
-                            title="Retry asset delivery"
-                          >
-                            {isRetrying ? (
-                              <LoaderIcon className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <RotateCw className="w-4 h-4" />
-                            )}
-                          </button>
-                        )}
                         <button
                           className="flex items-center justify-center w-8 h-8 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-colors"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleViewDetails(order)
                           }}
-                          title="View details"
+                          title={t(
+                            'components.walletHistory.channelOrders.actions.viewDetails'
+                          )}
                         >
                           <ExternalLink className="w-4 h-4" />
                         </button>
@@ -939,7 +1045,9 @@ export const Component = () => {
                             e.stopPropagation()
                             handleDelete(order.order_id)
                           }}
-                          title="Delete order"
+                          title={t(
+                            'components.walletHistory.channelOrders.actions.deleteOrder'
+                          )}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -953,7 +1061,7 @@ export const Component = () => {
                       if (value === undefined || value === null)
                         return renderEmptyField()
                       if (typeof value === 'boolean')
-                        return value ? 'Yes' : 'No'
+                        return value ? t('common.yes') : t('common.no')
                       if (typeof value === 'number')
                         return value.toLocaleString()
                       if (typeof value === 'string' && value.length > 30) {
@@ -972,18 +1080,22 @@ export const Component = () => {
                   : 'col-span-1',
               header:
                 columnKey === 'actions'
-                  ? 'Actions'
+                  ? t(
+                      'components.walletHistory.channelOrders.columnHeaders.actions'
+                    )
                   : column?.label || columnKey,
               headerClassName: columnKey === 'actions' ? 'text-center' : '',
             }
           })}
           data={filteredOrders}
           emptyState={
-            <div className="text-center py-8 text-slate-400 bg-slate-800/30 rounded-lg border border-slate-700">
+            <div className="text-center py-8 text-content-secondary bg-surface-overlay/30 rounded-lg border border-border-default">
               {orders.length === 0 ? (
-                <p>No channel orders found.</p>
+                <p>{t('components.walletHistory.channelOrders.noOrders')}</p>
               ) : (
-                <p>No orders found matching your search.</p>
+                <p>
+                  {t('components.walletHistory.channelOrders.noOrdersSearch')}
+                </p>
               )}
             </div>
           }
@@ -995,10 +1107,8 @@ export const Component = () => {
       {selectedOrder && (
         <OrderDetailCard
           isOpen={showDetailCard}
-          isRetrying={retryingOrders.has(selectedOrder.order_id)}
           onClose={closeDetailCard}
           onDelete={() => handleDelete(selectedOrder.order_id)}
-          onRetryDelivery={() => handleRetryDelivery(selectedOrder.order_id)}
           order={selectedOrder}
           orderData={orderData[selectedOrder.order_id]}
           orderStatus={orderStatuses[selectedOrder.order_id] || 'Unknown'}

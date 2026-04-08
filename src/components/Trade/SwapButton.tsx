@@ -10,6 +10,7 @@ import {
   ShoppingCart,
 } from 'lucide-react'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { twJoin } from 'tailwind-merge'
 
 interface SwapButtonProps {
@@ -18,6 +19,7 @@ interface SwapButtonProps {
   isPriceLoading: boolean
   isQuoteLoading?: boolean
   errorMessage: string | null
+  warningMessage?: string | null
   hasChannels: boolean
   hasTradablePairs: boolean
   isSwapInProgress: boolean
@@ -36,6 +38,7 @@ export const SwapButton: React.FC<SwapButtonProps> = ({
   isPriceLoading,
   isQuoteLoading,
   errorMessage,
+  warningMessage = null,
   hasChannels,
   hasTradablePairs,
   isSwapInProgress,
@@ -43,33 +46,35 @@ export const SwapButton: React.FC<SwapButtonProps> = ({
   hasValidQuote = false,
   missingChannelAsset = null,
 }) => {
+  const { t } = useTranslation()
   // Check if we have an unconfirmed channel (channel pending confirmation)
   const hasUnconfirmedChannel = errorMessage?.includes('awaiting confirmation')
 
   const getButtonText = () => {
-    if (!wsConnected) return 'Connecting...'
+    if (!wsConnected) return t('trade.swapButton.connecting')
     // Only show "Buy channel" if there's truly no channel (not just unconfirmed)
     if (missingChannelAsset && !hasUnconfirmedChannel) {
-      return `Buy ${missingChannelAsset.asset} in Channel`
+      return t('trade.swapButton.buyChannel', {
+        asset: missingChannelAsset.asset,
+      })
     }
-    if (isQuoteLoading && !hasValidQuote) return 'Getting Latest Quote...'
+    if (isQuoteLoading && !hasValidQuote)
+      return t('trade.swapButton.gettingQuote')
     if (!hasValidQuote && (isToAmountLoading || isPriceLoading))
-      return 'Preparing Swap...'
-    if (!hasChannels) return 'No Channels Available'
-    if (!hasTradablePairs) return 'No Tradable Pairs'
+      return t('trade.swapButton.preparingSwap')
+    if (!hasChannels) return t('trade.swapButton.noChannels')
+    if (!hasTradablePairs) return t('trade.swapButton.noTradablePairs')
+    if (warningMessage) return t('trade.swapButton.exceedsMax')
     if (errorMessage) {
-      if (errorMessage.includes('You can only receive up to')) {
-        return 'Exceeds Max Receivable'
-      }
       if (hasUnconfirmedChannel) {
-        return 'Channel Awaiting Confirmation'
+        return t('trade.swapButton.channelAwaiting')
       }
-      return 'Invalid Amount'
+      return t('trade.swapButton.invalidAmount')
     }
-    if (hasZeroAmount) return 'Enter Amount'
-    if (isSwapInProgress) return 'Swap in Progress...'
-    if (!hasValidQuote) return 'Waiting for Quote...'
-    return 'Swap Now'
+    if (hasZeroAmount) return t('trade.swapButton.enterAmount')
+    if (isSwapInProgress) return t('trade.swapButton.swapInProgress')
+    if (!hasValidQuote) return t('trade.swapButton.waitingQuote')
+    return t('trade.swapButton.swapNow')
   }
 
   const getButtonIcon = () => {
@@ -81,6 +86,7 @@ export const SwapButton: React.FC<SwapButtonProps> = ({
     if (!hasChannels) return <Ban className="w-5 h-5" />
     if (!hasTradablePairs) return <Ban className="w-5 h-5" />
     if (hasUnconfirmedChannel) return <Clock className="w-5 h-5" />
+    if (warningMessage) return <AlertCircle className="w-5 h-5" />
     if (errorMessage) return <AlertCircle className="w-5 h-5" />
     if (hasZeroAmount) return <Wallet className="w-5 h-5" />
     if (isSwapInProgress) return <RefreshCw className="w-5 h-5 animate-spin" />
@@ -95,6 +101,7 @@ export const SwapButton: React.FC<SwapButtonProps> = ({
       (isQuoteLoading && !hasValidQuote) ||
       (!hasValidQuote && (isToAmountLoading || isPriceLoading)) ||
       !!errorMessage ||
+      !!warningMessage ||
       !hasChannels ||
       !hasTradablePairs ||
       isSwapInProgress ||
@@ -112,7 +119,8 @@ export const SwapButton: React.FC<SwapButtonProps> = ({
     // Only show as actionable (success) if there's truly no channel (not just unconfirmed)
     if (missingChannelAsset && !hasUnconfirmedChannel) return 'success'
     if (isDisabled) {
-      if (hasUnconfirmedChannel) return 'warning' // Show warning for unconfirmed channels
+      if (hasUnconfirmedChannel) return 'warning'
+      if (warningMessage) return 'warning'
       if (errorMessage) return 'error'
       if (!hasChannels || !hasTradablePairs) return 'warning'
       return 'disabled'
@@ -135,44 +143,40 @@ export const SwapButton: React.FC<SwapButtonProps> = ({
     const variants = {
       disabled: twJoin(
         baseStyles,
-        'bg-gradient-to-br from-slate-800/80 via-slate-800/70 to-slate-900/80',
-        'border-slate-700/40',
-        'text-slate-400',
+        'bg-surface-base',
+        'border-border-default/25',
+        'text-content-disabled',
         'cursor-not-allowed',
-        'focus:ring-slate-500/20',
-        'shadow-lg shadow-slate-900/30'
+        'opacity-60'
       ),
       error: twJoin(
         baseStyles,
-        'bg-gradient-to-br from-red-600/90 via-red-600/80 to-red-700/90',
-        'border-red-500/50',
+        'bg-red-700/80',
+        'border-red-600/50',
         'text-red-50',
         'cursor-not-allowed',
         'focus:ring-red-500/30',
-        'shadow-lg shadow-red-900/20'
+        'shadow-md'
       ),
       success: twJoin(
         baseStyles,
-        'bg-gradient-to-br from-blue-600/90 via-blue-600/80 to-purple-600/90',
-        'border-blue-500/50',
-        'text-white',
-        'hover:from-blue-500/90 hover:via-blue-500/80 hover:to-purple-500/90',
-        'hover:border-blue-400/70',
-        'hover:scale-[1.02]',
-        'active:scale-[0.98]',
+        'bg-primary',
+        'border-primary/40',
+        'text-primary-foreground',
+        'hover:opacity-90',
+        'hover:scale-[1.01]',
+        'active:scale-[0.99]',
         'cursor-pointer',
-        'shadow-lg hover:shadow-xl',
-        'hover:shadow-blue-500/25',
-        'focus:ring-blue-500/40'
+        'shadow-lg shadow-primary/20'
       ),
       warning: twJoin(
         baseStyles,
-        'bg-gradient-to-br from-amber-600/90 via-amber-600/80 to-orange-600/90',
+        'bg-amber-600/80',
         'border-amber-500/50',
         'text-amber-50',
         'cursor-not-allowed',
         'focus:ring-amber-500/30',
-        'shadow-lg shadow-amber-900/20'
+        'shadow-md'
       ),
     }
 
@@ -180,52 +184,26 @@ export const SwapButton: React.FC<SwapButtonProps> = ({
   }
 
   return (
-    <div className="relative group">
-      {/* Enhanced Glow Effects */}
-      {buttonVariant === 'success' && (
-        <>
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/30 via-blue-400/20 to-purple-500/30 rounded-2xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 via-purple-400/10 to-purple-400/20 rounded-2xl blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100"></div>
-        </>
-      )}
+    <button
+      aria-label={getButtonText()}
+      className={getButtonStyles()}
+      disabled={isDisabled}
+      type="submit"
+    >
+      {/* Button Icon */}
+      <span className="transition-transform duration-200">
+        {getButtonIcon()}
+      </span>
 
-      {/* Loading State Background Animation */}
-      {isLoading && (
-        <div className="absolute inset-0 overflow-hidden rounded-2xl">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer"></div>
+      {/* Button Text */}
+      <span className="font-bold tracking-wide">{getButtonText()}</span>
+
+      {/* Background Quote Refresh Indicator */}
+      {isQuoteLoading && hasValidQuote && buttonVariant === 'success' && (
+        <div className="absolute top-2 right-2">
+          <div className="w-2 h-2 bg-white/50 rounded-full animate-pulse"></div>
         </div>
       )}
-
-      <button
-        aria-label={getButtonText()}
-        className={getButtonStyles()}
-        disabled={isDisabled}
-        type="submit"
-      >
-        {/* Button Icon */}
-        <span className="transition-transform duration-300 group-hover:scale-110">
-          {getButtonIcon()}
-        </span>
-
-        {/* Button Text */}
-        <span className="font-bold tracking-wide">{getButtonText()}</span>
-
-        {/* Background Quote Refresh Indicator */}
-        {isQuoteLoading && hasValidQuote && buttonVariant === 'success' && (
-          <div className="absolute top-2 right-2">
-            <div className="w-2 h-2 bg-blue-400/80 rounded-full animate-pulse"></div>
-          </div>
-        )}
-
-        {/* Success State Sparkle Effects */}
-        {buttonVariant === 'success' && !isLoading && (
-          <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
-            <div className="absolute top-2 right-3 w-1.5 h-1.5 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100"></div>
-            <div className="absolute top-4 right-8 w-1 h-1 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200"></div>
-            <div className="absolute bottom-3 left-4 w-1.5 h-1.5 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-300"></div>
-          </div>
-        )}
-      </button>
-    </div>
+    </button>
   )
 }

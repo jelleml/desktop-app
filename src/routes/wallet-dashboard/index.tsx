@@ -3,44 +3,83 @@ import {
   Zap,
   ArrowUpRight,
   ArrowDownRight,
+  ArrowLeftRight,
+  AlertTriangle,
   Info,
   Plus,
   Loader as LoaderIcon,
-  Wallet,
-  Link as ChainIcon,
-  Network,
-  Blocks,
   Database,
   Users,
-  AlertCircle,
+  TrendingUp,
+  Copy,
+  Check,
+  ShoppingCart,
+  ExternalLink,
+  Lock,
+  Unlock,
+  Download,
+  Upload,
+  History,
 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 
-import { CREATE_NEW_CHANNEL_PATH } from '../../app/router/paths'
-import { useAppDispatch, useAppSelector } from '../../app/store/hooks'
-import { AssetRow } from '../../components/AssetRow'
-import { ChannelCard } from '../../components/ChannelCard'
-import { IssueAssetModal } from '../../components/IssueAssetModal'
-import { LiquidityCard } from '../../components/LiquidityCard'
-import { OnChainDetailsOverlay } from '../../components/OnChainDetailsOverlay'
-import { PeerManagementModal } from '../../components/PeerManagementModal'
 import {
-  Button,
-  Card,
-  LoadingPlaceholder,
-  InfoCard,
-  InfoCardGrid,
-  NetworkWarningAlert,
-  Alert,
-} from '../../components/ui'
+  CHANNELS_PATH,
+  CREATE_NEW_CHANNEL_PATH,
+  ORDER_CHANNEL_PATH,
+  TRADE_PATH,
+  WALLET_HISTORY_DEPOSITS_PATH,
+} from '../../app/router/paths'
+import { useAppDispatch } from '../../app/store/hooks'
+import { useCopyToClipboard } from '../../hooks/useCopyToClipboard'
+import { useSettings } from '../../hooks/useSettings'
+import { AssetRow } from '../../components/AssetRow'
+import { IssueAssetModal } from '../../components/IssueAssetModal'
+import { PeerManagementModal } from '../../components/PeerManagementModal'
+import { Button, LoadingPlaceholder } from '../../components/ui'
 import { UTXOManagementModal } from '../../components/UTXOManagementModal'
 import { BitcoinNetwork } from '../../constants'
 import { formatBitcoinAmount } from '../../helpers/number'
-import { nodeApi, NiaAsset } from '../../slices/nodeApi/nodeApi.slice'
+import { useAssetIcon } from '../../helpers/utils'
+import { useBitcoinPrice } from '../../hooks/useBitcoinPrice'
+import defaultRgbIcon from '../../assets/rgb-symbol-color.svg'
+import type { AssetNIA as NiaAsset } from 'kaleido-sdk/rln'
+import { nodeApi } from '../../slices/nodeApi/nodeApi.slice'
 import { uiSliceActions } from '../../slices/ui/ui.slice'
 
+const BtcIcon: React.FC<{ className?: string }> = ({
+  className = 'h-6 w-6',
+}) => {
+  const [imgSrc, setImgSrc] = useAssetIcon('BTC', defaultRgbIcon)
+  return (
+    <img
+      alt="BTC icon"
+      className={className}
+      onError={() => setImgSrc(defaultRgbIcon)}
+      src={imgSrc}
+    />
+  )
+}
+
+const ChannelAssetBadge: React.FC<{ ticker: string }> = ({ ticker }) => {
+  const [imgSrc, setImgSrc] = useAssetIcon(ticker, defaultRgbIcon)
+  return (
+    <span className="flex items-center gap-1 text-[10px] font-bold text-secondary bg-secondary/10 border border-secondary/20 px-1.5 py-0.5 rounded flex-shrink-0">
+      <img
+        alt={ticker}
+        className="w-3 h-3 rounded-full object-contain"
+        onError={() => setImgSrc(defaultRgbIcon)}
+        src={imgSrc}
+      />
+      {ticker}
+    </span>
+  )
+}
+
 export const Component = () => {
+  const { t } = useTranslation()
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const [assets, assetsResponse] = nodeApi.endpoints.listAssets.useLazyQuery()
@@ -49,15 +88,13 @@ export const Component = () => {
   const [listChannels, listChannelsResponse] =
     nodeApi.endpoints.listChannels.useLazyQuery()
   const [assetBalance] = nodeApi.endpoints.assetBalance.useLazyQuery()
-  const [refreshTransfers] =
-    nodeApi.endpoints.refreshRgbTransfers.useLazyQuery()
+  const [refreshTransfers] = nodeApi.endpoints.refresh.useMutation()
   const [assetBalances, setAssetBalances] = useState<
-    Record<string, { offChain: number; onChain: number }>
+    Record<string, { offChain: number; onChain: number; incoming: number }>
   >({})
   const [assetsMap, setAssetsMap] = useState<Record<string, NiaAsset>>({})
-  const bitcoinUnit = useAppSelector((state) => state.settings.bitcoinUnit)
+  const { bitcoinUnit } = useSettings()
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const [sync] = nodeApi.endpoints.sync.useLazyQuery()
   const [getNodeInfo, nodeInfoResponse] =
     nodeApi.endpoints.nodeInfo.useLazyQuery()
   const [getNetworkInfo, networkInfoResponse] =
@@ -65,6 +102,7 @@ export const Component = () => {
   const [showUTXOModal, setShowUTXOModal] = useState(false)
   const [showPeerModal, setShowPeerModal] = useState(false)
   const [showIssueAssetModal, setShowIssueAssetModal] = useState(false)
+  const { copied: pubkeyCopied, copy: copyPubkey } = useCopyToClipboard()
 
   const refreshData = useCallback(async () => {
     setIsRefreshing(true)
@@ -72,58 +110,57 @@ export const Component = () => {
       await Promise.all([
         assets(),
         listChannels(),
-        btcBalance({ skip_sync: false }),
-        refreshTransfers({ skip_sync: false }),
-        sync(),
-        getNodeInfo(),
-        getNetworkInfo(),
+        btcBalance(),
+        refreshTransfers({}),
       ])
     } finally {
       setIsRefreshing(false)
     }
-  }, [
-    assets,
-    btcBalance,
-    listChannels,
-    refreshTransfers,
-    sync,
-    getNodeInfo,
-    getNetworkInfo,
-  ])
+  }, [assets, btcBalance, listChannels, refreshTransfers])
 
   useEffect(() => {
     if (assetsResponse.data?.nia) {
       const newAssetsMap: Record<string, NiaAsset> = {}
-      assetsResponse.data.nia.forEach((asset) => {
-        newAssetsMap[asset.asset_id] = asset
+      assetsResponse.data.nia.forEach((asset: any) => {
+        if (asset.asset_id) newAssetsMap[asset.asset_id] = asset as NiaAsset
       })
       setAssetsMap(newAssetsMap)
     }
   }, [assetsResponse.data])
 
+  // Fetch nodeInfo and networkInfo once on mount (they rarely change)
+  useEffect(() => {
+    getNodeInfo()
+    getNetworkInfo()
+  }, [getNodeInfo, getNetworkInfo])
+
   useEffect(() => {
     refreshData()
-    const intervalId = setInterval(refreshData, 5000)
+    const intervalId = setInterval(refreshData, 30_000)
     return () => clearInterval(intervalId)
   }, [refreshData])
 
   useEffect(() => {
     const fetchAssetBalances = async () => {
-      const newBalances: Record<string, { offChain: number; onChain: number }> =
-        {}
+      const newBalances: Record<
+        string,
+        { offChain: number; onChain: number; incoming: number }
+      > = {}
       for (const asset of assetsResponse.data?.nia || []) {
-        const balance = await assetBalance({ asset_id: asset.asset_id })
-        newBalances[asset.asset_id] = {
-          offChain: balance.data?.offchain_outbound || 0,
-          onChain: balance.data?.future || 0,
+        if (asset.asset_id) {
+          const balance = await assetBalance({ asset_id: asset.asset_id })
+          const spendable = balance.data?.spendable || 0
+          const future = balance.data?.future || 0
+          newBalances[asset.asset_id] = {
+            incoming: Math.max(0, future - spendable),
+            offChain: balance.data?.offchain_outbound || 0,
+            onChain: spendable,
+          }
         }
       }
       setAssetBalances(newBalances)
     }
-
-    if (assetsResponse.data) {
-      fetchAssetBalances()
-    }
+    if (assetsResponse.data) fetchAssetBalances()
   }, [
     assetsResponse.data,
     btcBalanceResponse.data,
@@ -131,382 +168,664 @@ export const Component = () => {
     assetBalance,
   ])
 
-  const onChainBalance = btcBalanceResponse.data?.vanilla.spendable || 0
-  const onChainFutureBalance = btcBalanceResponse.data?.vanilla.future || 0
-  const onChainSpendableBalance =
-    btcBalanceResponse.data?.vanilla.spendable || 0
+  const { formatFiat, btcPrice } = useBitcoinPrice()
 
-  const onChainColoredBalance = btcBalanceResponse.data?.colored.spendable || 0
-  const onChainColoredFutureBalance =
-    btcBalanceResponse.data?.colored.future || 0
+  const network = networkInfoResponse.data?.network as unknown as
+    | BitcoinNetwork
+    | undefined
+  const isMainnet = network === 'Mainnet'
+
+  const onChainSpendableBalance =
+    btcBalanceResponse.data?.vanilla?.spendable || 0
+  const onChainFutureBalance = btcBalanceResponse.data?.vanilla?.future || 0
+  const btcIncoming = Math.max(
+    0,
+    onChainFutureBalance - onChainSpendableBalance
+  )
   const onChainColoredSpendableBalance =
-    btcBalanceResponse.data?.colored.spendable || 0
+    btcBalanceResponse.data?.colored?.spendable || 0
 
   const channels = listChannelsResponse?.data?.channels || []
   const offChainBalance = channels.reduce(
-    (sum, channel) => sum + channel.local_balance_sat,
+    (sum: number, ch: any) => sum + (ch.local_balance_sat || 0),
     0
   )
   const totalBalance =
     offChainBalance + onChainSpendableBalance + onChainColoredSpendableBalance
   const totalInboundLiquidity = channels.reduce(
-    (sum, channel) => sum + channel.inbound_balance_msat / 1000,
+    (sum: number, ch: any) => sum + (ch.inbound_balance_msat || 0) / 1000,
     0
   )
   const totalOutboundLiquidity = channels.reduce(
-    (sum, channel) => sum + channel.outbound_balance_msat / 1000,
-    0
-  )
-
-  // Calculate total channel capacity for liquidity percentage
-  const totalChannelCapacity = channels.reduce(
-    (sum, channel) => sum + channel.capacity_sat,
+    (sum: number, ch: any) => sum + (ch.outbound_balance_msat || 0) / 1000,
     0
   )
 
   const isLoading =
     btcBalanceResponse.isLoading || listChannelsResponse.isLoading
 
+  const liquidityTotal = totalInboundLiquidity + totalOutboundLiquidity
+  const outboundPct =
+    liquidityTotal > 0 ? (totalOutboundLiquidity / liquidityTotal) * 100 : 50
+  const inboundPct =
+    liquidityTotal > 0 ? (totalInboundLiquidity / liquidityTotal) * 100 : 50
+
+  const pubkey = nodeInfoResponse.data?.pubkey || ''
+  const niaAssets = assetsResponse.data?.nia || []
+
+  const handleCopyPubkey = () => {
+    if (!pubkey) return
+    copyPubkey(pubkey)
+  }
+
+  const btcOnChain = onChainSpendableBalance + onChainColoredSpendableBalance
+
+  const renderBalanceWithIncoming = (
+    balance: number,
+    incoming: number,
+    formatFn: (val: number) => React.ReactNode
+  ) => {
+    if (incoming > 0) {
+      return (
+        <div className="flex flex-col">
+          <span className="font-bold">{formatFn(balance)}</span>
+          <span className="text-[10px] text-content-tertiary font-medium">
+            +{formatFn(incoming)} incoming
+          </span>
+        </div>
+      )
+    }
+    return <div className="font-bold">{formatFn(balance)}</div>
+  }
+
   return (
-    <div className="w-full bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-slate-800/50 p-6">
-      {(networkInfoResponse.data?.network as unknown as BitcoinNetwork) !==
-        'Mainnet' && (
-        <div className="mb-6">
-          <NetworkWarningAlert
-            faucetUrl={
-              (networkInfoResponse.data
-                ?.network as unknown as BitcoinNetwork) === 'Signet'
-                ? 'https://faucet.mutinynet.com/'
-                : undefined
-            }
-            network={networkInfoResponse.data?.network || 'Testnet'}
-          />
-        </div>
-      )}
-
-      {onChainBalance === 0 && offChainBalance === 0 && !isLoading && (
-        <div className="mb-6">
-          <Alert
-            className="mb-6"
-            icon={<AlertCircle className="w-5 h-5" />}
-            title="No Bitcoin Funds"
-            variant="warning"
-          >
-            <p className="text-sm">
-              You don't have any Bitcoin funds in your wallet. Deposit funds to
-              start using the application.
-              <Button
-                className="ml-4 mt-2"
-                icon={<ArrowDownRight className="w-3.5 h-3.5" />}
-                onClick={() =>
-                  dispatch(
-                    uiSliceActions.setModal({
-                      assetId: assetsResponse.data?.nia[0]?.asset_id,
-                      type: 'deposit',
-                    })
-                  )
-                }
-                size="sm"
-                variant="success"
-              >
-                Deposit Now
-              </Button>
-            </p>
-          </Alert>
-        </div>
-      )}
-
+    <div className="w-full h-full flex flex-col animate-in fade-in duration-500">
+      {/* Modals */}
       {showIssueAssetModal && (
         <IssueAssetModal
           onClose={() => setShowIssueAssetModal(false)}
           onSuccess={refreshData}
         />
       )}
+      {showUTXOModal && (
+        <UTXOManagementModal
+          bitcoinUnit={bitcoinUnit}
+          onClose={() => setShowUTXOModal(false)}
+        />
+      )}
+      {showPeerModal && (
+        <PeerManagementModal onClose={() => setShowPeerModal(false)} />
+      )}
 
-      <div className="flex flex-col items-center mb-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Wallet className="w-8 h-8 text-blue-500" />
-          <h3 className="text-xl font-bold text-white">Wallet Dashboard</h3>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
+        {/* ── LEFT COLUMN: Balance + Assets ── */}
+        <div className="lg:col-span-7 flex flex-col gap-5 min-h-0">
+          {/* Balance Card */}
+          <div className="relative overflow-hidden bg-surface-overlay rounded-2xl border border-border-default/60 shadow-xl p-6 group">
+            <div className="absolute -top-20 -left-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 right-0 w-48 h-48 bg-secondary/5 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
-          <Button
-            icon={<Zap className="w-4 h-4" />}
-            onClick={() => navigate(CREATE_NEW_CHANNEL_PATH)}
-            size="md"
-          >
-            Open Channel
-          </Button>
-
-          <Button
-            icon={<Database className="w-4 h-4" />}
-            onClick={() => setShowUTXOModal(true)}
-            size="md"
-          >
-            Manage UTXOs
-          </Button>
-
-          <Button
-            icon={<Users className="w-4 h-4" />}
-            onClick={() => setShowPeerModal(true)}
-            size="md"
-          >
-            Peers
-          </Button>
-
-          <Button
-            disabled={isRefreshing}
-            icon={
-              isRefreshing ? (
-                <LoaderIcon className="w-4 h-4 animate-spin" />
-              ) : (
-                <RefreshCw className="w-4 h-4" />
-              )
-            }
-            onClick={refreshData}
-            size="sm"
-            variant="outline"
-          >
-            {isRefreshing ? 'Refreshing...' : 'Refresh'}
-          </Button>
-        </div>
-
-        <InfoCardGrid className="grid-cols-3 gap-3">
-          <InfoCard
-            copySuccessMessage="Node public key copied to clipboard"
-            copyText={nodeInfoResponse.data?.pubkey}
-            copyable
-            icon={<ChainIcon className="w-4 h-4 text-blue-500" />}
-            label="Node Public Key"
-            value={nodeInfoResponse.data?.pubkey || '...'}
-          />
-
-          <InfoCard
-            icon={<Network className="w-4 h-4 text-blue-500" />}
-            label="Network"
-            value={
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-                <span>{networkInfoResponse.data?.network || 'Unknown'}</span>
+            {/* Total balance */}
+            <div className="relative z-10 mb-5">
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-xs font-semibold text-content-secondary uppercase tracking-wider">
+                  {t('dashboard.totalBalance')}
+                </p>
+                <div className="flex items-center gap-2">
+                  <div className="relative group/warn">
+                    <span
+                      className={`flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border cursor-default ${
+                        isMainnet
+                          ? 'text-status-success bg-status-success/10 border-status-success/20'
+                          : network
+                            ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                            : 'text-content-tertiary bg-surface-elevated border-border-default/40'
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isMainnet ? 'bg-status-success' : network ? 'bg-amber-400 animate-pulse' : 'bg-content-tertiary'}`}
+                      />
+                      {network || '—'}
+                      {!isMainnet && network && (
+                        <AlertTriangle className="w-3 h-3" />
+                      )}
+                    </span>
+                    {!isMainnet && network && (
+                      <div className="absolute right-0 top-7 w-52 bg-surface-elevated text-content-primary text-xs rounded-xl py-2.5 px-3 opacity-0 group-hover/warn:opacity-100 transition-opacity pointer-events-none border border-amber-500/30 shadow-lg z-30">
+                        <p className="font-semibold text-amber-400 mb-1">
+                          {t('dashboard.testnetWarning')}
+                        </p>
+                        <p className="text-content-tertiary leading-relaxed">
+                          {t('dashboard.testnetWarningDesc')}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-xs font-mono text-content-tertiary">
+                    #{networkInfoResponse.data?.height || '—'}
+                  </span>
+                </div>
               </div>
-            }
-          />
-
-          <InfoCard
-            icon={<Blocks className="w-4 h-4 text-blue-500" />}
-            label="Block Height"
-            value={`#${networkInfoResponse.data?.height || '...'}`}
-          />
-        </InfoCardGrid>
-
-        {showUTXOModal && (
-          <UTXOManagementModal
-            bitcoinUnit={bitcoinUnit}
-            onClose={() => setShowUTXOModal(false)}
-          />
-        )}
-
-        {showPeerModal && (
-          <PeerManagementModal onClose={() => setShowPeerModal(false)} />
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card className="md:col-span-2">
-          <div className="flex justify-between items-center mb-2">
-            <div>
-              <h2 className="text-sm font-medium text-slate-400">
-                Total Balance
-              </h2>
-              <div className="text-lg font-bold text-white">
-                {isLoading ? (
-                  <LoadingPlaceholder width="w-32" />
-                ) : (
-                  `${formatBitcoinAmount(totalBalance, bitcoinUnit)} ${bitcoinUnit}`
+              <div className="flex items-baseline gap-2.5 mb-1.5">
+                <span className="text-4xl font-bold text-content-primary leading-none">
+                  {isLoading ? (
+                    <LoadingPlaceholder width="w-48" />
+                  ) : (
+                    formatBitcoinAmount(totalBalance, bitcoinUnit)
+                  )}
+                </span>
+                <span className="text-xl font-semibold text-primary">
+                  {bitcoinUnit}
+                </span>
+              </div>
+              <div className="flex items-center gap-4 text-sm flex-wrap">
+                {!isLoading && formatFiat(totalBalance) && (
+                  <span className="text-content-secondary">
+                    ≈ {formatFiat(totalBalance)}
+                  </span>
+                )}
+                {btcPrice !== undefined && (
+                  <span className="flex items-center gap-1 text-xs text-content-tertiary">
+                    <TrendingUp className="w-3 h-3 text-primary" />
+                    {t('dashboard.btcPrice')}:{' '}
+                    <span className="text-content-secondary ml-0.5">
+                      {formatFiat(100_000_000)}
+                    </span>
+                  </span>
                 )}
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button
-                icon={<ArrowDownRight className="w-3.5 h-3.5" />}
+
+            {/* Actions — compact 4-button row */}
+            <div className="relative z-10 grid grid-cols-4 gap-2">
+              <button
+                className="flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-status-success/15 hover:bg-status-success/25 border border-status-success/30 hover:border-status-success/50 text-status-success text-xs font-semibold transition-all overflow-hidden"
                 onClick={() =>
                   dispatch(
                     uiSliceActions.setModal({
-                      assetId: assetsResponse.data?.nia[0]?.asset_id,
+                      assetId: niaAssets[0]?.asset_id,
                       type: 'deposit',
                     })
                   )
                 }
-                size="sm"
-                variant="success"
               >
-                Deposit
-              </Button>
-              <Button
-                icon={<ArrowUpRight className="w-3.5 h-3.5" />}
+                <Download className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="truncate">{t('dashboard.deposit')}</span>
+              </button>
+              <button
+                className="flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-status-danger/15 hover:bg-status-danger/25 border border-status-danger/30 hover:border-status-danger/50 text-status-danger text-xs font-semibold transition-all overflow-hidden"
+                onClick={() => navigate(TRADE_PATH)}
+              >
+                <ArrowLeftRight className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="truncate">{t('dashboard.swap', 'Swap')}</span>
+              </button>
+              <button
+                className="flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-emerald-900/35 hover:bg-emerald-900/50 border border-emerald-700/50 hover:border-emerald-600/70 text-emerald-300 text-xs font-semibold transition-all overflow-hidden"
                 onClick={() =>
                   dispatch(
                     uiSliceActions.setModal({
-                      assetId: assetsResponse.data?.nia[0]?.asset_id,
+                      assetId: niaAssets[0]?.asset_id,
                       type: 'withdraw',
                     })
                   )
                 }
-                size="sm"
-                variant="danger"
               >
-                Withdraw
-              </Button>
+                <Upload className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="truncate">{t('dashboard.withdraw')}</span>
+              </button>
+              <button
+                className="flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-surface-elevated/60 hover:bg-surface-elevated border border-border-default/40 hover:border-border-default text-content-secondary hover:text-content-primary text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+                disabled={isRefreshing}
+                onClick={refreshData}
+              >
+                {isRefreshing ? (
+                  <LoaderIcon className="w-3.5 h-3.5 animate-spin flex-shrink-0" />
+                ) : (
+                  <RefreshCw className="w-3.5 h-3.5 flex-shrink-0" />
+                )}
+                <span className="truncate">
+                  {isRefreshing
+                    ? t('dashboard.refreshing')
+                    : t('dashboard.refresh')}
+                </span>
+              </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mt-3">
-            <div className="bg-[#0B101B]/80 rounded-lg p-2.5 hover:bg-[#0B101B] transition-all duration-200">
-              <OnChainDetailsOverlay
-                bitcoinUnit={bitcoinUnit}
-                isLoading={isLoading}
-                onChainBalance={onChainBalance}
-                onChainColoredBalance={onChainColoredBalance}
-                onChainColoredFutureBalance={onChainColoredFutureBalance}
-                onChainColoredSpendableBalance={onChainColoredSpendableBalance}
-                onChainFutureBalance={onChainFutureBalance}
-                onChainSpendableBalance={onChainSpendableBalance}
-              />
+          {/* Assets Card */}
+          <div className="flex-1 min-h-0 flex flex-col bg-surface-overlay rounded-2xl border border-border-default/60 shadow-xl overflow-hidden">
+            {/* Card header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border-default/40">
+              <h3 className="text-base font-bold text-content-primary">
+                {t('dashboard.assets')}
+              </h3>
+              <div className="flex items-center gap-2">
+                <Button
+                  icon={<Database className="w-4 h-4" />}
+                  onClick={() => setShowUTXOModal(true)}
+                  size="sm"
+                  variant="outline"
+                >
+                  {t('dashboard.manageUTXOs')}
+                </Button>
+                <Button
+                  icon={<Plus className="w-4 h-4" />}
+                  onClick={() => setShowIssueAssetModal(true)}
+                  size="sm"
+                >
+                  {t('dashboard.issueAsset')}
+                </Button>
+              </div>
             </div>
 
-            <div className="bg-slate-900/50 rounded-lg p-2.5">
-              <span className="text-sm text-slate-400 flex items-center gap-2">
-                <Zap className="w-4 h-4 text-blue-500" />
-                Off-chain
-              </span>
-              <div className="text-base text-white font-medium">
+            {/* Column headers */}
+            <div className="grid grid-cols-4 gap-2 text-[11px] font-semibold uppercase tracking-wider text-content-tertiary border-b border-border-default/30">
+              <div className="px-4 py-2.5">{t('dashboard.asset')}</div>
+              <div className="px-4 py-2.5">
+                {t('dashboard.offChainBalance')}
+              </div>
+              <div className="px-4 py-2.5">{t('dashboard.onChainBalance')}</div>
+              <div className="px-4 py-2.5 text-center">
+                {t('dashboard.actions')}
+              </div>
+            </div>
+
+            {/* Bitcoin row — always first */}
+            <div className="group grid grid-cols-4 gap-2 items-center bg-surface-elevated/40 hover:bg-surface-elevated/70 transition-colors border-b border-border-default/20">
+              {/* Asset cell */}
+              <div className="py-3 px-4 text-sm truncate flex items-center">
+                <BtcIcon className="h-6 w-6 mr-2 flex-shrink-0" />
+                <div>
+                  <div className="font-bold">BTC</div>
+                  <div>Bitcoin</div>
+                </div>
+              </div>
+              {/* Off-chain */}
+              <div className="text-sm py-3 px-4">
                 {isLoading ? (
                   <LoadingPlaceholder />
                 ) : (
-                  `${formatBitcoinAmount(offChainBalance, bitcoinUnit)} ${bitcoinUnit}`
-                )}
-              </div>
-
-              <div className="mt-1.5 flex items-center text-xs text-slate-400">
-                <div className="flex items-center mr-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1"></div>
-                  <span>{channels.length} Channels</span>
-                </div>
-                {channels.length > 0 && (
-                  <div className="flex items-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1"></div>
-                    <span>{channels.filter((c) => c.ready).length} Active</span>
+                  <div className="font-bold">
+                    {formatBitcoinAmount(offChainBalance, bitcoinUnit)}
                   </div>
                 )}
               </div>
+              {/* On-chain */}
+              <div className="text-sm py-3 px-4">
+                {isLoading ? (
+                  <LoadingPlaceholder />
+                ) : (
+                  renderBalanceWithIncoming(btcOnChain, btcIncoming, (val) =>
+                    formatBitcoinAmount(val, bitcoinUnit)
+                  )
+                )}
+              </div>
+              {/* Actions */}
+              <div className="py-3 px-2 flex justify-center">
+                <div className="flex items-center gap-0.5">
+                  {[
+                    {
+                      color: 'text-primary hover:bg-primary/15',
+                      icon: <Download className="w-3.5 h-3.5" />,
+                      label: t('dashboard.deposit'),
+                      onClick: () =>
+                        dispatch(
+                          uiSliceActions.setModal({
+                            assetId: niaAssets[0]?.asset_id,
+                            type: 'deposit',
+                          })
+                        ),
+                    },
+                    {
+                      color: 'text-emerald-300 hover:bg-emerald-900/30',
+                      icon: <Upload className="w-3.5 h-3.5" />,
+                      label: t('dashboard.withdraw'),
+                      onClick: () =>
+                        dispatch(
+                          uiSliceActions.setModal({
+                            assetId: niaAssets[0]?.asset_id,
+                            type: 'withdraw',
+                          })
+                        ),
+                    },
+                    {
+                      color: 'text-secondary hover:bg-secondary/15',
+                      icon: <History className="w-3.5 h-3.5" />,
+                      label: t('dashboard.history'),
+                      onClick: () => navigate(WALLET_HISTORY_DEPOSITS_PATH),
+                    },
+                  ].map(({ icon, label, color, onClick }) => (
+                    <div className="relative group/btn" key={label}>
+                      <button
+                        className={`p-1.5 rounded-lg transition-colors duration-150 ${color}`}
+                        onClick={onClick}
+                        title={label}
+                      >
+                        {icon}
+                      </button>
+                      <div className="absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 bg-surface-high text-content-primary text-[10px] rounded-md py-0.5 px-1.5 opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-border-default/40 shadow-lg z-20">
+                        {label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* RGB asset rows — scrollable */}
+            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+              {niaAssets.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 text-content-tertiary">
+                  <Database className="w-10 h-10 mb-3 opacity-40" />
+                  <p className="text-sm font-medium">No RGB assets found.</p>
+                  <p className="text-xs mt-1 opacity-70">
+                    Issue an asset or deposit to get started.
+                  </p>
+                </div>
+              ) : (
+                niaAssets.map((asset: any) => (
+                  <AssetRow
+                    asset={asset as NiaAsset}
+                    incomingBalance={
+                      (assetBalances[asset.asset_id || ''] || {}).incoming || 0
+                    }
+                    key={asset.asset_id}
+                    offChainBalance={
+                      (assetBalances[asset.asset_id || ''] || {}).offChain || 0
+                    }
+                    onChainBalance={
+                      (assetBalances[asset.asset_id || ''] || {}).onChain || 0
+                    }
+                  />
+                ))
+              )}
             </div>
           </div>
-        </Card>
+        </div>
 
-        <div className="space-y-2">
-          <LiquidityCard
-            amount={totalInboundLiquidity}
-            bitcoinUnit={bitcoinUnit}
-            icon={<ArrowDownRight className="h-4 w-4 text-blue-500" />}
-            isLoading={isLoading}
-            title="Inbound Liquidity"
-            tooltipDescription={`Maximum amount of ${bitcoinUnit} that you can receive through Lightning Network channels. This represents the total amount others can send to you.`}
-            totalCapacity={totalChannelCapacity}
-            type="inbound"
-          />
+        {/* ── RIGHT COLUMN: Node + Channels ── */}
+        <div className="lg:col-span-5 flex flex-col min-h-0">
+          {/* Single node card */}
+          <div className="flex-1 min-h-0 flex flex-col bg-surface-overlay rounded-2xl border border-border-default/60 p-5">
+            {/* Header: title + channel count */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-content-primary">
+                  {t('dashboard.lightningChannels')}
+                </h3>
+                {channels.length > 0 && (
+                  <span className="text-xs font-bold bg-secondary/15 text-secondary border border-secondary/20 rounded-full px-2 py-0.5">
+                    {channels.filter((c: any) => c.ready).length}/
+                    {channels.length}
+                  </span>
+                )}
+              </div>
+              {channels.length > 0 && (
+                <span className="text-xs text-status-success flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-status-success animate-pulse" />
+                  Online
+                </span>
+              )}
+            </div>
 
-          <LiquidityCard
-            amount={totalOutboundLiquidity}
-            bitcoinUnit={bitcoinUnit}
-            icon={<ArrowUpRight className="h-4 w-4 text-blue-500" />}
-            isLoading={isLoading}
-            title="Outbound Liquidity"
-            tooltipDescription={`Maximum amount of ${bitcoinUnit} that you can send through Lightning Network channels. This represents your available balance for making payments.`}
-            totalCapacity={totalChannelCapacity}
-            type="outbound"
-          />
+            {/* Node ID row */}
+            <div className="flex items-center justify-between bg-surface-elevated/60 px-3 py-2 rounded-lg border border-dashed border-border-default mb-4">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Lock className="w-3 h-3 text-content-tertiary flex-shrink-0" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-content-tertiary flex-shrink-0">
+                  Node ID
+                </span>
+                <code className="text-xs font-mono text-primary truncate">
+                  {pubkey ? `${pubkey.slice(0, 14)}…${pubkey.slice(-6)}` : '—'}
+                </code>
+              </div>
+              <button
+                className="text-content-tertiary hover:text-content-primary transition-colors flex-shrink-0 ml-2"
+                onClick={handleCopyPubkey}
+                title={pubkey}
+                type="button"
+              >
+                {pubkeyCopied ? (
+                  <Check className="w-3.5 h-3.5 text-status-success" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
+              </button>
+            </div>
+
+            {/* Channel list — flex-1 scrollable */}
+            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 -mr-1">
+              {isLoading ? (
+                <div className="space-y-2">
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      className="h-16 bg-surface-elevated/50 rounded-xl animate-pulse"
+                      key={i}
+                    />
+                  ))}
+                </div>
+              ) : channels.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-6 text-center h-full">
+                  <Zap className="w-7 h-7 text-content-tertiary mb-2 opacity-50" />
+                  <p className="text-xs text-content-tertiary">
+                    {t('dashboard.noChannelsFound')}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  {channels.map((ch: any) => {
+                    const asset = assetsMap[ch.asset_id || '']
+                    const btcTotal =
+                      (ch.outbound_balance_msat || 0) +
+                      (ch.inbound_balance_msat || 0)
+                    const btcOutPct =
+                      btcTotal > 0
+                        ? ((ch.outbound_balance_msat || 0) / btcTotal) * 100
+                        : 50
+                    const btcInPct =
+                      btcTotal > 0
+                        ? ((ch.inbound_balance_msat || 0) / btcTotal) * 100
+                        : 50
+                    const assetTotal =
+                      (ch.asset_local_amount || 0) +
+                      (ch.asset_remote_amount || 0)
+                    const assetOutPct =
+                      assetTotal > 0
+                        ? ((ch.asset_local_amount || 0) / assetTotal) * 100
+                        : 50
+                    const assetInPct =
+                      assetTotal > 0
+                        ? ((ch.asset_remote_amount || 0) / assetTotal) * 100
+                        : 50
+                    return (
+                      <div
+                        className="group/ch bg-surface-elevated/60 hover:bg-surface-elevated/90 rounded-xl border border-border-subtle/40 hover:border-border-default/50 p-3 transition-all duration-200"
+                        key={ch.channel_id}
+                      >
+                        {/* Channel header row */}
+                        <div className="flex items-center justify-between text-xs mb-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span
+                              className={`w-2 h-2 rounded-full flex-shrink-0 ${ch.is_usable ? 'bg-status-success' : 'bg-status-danger'}`}
+                            />
+                            <span className="text-content-secondary font-medium truncate">
+                              {ch.peer_alias || ch.peer_pubkey?.slice(0, 10)}…
+                            </span>
+                            {asset && (
+                              <ChannelAssetBadge ticker={asset.ticker} />
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            {ch.ready ? (
+                              <span className="text-[10px] font-semibold text-status-success border border-status-success/30 px-1.5 py-0.5 rounded uppercase">
+                                {t('channelCard.status.open')}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-semibold text-amber-400 border border-amber-400/30 px-1.5 py-0.5 rounded uppercase">
+                                {t('channelCard.status.pending')}
+                              </span>
+                            )}
+                            {ch.public ? (
+                              <Unlock className="w-3 h-3 text-content-tertiary" />
+                            ) : (
+                              <Lock className="w-3 h-3 text-secondary/70" />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* BTC liquidity bar */}
+                        <div className="mb-1.5">
+                          <div className="flex items-center justify-between text-[10px] text-content-tertiary mb-0.5 max-h-0 overflow-hidden group-hover/ch:max-h-4 transition-all duration-200">
+                            <span className="flex items-center gap-0.5 text-yellow-400">
+                              <ArrowUpRight className="w-2.5 h-2.5" />
+                              {formatBitcoinAmount(
+                                (ch.outbound_balance_msat || 0) / 1000,
+                                bitcoinUnit
+                              )}
+                            </span>
+                            <span className="text-content-secondary font-medium">
+                              BTC
+                            </span>
+                            <span className="flex items-center gap-0.5 text-blue-400">
+                              {formatBitcoinAmount(
+                                (ch.inbound_balance_msat || 0) / 1000,
+                                bitcoinUnit
+                              )}
+                              <ArrowDownRight className="w-2.5 h-2.5" />
+                            </span>
+                          </div>
+                          <div className="relative h-1.5 bg-surface-high/60 rounded-full overflow-hidden">
+                            <div
+                              className="absolute left-0 top-0 h-full bg-yellow-500 rounded-l-full"
+                              style={{ width: `${btcOutPct}%` }}
+                            />
+                            <div
+                              className="absolute right-0 top-0 h-full bg-blue-500 rounded-r-full"
+                              style={{ width: `${btcInPct}%` }}
+                            />
+                            <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-px bg-surface-high/80" />
+                          </div>
+                        </div>
+
+                        {/* Asset liquidity bar (if RGB channel) */}
+                        {asset && (
+                          <div>
+                            <div className="flex items-center justify-between text-[10px] text-content-tertiary mb-0.5 max-h-0 overflow-hidden group-hover/ch:max-h-4 transition-all duration-200">
+                              <span className="flex items-center gap-0.5 text-lime-300">
+                                <ArrowUpRight className="w-2.5 h-2.5" />
+                                {ch.asset_local_amount || 0}
+                              </span>
+                              <span className="text-lime-300/60 font-medium">
+                                {asset.ticker}
+                              </span>
+                              <span className="flex items-center gap-0.5 text-emerald-400">
+                                {ch.asset_remote_amount || 0}
+                                <ArrowDownRight className="w-2.5 h-2.5" />
+                              </span>
+                            </div>
+                            <div className="relative h-1.5 bg-surface-high/60 rounded-full overflow-hidden">
+                              <div
+                                className="absolute left-0 top-0 h-full bg-lime-300 rounded-l-full"
+                                style={{ width: `${assetOutPct}%` }}
+                              />
+                              <div
+                                className="absolute right-0 top-0 h-full bg-emerald-700 rounded-r-full"
+                                style={{ width: `${assetInPct}%` }}
+                              />
+                              <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-px bg-surface-high/80" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Liquidity totals */}
+            {channels.length > 0 && !isLoading && (
+              <div className="border-t border-border-default/40 mt-4 pt-3">
+                <div className="flex justify-between text-xs text-content-tertiary mb-1.5">
+                  <span className="flex items-center gap-1">
+                    <ArrowUpRight className="w-3 h-3 text-yellow-400" />
+                    {formatBitcoinAmount(
+                      totalOutboundLiquidity,
+                      bitcoinUnit
+                    )}{' '}
+                    {bitcoinUnit}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    {formatBitcoinAmount(totalInboundLiquidity, bitcoinUnit)}{' '}
+                    {bitcoinUnit}
+                    <ArrowDownRight className="w-3 h-3 text-blue-400" />
+                  </span>
+                </div>
+                <div className="relative w-full bg-surface-elevated/60 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="absolute left-0 top-0 h-full bg-yellow-500 rounded-l-full transition-all duration-500"
+                    style={{ width: `${outboundPct}%` }}
+                  />
+                  <div
+                    className="absolute right-0 top-0 h-full bg-blue-500 rounded-r-full transition-all duration-500"
+                    style={{ width: `${inboundPct}%` }}
+                  />
+                  <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-px bg-surface-high/80" />
+                </div>
+              </div>
+            )}
+
+            {/* Action strip */}
+            <div className="flex items-center gap-1.5 mt-4 pt-3 border-t border-border-default/40">
+              {/* Primary: Manage */}
+              <button
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-semibold transition-colors flex-shrink-0"
+                onClick={() => navigate(CHANNELS_PATH)}
+              >
+                <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
+                {t('dashboard.manage')}
+              </button>
+              <div className="flex-1" />
+              {/* Secondary: icon-only */}
+              {[
+                {
+                  icon: <Plus className="w-3.5 h-3.5" />,
+                  label: t('dashboard.openChannel'),
+                  onClick: () => navigate(CREATE_NEW_CHANNEL_PATH),
+                },
+                {
+                  icon: <ShoppingCart className="w-3.5 h-3.5" />,
+                  label: t('channels.buyChannel'),
+                  onClick: () => navigate(ORDER_CHANNEL_PATH),
+                },
+                {
+                  icon: <Users className="w-3.5 h-3.5" />,
+                  label: t('dashboard.peers'),
+                  onClick: () => setShowPeerModal(true),
+                },
+              ].map(({ icon, label, onClick }) => (
+                <div className="relative group/act" key={label}>
+                  <button
+                    className="p-1.5 rounded-lg hover:bg-surface-elevated text-content-tertiary hover:text-content-primary transition-colors"
+                    onClick={onClick}
+                    title={label}
+                  >
+                    {icon}
+                  </button>
+                  <div className="absolute bottom-full mb-1.5 right-0 bg-surface-high text-content-primary text-[10px] rounded-md py-0.5 px-1.5 opacity-0 group-hover/act:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-border-default/40 shadow-lg z-20">
+                    {label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      <Card
-        action={
-          <Button
-            icon={<Plus className="w-4 h-4" />}
-            onClick={() => setShowIssueAssetModal(true)}
-            size="sm"
-          >
-            Issue Asset
-          </Button>
-        }
-        className="mb-6"
-        title="Assets"
-      >
-        <div className="rounded-lg overflow-hidden">
-          <div className="grid grid-cols-4 text-grey-light text-xs">
-            <div className="py-2 px-4">Asset</div>
-            <div className="py-2 px-4">Off Chain</div>
-            <div className="py-2 px-4">On Chain</div>
-            <div className="py-2 px-4">Actions</div>
-          </div>
-
-          {assetsResponse.data?.nia.map((asset) => (
-            <AssetRow
-              asset={{
-                ...asset,
-                balance: {
-                  future: assetBalances[asset.asset_id]?.onChain || 0,
-                  settled: assetBalances[asset.asset_id]?.onChain || 0,
-                  spendable: assetBalances[asset.asset_id]?.onChain || 0,
-                },
-              }}
-              isLoading={!assetBalances[asset.asset_id]}
-              key={asset.asset_id}
-              offChainBalance={assetBalances[asset.asset_id]?.offChain || 0}
-              onChainBalance={assetBalances[asset.asset_id]?.onChain || 0}
-            />
-          ))}
-        </div>
-      </Card>
-
-      <Card className="mb-6" title="Lightning Channels">
-        {channels.length > 0 ? (
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {channels.map((channel) => {
-              const asset = assetsMap[channel.asset_id]
-              return (
-                <ChannelCard
-                  asset={asset}
-                  channel={channel}
-                  key={channel.channel_id}
-                  onClose={refreshData}
-                />
-              )
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-6">
-            <div className="text-slate-400 mb-3">No channels found</div>
-            <Button
-              className="mx-auto"
-              icon={<Plus className="w-4 h-4" />}
-              onClick={() => navigate(CREATE_NEW_CHANNEL_PATH)}
-              size="md"
-            >
-              Open Your First Channel
-            </Button>
-          </div>
-        )}
-      </Card>
-
-      <div
-        className="flex items-center gap-2 text-xs text-slate-400 mt-4 p-3 
-                    bg-slate-800/30 rounded-xl border border-slate-700"
-      >
-        <Info className="h-4 w-4 text-blue-500 flex-shrink-0" />
-        <p>
-          Channel liquidity changes as you send and receive payments. Keep your
-          channels balanced for optimal performance.
-        </p>
+      {/* Footer */}
+      <div className="flex items-center gap-2 text-xs text-content-tertiary px-1 mt-2">
+        <Info className="h-3 w-3 flex-shrink-0" />
+        <p>{t('dashboard.liquidityInfo')}</p>
       </div>
     </div>
   )

@@ -3,6 +3,7 @@ import { CSSProperties, useEffect, useRef, memo, useMemo } from 'react'
 // Move parseAnsi outside component to avoid recreating on every render
 const parseAnsi = (log: string) => {
   const segments = []
+  // eslint-disable-next-line no-control-regex
   const ansiRegex = /\x1b\[([\d;]*?)m/g
   let lastIndex = 0
 
@@ -130,7 +131,7 @@ const TerminalLogDisplay = memo(
     if (!logs || logs.length === 0) {
       return (
         <div className={`h-full flex items-center justify-center ${className}`}>
-          <span className="text-gray-500">No logs available</span>
+          <span className="text-content-tertiary">No logs available</span>
         </div>
       )
     }

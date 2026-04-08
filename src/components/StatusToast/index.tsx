@@ -1,14 +1,11 @@
 import { ArrowRight } from 'lucide-react'
 import React, { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'react-toastify'
 
-import { useAppSelector } from '../../app/store/hooks'
+import { useSettings } from '../../hooks/useSettings'
 import { useAssetIcon } from '../../helpers/utils'
-import {
-  NiaAsset,
-  nodeApi,
-  SwapDetails,
-} from '../../slices/nodeApi/nodeApi.slice'
+import { nodeApi, SwapDetails } from '../../slices/nodeApi/nodeApi.slice'
 import { useNotification } from '../NotificationSystem'
 
 const formatAmount = (amount: number) => {
@@ -33,7 +30,7 @@ const AssetDisplay: React.FC<{
         <img alt={`${asset} icon`} className="w-4 h-4" src={imgSrc} />
       </div>
       <div>
-        <div className="font-medium text-gray-700 dark:text-gray-200">
+        <div className="font-medium text-gray-700 dark:text-content-primary">
           {formatAmount(amount)} {asset}
         </div>
       </div>
@@ -43,16 +40,16 @@ const AssetDisplay: React.FC<{
 
 const SwapStatusContent: React.FC<{
   swap: SwapDetails
-  assets: NiaAsset[]
+  assets: any[]
   timestamp?: Date
 }> = ({ swap, assets, timestamp }) => {
-  const bitcoinUnit = useAppSelector((state) => state.settings.bitcoinUnit)
+  const { bitcoinUnit } = useSettings()
 
   const fromAssetTicker =
     assets.find((asset) => asset.asset_id === swap.from_asset)?.ticker ||
     bitcoinUnit
   let fromAssetQty =
-    swap.qty_from /
+    (swap.qty_from ?? 0) /
     Math.pow(
       10,
       assets.find((asset) => asset.asset_id === swap.from_asset)?.precision || 8
@@ -67,7 +64,7 @@ const SwapStatusContent: React.FC<{
     assets.find((asset) => asset.asset_id === swap.to_asset)?.ticker ||
     bitcoinUnit
   let toAssetQty =
-    swap.qty_to /
+    (swap.qty_to ?? 0) /
     Math.pow(
       10,
       assets.find((asset) => asset.asset_id === swap.to_asset)?.precision || 8
@@ -89,12 +86,12 @@ const SwapStatusContent: React.FC<{
       case 'Pending':
         return 'text-blue-500 dark:text-blue-400'
       default:
-        return 'text-gray-500 dark:text-gray-400'
+        return 'text-content-tertiary dark:text-content-secondary'
     }
   }
 
   return (
-    <div className="space-y-3 bg-gray-50/90 dark:bg-blue-darker p-4 rounded-lg border border-gray-200 dark:border-blue-700">
+    <div className="space-y-3 bg-gray-50/90 dark:bg-surface-overlay p-4 rounded-lg border border-gray-200 dark:border-blue-700">
       {/* Status badge at the top */}
       <div className={`font-medium ${getStatusColor()} flex items-center`}>
         <span className="mr-2">Swap {swap.status}</span>
@@ -105,16 +102,20 @@ const SwapStatusContent: React.FC<{
 
       <div className="flex items-center justify-between gap-4 bg-white dark:bg-blue-900/80 p-3 rounded-lg shadow-md border border-gray-100 dark:border-blue-800">
         <div className="flex-1">
-          <span className="text-sm text-gray-500 dark:text-gray-400">From</span>
+          <span className="text-sm text-content-tertiary dark:text-content-secondary">
+            From
+          </span>
           <AssetDisplay amount={fromAssetQty} asset={fromAssetTicker} />
         </div>
 
         <ArrowRight
-          className={`text-gray-400 w-4 h-4 flex-shrink-0 ${swap.status === 'Pending' ? 'animate-pulse' : ''}`}
+          className={`text-content-secondary w-4 h-4 flex-shrink-0 ${swap.status === 'Pending' ? 'animate-pulse' : ''}`}
         />
 
         <div className="flex-1">
-          <span className="text-sm text-gray-500 dark:text-gray-400">To</span>
+          <span className="text-sm text-content-tertiary dark:text-content-secondary">
+            To
+          </span>
           <AssetDisplay
             align="right"
             amount={toAssetQty}
@@ -123,7 +124,7 @@ const SwapStatusContent: React.FC<{
         </div>
       </div>
 
-      <div className="text-xs text-gray-500 dark:text-gray-400">
+      <div className="text-xs text-content-tertiary dark:text-content-secondary">
         {(timestamp || new Date()).toLocaleString(undefined, {
           dateStyle: 'medium',
           timeStyle: 'short',
@@ -141,8 +142,9 @@ interface SwapNotificationState {
 }
 
 export const StatusToast: React.FC<{
-  assets: NiaAsset[]
+  assets: any[]
 }> = ({ assets }) => {
+  const { t } = useTranslation()
   const { addNotification, removeNotification } = useNotification()
   const swapStates = useRef<Record<string, SwapNotificationState>>({})
   const autoRemoveTimeoutsRef = useRef<Record<string, number>>({})
@@ -164,8 +166,11 @@ export const StatusToast: React.FC<{
     if (!data?.taker) return
 
     // Process new and existing swaps
-    data.taker.forEach((swap) => {
-      const currentState = swapStates.current[swap.payment_hash]
+    data.taker.forEach((swap: any) => {
+      const paymentHash = swap.payment_hash || ''
+      if (!paymentHash) return
+
+      const currentState = swapStates.current[paymentHash]
 
       // Skip if the swap was dismissed and has a final status
       if (
@@ -186,8 +191,8 @@ export const StatusToast: React.FC<{
           />
         ),
         onClose: () => {
-          if (swapStates.current[swap.payment_hash]) {
-            swapStates.current[swap.payment_hash].dismissed = true
+          if (paymentHash && swapStates.current[paymentHash]) {
+            swapStates.current[paymentHash].dismissed = true
           }
         },
         showProgress: swap.status === 'Pending',
@@ -199,44 +204,43 @@ export const StatusToast: React.FC<{
       if (currentState) {
         if (currentState.status !== swap.status) {
           // Clear any existing auto-remove timeout for this swap
-          if (autoRemoveTimeoutsRef.current[swap.payment_hash]) {
-            clearTimeout(autoRemoveTimeoutsRef.current[swap.payment_hash])
-            delete autoRemoveTimeoutsRef.current[swap.payment_hash]
+          if (autoRemoveTimeoutsRef.current[paymentHash]) {
+            clearTimeout(autoRemoveTimeoutsRef.current[paymentHash])
+            delete autoRemoveTimeoutsRef.current[paymentHash]
           }
 
           removeNotification(currentState.id)
           const newId = addNotification({
             ...notificationConfig,
-            autoClose: ['Succeeded', 'Failed', 'Expired'].includes(swap.status)
+            autoClose: ['Succeeded', 'Failed', 'Expired'].includes(
+              swap.status ?? ''
+            )
               ? 5000
               : undefined,
-            type: getNotificationType(swap.status),
+            type: getNotificationType(swap.status ?? 'Pending'),
           })
-          swapStates.current[swap.payment_hash] = {
+          swapStates.current[paymentHash] = {
             dismissed: false,
             id: newId,
-            status: swap.status,
+            status: swap.status ?? 'Pending',
             timestamp,
           }
 
           // Auto-remove successful or expired swaps
-          if (['Succeeded', 'Expired'].includes(swap.status)) {
-            console.log('auto-removing swap', swap.payment_hash)
-            autoRemoveTimeoutsRef.current[swap.payment_hash] = setTimeout(
-              () => {
-                if (swapStates.current[swap.payment_hash]) {
-                  removeNotification(swapStates.current[swap.payment_hash].id)
-                  delete swapStates.current[swap.payment_hash]
-                  delete autoRemoveTimeoutsRef.current[swap.payment_hash]
-                }
-              },
-              5000
-            ) as unknown as number
+          if (['Succeeded', 'Expired'].includes(swap.status ?? '')) {
+            console.log('auto-removing swap', paymentHash)
+            autoRemoveTimeoutsRef.current[paymentHash] = setTimeout(() => {
+              if (swapStates.current[paymentHash]) {
+                removeNotification(swapStates.current[paymentHash].id)
+                delete swapStates.current[paymentHash]
+                delete autoRemoveTimeoutsRef.current[paymentHash]
+              }
+            }, 5000) as unknown as number
 
             if (swap.status === 'Succeeded') {
-              toast.success('Swap succeeded')
+              toast.success(t('trade.statusToast.swapSucceeded'))
             } else if (swap.status === 'Expired') {
-              toast.error('Swap expired')
+              toast.error(t('trade.statusToast.swapExpired'))
             }
           }
         }
@@ -246,7 +250,7 @@ export const StatusToast: React.FC<{
           ...notificationConfig,
           type: 'loading',
         })
-        swapStates.current[swap.payment_hash] = {
+        swapStates.current[paymentHash] = {
           dismissed: false,
           id,
           status: swap.status,
@@ -257,7 +261,9 @@ export const StatusToast: React.FC<{
 
     // Clean up completed swaps that are no longer in the data
     Object.entries(swapStates.current).forEach(([hash, state]) => {
-      const swapExists = data.taker.some((swap) => swap.payment_hash === hash)
+      const swapExists = (data?.taker || []).some(
+        (swap: any) => swap.payment_hash === hash
+      )
       const isFinalStatus = ['Succeeded', 'Failed', 'Expired'].includes(
         state.status
       )
@@ -276,12 +282,16 @@ export const StatusToast: React.FC<{
         }
       }
     })
-  }, [data, assets, addNotification, removeNotification])
+  }, [data, assets, addNotification, removeNotification, t])
 
   // Add a subtle floating component to draw attention to pending swaps
   const pendingSwapCount = Object.values(swapStates.current).filter(
     (state) => state.status === 'Pending' && !state.dismissed
   ).length
+
+  const pendingText = t('trade.statusToast.pendingSwaps', {
+    count: pendingSwapCount,
+  })
 
   const hasNewSwaps = pendingSwapCount > 0
 
@@ -296,10 +306,7 @@ export const StatusToast: React.FC<{
       <div className="bg-gradient-to-r from-blue-900 to-blue-800 backdrop-blur-md p-3 rounded-lg shadow-xl border border-blue-700 flex items-center">
         <div className="text-white font-medium flex items-center">
           <div className="w-3 h-3 rounded-full bg-blue-500 animate-pulse mr-3"></div>
-          <span>
-            {pendingSwapCount} {pendingSwapCount === 1 ? 'Swap' : 'Swaps'} in
-            progress
-          </span>
+          <span>{pendingText}</span>
         </div>
       </div>
     </div>

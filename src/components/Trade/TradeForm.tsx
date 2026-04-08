@@ -1,5 +1,6 @@
 import { ArrowDownUp } from 'lucide-react'
 import React, { useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { twJoin } from 'tailwind-merge'
 
 import { logger } from '../../utils/logger'
@@ -58,6 +59,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
   updateMinMaxAmounts,
   parseAssetAmount,
 }) => {
+  const { t } = useTranslation()
   const [isFromAmountLoading, setIsFromAmountLoading] = useState(false)
   const [isToAmountLoading, setIsToAmountLoading] = useState(false)
   const [isSwapping, setIsSwapping] = useState(false)
@@ -114,12 +116,12 @@ export const TradeForm: React.FC<TradeFormProps> = ({
     'bg-gradient-to-br from-slate-900/90 via-slate-900/85 to-slate-800/90',
     'backdrop-blur-2xl',
     'rounded-3xl',
-    'border border-slate-700/40',
+    'border border-border-default/40',
     'p-6',
     'shadow-2xl shadow-slate-900/50',
     'transition-all duration-500 ease-out',
     'hover:shadow-slate-900/60',
-    'hover:border-slate-600/50',
+    'hover:border-border-default/50',
     'group'
   )
 
@@ -136,7 +138,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
           'hover:shadow-lg hover:shadow-blue-500/20',
           'hover:from-slate-800/95 hover:to-slate-900/95'
         )
-      : 'border-slate-700/40 opacity-50 cursor-not-allowed'
+      : 'border-border-default/40 opacity-50 cursor-not-allowed'
   )
 
   return (
@@ -155,12 +157,12 @@ export const TradeForm: React.FC<TradeFormProps> = ({
               asset={form.getValues().fromAsset}
               assetOptions={getAssetOptions(form.getValues().toAsset)}
               availableAmount={`${formatAmount(maxFromAmount, form.getValues().fromAsset)} ${displayAsset(form.getValues().fromAsset)}`}
-              availableAmountLabel="Available:"
+              availableAmountLabel={t('trade.tradeForm.available')}
               disabled={!hasChannels || !hasTradablePairs || isSwapInProgress}
               formatAmount={formatAmount}
               getDisplayAsset={displayAsset}
               isLoading={isFromAmountLoading}
-              label="You Send"
+              label={t('trade.tradeForm.youSend')}
               maxAmount={maxFromAmount}
               maxHtlcAmount={max_outbound_htlc_sat}
               minAmount={minFromAmount}
@@ -201,12 +203,12 @@ export const TradeForm: React.FC<TradeFormProps> = ({
                 asset={form.getValues().toAsset}
                 assetOptions={getAssetOptions(form.getValues().fromAsset)}
                 availableAmount={`${formatAmount(maxToAmount, form.getValues().toAsset)} ${displayAsset(form.getValues().toAsset)}`}
-                availableAmountLabel="Can receive up to:"
+                availableAmountLabel={t('trade.tradeForm.canReceive')}
                 disabled={!hasChannels || !hasTradablePairs || isSwapInProgress}
                 formatAmount={formatAmount}
                 getDisplayAsset={displayAsset}
                 isLoading={isToAmountLoading}
-                label="You Receive (Estimated)"
+                label={t('trade.tradeForm.youReceive')}
                 maxAmount={maxToAmount}
                 onAmountChange={handleToAmountChange}
                 onAssetChange={(value) => handleAssetChange('toAsset', value)}

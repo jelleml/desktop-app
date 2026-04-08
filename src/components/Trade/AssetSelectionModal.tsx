@@ -1,6 +1,7 @@
 import { Search, X, Copy, Check, ArrowRight } from 'lucide-react'
 import React, { useState, useRef, useMemo, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import { twJoin } from 'tailwind-merge'
 
 import defaultIcon from '../../assets/rgb-symbol-color.svg'
@@ -33,8 +34,9 @@ const AssetOption = React.memo(
     onCopyAssetId,
     onClick,
   }: AssetOptionProps) => {
+    const { t } = useTranslation()
     const [copiedAssetId, setCopiedAssetId] = useState<string | null>(null)
-    const displayTicker = ticker || 'None'
+    const displayTicker = ticker || t('trade.assetModal.none')
     const iconTicker =
       displayTicker === 'SAT'
         ? 'BTC'
@@ -56,17 +58,17 @@ const AssetOption = React.memo(
       <div
         className={twJoin(
           'flex items-center justify-between p-4 rounded-xl border transition-all duration-200 cursor-pointer group',
-          'hover:bg-slate-700/40 hover:border-blue-500/50',
+          'hover:bg-surface-high/40 hover:border-blue-500/50',
           isSelected
             ? 'bg-blue-500/20 border-blue-500/50 ring-1 ring-blue-500/30'
-            : 'bg-slate-800/50 border-slate-700/50'
+            : 'bg-surface-overlay/50 border-border-default/50'
         )}
         onClick={onClick}
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <img
             alt={displayTicker}
-            className="w-10 h-10 rounded-full border-2 border-slate-600/50 flex-shrink-0"
+            className="w-10 h-10 rounded-full border-2 border-border-default/50 flex-shrink-0"
             onError={() => setImgSrc(defaultIcon)}
             src={!iconTicker ? defaultIcon : imgSrc}
           />
@@ -77,30 +79,32 @@ const AssetOption = React.memo(
               </span>
               {isSelected && (
                 <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-500/30">
-                  Selected
+                  {t('trade.assetModal.selected')}
                 </span>
               )}
             </div>
             {name && (
-              <span className="text-slate-400 text-sm truncate">{name}</span>
+              <span className="text-content-secondary text-sm truncate">
+                {name}
+              </span>
             )}
             {assetId && assetId !== 'BTC' && assetId !== displayTicker && (
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-slate-500 text-xs font-mono truncate">
+                <span className="text-content-tertiary text-xs font-mono truncate">
                   {assetId.length > 20
                     ? `${assetId.slice(0, 16)}...${assetId.slice(-4)}`
                     : assetId}
                 </span>
                 {onCopyAssetId && (
                   <button
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-600/50 rounded"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-surface-elevated/50 rounded"
                     onClick={handleCopyAssetId}
-                    title="Copy full asset ID"
+                    title={t('trade.assetModal.copyAssetId')}
                   >
                     {copiedAssetId === assetId ? (
                       <Check className="w-3 h-3 text-green-400" />
                     ) : (
-                      <Copy className="w-3 h-3 text-slate-400" />
+                      <Copy className="w-3 h-3 text-content-secondary" />
                     )}
                   </button>
                 )}
@@ -113,7 +117,7 @@ const AssetOption = React.memo(
             'w-5 h-5 transition-all duration-200 flex-shrink-0',
             isSelected
               ? 'text-blue-400'
-              : 'text-slate-500 group-hover:text-slate-300'
+              : 'text-content-tertiary group-hover:text-content-secondary'
           )}
         />
       </div>
@@ -139,10 +143,14 @@ export const AssetSelectionModal: React.FC<AssetSelectionModalProps> = ({
   options,
   value,
   onChange,
-  title = 'Select Asset',
-  searchPlaceholder = 'Search by ticker, name or asset ID...',
+  title,
+  searchPlaceholder,
   fieldLabel,
 }) => {
+  const { t } = useTranslation()
+  const displayTitle = title || t('trade.assetModal.title')
+  const displaySearchPlaceholder =
+    searchPlaceholder || t('trade.assetModal.searchPlaceholder')
   const [searchTerm, setSearchTerm] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
@@ -230,7 +238,7 @@ export const AssetSelectionModal: React.FC<AssetSelectionModalProps> = ({
     >
       <div
         className={twJoin(
-          'bg-slate-900/98 backdrop-blur-md border border-blue-500/50',
+          'bg-surface-base/98 backdrop-blur-md border border-blue-500/50',
           'rounded-2xl shadow-2xl shadow-blue-500/20 overflow-hidden',
           'w-full max-w-2xl max-h-[80vh] flex flex-col',
           'animate-in fade-in-0 zoom-in-95 duration-300'
@@ -238,18 +246,20 @@ export const AssetSelectionModal: React.FC<AssetSelectionModalProps> = ({
         ref={modalRef}
       >
         {/* Header */}
-        <div className="p-6 border-b border-slate-700/50 bg-slate-800/50">
+        <div className="p-6 border-b border-border-default/50 bg-surface-overlay/50">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-white">{title}</h2>
+              <h2 className="text-xl font-bold text-white">{displayTitle}</h2>
               {fieldLabel && (
-                <p className="text-sm text-slate-400 mt-1">{fieldLabel}</p>
+                <p className="text-sm text-content-secondary mt-1">
+                  {fieldLabel}
+                </p>
               )}
             </div>
             <button
-              className="p-2 hover:bg-slate-700/50 rounded-full transition-colors text-slate-400 hover:text-white"
+              className="p-2 hover:bg-surface-high/50 rounded-full transition-colors text-content-secondary hover:text-white"
               onClick={onClose}
-              title="Close"
+              title={t('trade.assetModal.close')}
             >
               <X className="w-5 h-5" />
             </button>
@@ -257,30 +267,31 @@ export const AssetSelectionModal: React.FC<AssetSelectionModalProps> = ({
 
           {/* Search Input */}
           <div className="relative mt-4">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-content-secondary" />
             <input
-              className="w-full pl-10 pr-10 py-3 bg-slate-900/70 border border-slate-600/50 rounded-xl text-white text-sm placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+              className="w-full pl-10 pr-10 py-3 bg-surface-base/70 border border-border-default/50 rounded-xl text-white text-sm placeholder:text-content-tertiary focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={searchPlaceholder}
+              placeholder={displaySearchPlaceholder}
               ref={searchInputRef}
               type="text"
               value={searchTerm}
             />
             {searchTerm && (
               <button
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-slate-700/50 rounded transition-colors"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-surface-high/50 rounded transition-colors"
                 onClick={clearSearch}
               >
-                <X className="w-3 h-3 text-slate-400" />
+                <X className="w-3 h-3 text-content-secondary" />
               </button>
             )}
           </div>
 
           {/* Search Results Count */}
           {searchTerm && (
-            <div className="mt-2 text-xs text-slate-400">
-              {filteredOptions.length} asset
-              {filteredOptions.length !== 1 ? 's' : ''} found
+            <div className="mt-2 text-xs text-content-secondary">
+              {t('trade.assetModal.assetsFound', {
+                count: filteredOptions.length,
+              })}
             </div>
           )}
         </div>
@@ -302,22 +313,20 @@ export const AssetSelectionModal: React.FC<AssetSelectionModalProps> = ({
               ))}
             </div>
           ) : (
-            <div className="py-12 text-center text-slate-400">
+            <div className="py-12 text-center text-content-secondary">
               <div className="space-y-3">
-                <Search className="w-12 h-12 mx-auto text-slate-600" />
+                <Search className="w-12 h-12 mx-auto text-content-tertiary" />
                 <div>
-                  <p className="text-lg font-medium text-slate-300">
-                    No assets found
+                  <p className="text-lg font-medium text-content-secondary">
+                    {t('trade.assetModal.noAssetsFound')}
                   </p>
-                  <p className="text-sm">
-                    Try searching by ticker (e.g., "BTC"), name, or asset ID
-                  </p>
+                  <p className="text-sm">{t('trade.assetModal.searchHint')}</p>
                   {searchTerm && (
                     <button
                       className="mt-3 text-sm text-blue-400 hover:text-blue-300 underline"
                       onClick={clearSearch}
                     >
-                      Clear search and show all assets
+                      {t('trade.assetModal.clearSearch')}
                     </button>
                   )}
                 </div>
@@ -327,14 +336,14 @@ export const AssetSelectionModal: React.FC<AssetSelectionModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-700/50 bg-slate-800/30">
+        <div className="p-4 border-t border-border-default/50 bg-surface-overlay/30">
           <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-500">
-              💡 Tip: You can search by ticker or paste full asset ID
+            <p className="text-xs text-content-tertiary">
+              💡 {t('trade.assetModal.tip')}
             </p>
             {selectedOption && (
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <span>Selected:</span>
+              <div className="flex items-center gap-2 text-xs text-content-secondary">
+                <span>{t('trade.assetModal.selectedLabel')}:</span>
                 <span className="font-medium text-blue-300">
                   {selectedOption.ticker}
                 </span>

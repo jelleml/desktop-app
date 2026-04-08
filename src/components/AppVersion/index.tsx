@@ -1,6 +1,7 @@
 import { getName, getVersion } from '@tauri-apps/api/app'
 import { GitCommit, Calendar, Package } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface AppVersionInfo {
   name: string
@@ -21,6 +22,7 @@ export const AppVersion: React.FC<AppVersionProps> = ({
   showDetailed = false,
   className = '',
 }) => {
+  const { t } = useTranslation()
   const [versionInfo, setVersionInfo] = useState<AppVersionInfo | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showDetails, setShowDetails] = useState(false)
@@ -86,7 +88,7 @@ export const AppVersion: React.FC<AppVersionProps> = ({
     return (
       <div className={`flex items-center justify-center ${className}`}>
         <button
-          className="px-1.5 py-0.5 text-xs text-gray-400 hover:text-white transition-colors rounded font-mono"
+          className="px-1.5 py-0.5 text-xs text-content-secondary hover:text-white transition-colors rounded font-mono"
           onClick={() => setShowDetails(!showDetails)}
           onMouseEnter={() => setShowDetails(true)}
           onMouseLeave={() => setShowDetails(false)}
@@ -96,21 +98,23 @@ export const AppVersion: React.FC<AppVersionProps> = ({
         </button>
 
         {showDetails && (
-          <div className="absolute bottom-12 left-2 bg-blue-dark border border-divider/20 rounded shadow-lg p-2 z-50 min-w-48">
-            <div className="text-xs text-gray-300 space-y-1">
+          <div className="absolute bottom-12 left-2 bg-surface-elevated border border-divider/20 rounded shadow-lg p-2 z-50 min-w-48">
+            <div className="text-xs text-content-secondary space-y-1">
               <div className="flex items-center gap-1.5 pb-1 border-b border-divider/20">
                 <Package className="w-2.5 h-2.5" />
                 <span className="font-medium text-xs">{versionInfo.name}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-400">Version:</span>
+                <span className="text-content-secondary">Version:</span>
                 <span className="font-mono text-xs">
                   v{versionInfo.version}
                 </span>
               </div>
               {versionInfo.commit && (
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Commit:</span>
+                  <span className="text-content-secondary">
+                    {t('components.appVersion.commit')}
+                  </span>
                   <span className="font-mono text-xs">
                     {formatCommit(versionInfo.commit)}
                   </span>
@@ -118,7 +122,9 @@ export const AppVersion: React.FC<AppVersionProps> = ({
               )}
               {versionInfo.buildDate && (
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Built:</span>
+                  <span className="text-content-secondary">
+                    {t('components.appVersion.built')}
+                  </span>
                   <span className="text-xs">
                     {formatDate(versionInfo.buildDate)}
                   </span>
@@ -126,7 +132,7 @@ export const AppVersion: React.FC<AppVersionProps> = ({
               )}
               {versionInfo.environment && (
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Env:</span>
+                  <span className="text-content-secondary">Env:</span>
                   <span className="capitalize text-xs">
                     {versionInfo.environment}
                   </span>
@@ -143,25 +149,25 @@ export const AppVersion: React.FC<AppVersionProps> = ({
     return (
       <div className={`bg-white/5 rounded-lg p-4 ${className}`}>
         <div className="flex items-center gap-2 mb-3">
-          <Package className="w-4 h-4 text-cyan" />
+          <Package className="w-4 h-4 text-primary" />
           <h3 className="text-sm font-medium text-white">App Information</h3>
         </div>
 
         <div className="space-y-3 text-xs">
           <div className="flex justify-between items-center">
-            <span className="text-gray-400">Version:</span>
-            <span className="font-mono text-white bg-cyan/20 px-2 py-1 rounded">
+            <span className="text-content-secondary">Version:</span>
+            <span className="font-mono text-white bg-primary/20 px-2 py-1 rounded">
               v{versionInfo.version}
             </span>
           </div>
 
           {versionInfo.commit && (
             <div className="flex justify-between items-center">
-              <div className="flex items-center gap-1 text-gray-400">
+              <div className="flex items-center gap-1 text-content-secondary">
                 <GitCommit className="w-3 h-3" />
-                <span>Commit:</span>
+                <span>{t('components.appVersion.commit')}</span>
               </div>
-              <span className="font-mono text-white bg-gray-600/30 px-2 py-1 rounded">
+              <span className="font-mono text-white bg-surface-elevated/30 px-2 py-1 rounded">
                 {formatCommit(versionInfo.commit)}
               </span>
             </div>
@@ -169,9 +175,9 @@ export const AppVersion: React.FC<AppVersionProps> = ({
 
           {versionInfo.buildDate && (
             <div className="flex justify-between items-center">
-              <div className="flex items-center gap-1 text-gray-400">
+              <div className="flex items-center gap-1 text-content-secondary">
                 <Calendar className="w-3 h-3" />
-                <span>Built:</span>
+                <span>{t('components.appVersion.built')}</span>
               </div>
               <span className="text-white">
                 {formatDate(versionInfo.buildDate)}
@@ -181,7 +187,7 @@ export const AppVersion: React.FC<AppVersionProps> = ({
 
           {versionInfo.environment && (
             <div className="flex justify-between items-center">
-              <span className="text-gray-400">Environment:</span>
+              <span className="text-content-secondary">Environment:</span>
               <span className="capitalize text-white bg-amber-600/30 px-2 py-1 rounded text-xs">
                 {versionInfo.environment}
               </span>
@@ -196,7 +202,7 @@ export const AppVersion: React.FC<AppVersionProps> = ({
   return (
     <div className={`${className}`}>
       <button
-        className="w-full text-center px-1.5 py-1 text-xs text-gray-400 hover:text-white transition-colors rounded font-mono"
+        className="w-full text-center px-1.5 py-1 text-xs text-content-secondary hover:text-white transition-colors rounded font-mono"
         onClick={() => setShowDetails(!showDetails)}
         onMouseEnter={() => setShowDetails(true)}
         onMouseLeave={() => setShowDetails(false)}
@@ -206,23 +212,23 @@ export const AppVersion: React.FC<AppVersionProps> = ({
       </button>
 
       {showDetails && (
-        <div className="absolute bottom-full left-2 right-2 mb-1 bg-blue-dark border border-divider/20 rounded shadow-lg p-2 z-50">
-          <div className="text-xs text-gray-300 space-y-1">
+        <div className="absolute bottom-full left-2 right-2 mb-1 bg-surface-elevated border border-divider/20 rounded shadow-lg p-2 z-50">
+          <div className="text-xs text-content-secondary space-y-1">
             <div className="flex items-center gap-1.5 pb-1 border-b border-divider/20">
-              <Package className="w-2.5 h-2.5 text-cyan" />
+              <Package className="w-2.5 h-2.5 text-primary" />
               <span className="font-medium text-white text-xs">
                 {versionInfo.name}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-400">Version:</span>
+              <span className="text-content-secondary">Version:</span>
               <span className="font-mono text-white text-xs">
                 v{versionInfo.version}
               </span>
             </div>
             {versionInfo.commit && (
               <div className="flex justify-between items-center">
-                <span className="text-gray-400">Commit:</span>
+                <span className="text-content-secondary">Commit:</span>
                 <span className="font-mono text-white text-xs">
                   {formatCommit(versionInfo.commit)}
                 </span>
@@ -230,7 +236,7 @@ export const AppVersion: React.FC<AppVersionProps> = ({
             )}
             {versionInfo.buildDate && (
               <div className="flex justify-between items-center">
-                <span className="text-gray-400">Built:</span>
+                <span className="text-content-secondary">Built:</span>
                 <span className="text-white text-xs">
                   {formatDate(versionInfo.buildDate)}
                 </span>
@@ -238,7 +244,7 @@ export const AppVersion: React.FC<AppVersionProps> = ({
             )}
             {versionInfo.environment && (
               <div className="flex justify-between items-center">
-                <span className="text-gray-400">Environment:</span>
+                <span className="text-content-secondary">Environment:</span>
                 <span className="capitalize text-white text-xs">
                   {versionInfo.environment}
                 </span>

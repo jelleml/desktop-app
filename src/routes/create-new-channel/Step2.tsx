@@ -1,12 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
 import { Controller, SubmitHandler, useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'react-toastify'
 import { twJoin } from 'tailwind-merge'
 import { z } from 'zod'
 
-import { useAppSelector } from '../../app/store/hooks'
+import { useSettings } from '../../hooks/useSettings'
 import defaultIcon from '../../assets/rgb-symbol-color.svg'
+import { FormError } from '../../components/FormError'
 import { AssetSelectWithModal } from '../../components/Trade/AssetSelectWithModal'
 import { Button } from '../../components/ui'
 import { MAX_CHANNEL_CAPACITY, MIN_CHANNEL_CAPACITY } from '../../constants'
@@ -21,7 +23,6 @@ import {
 } from '../../slices/channel/channel.slice'
 import { nodeApi, NiaAsset } from '../../slices/nodeApi/nodeApi.slice'
 
-import { FormError } from './FormError'
 import 'react-toastify/dist/ReactToastify.css'
 
 interface Props {
@@ -62,6 +63,7 @@ export const Step2 = ({
   formData,
   onFormUpdate,
 }: Props) => {
+  const { t } = useTranslation()
   const [maxCapacity, setMaxCapacity] = useState<number>(MAX_CHANNEL_CAPACITY)
   const [addAsset, setAddAsset] = useState<boolean>(false)
   const [hasAvailableAssets, setHasAvailableAssets] = useState<boolean>(false)
@@ -71,7 +73,7 @@ export const Step2 = ({
   const [selectedAsset, setSelectedAsset] = useState<NiaAsset | null>(null)
   const [assetAmountInput, setAssetAmountInput] = useState('')
 
-  const bitcoinUnit = useAppSelector((state) => state.settings.bitcoinUnit)
+  const { bitcoinUnit } = useSettings()
 
   // Asset icon hook
   const [assetIconSrc, setAssetIconSrc] = useAssetIcon(
@@ -129,10 +131,10 @@ export const Step2 = ({
   useEffect(() => {
     const fetchBtcBalance = async () => {
       try {
-        const balance = await btcBalance({ skip_sync: false })
+        const balance = await btcBalance()
         const totalSpendable =
-          (balance.data?.vanilla.spendable || 0) +
-          (balance.data?.colored.spendable || 0)
+          (balance.data?.vanilla?.spendable || 0) +
+          (balance.data?.colored?.spendable || 0)
         const newMaxCapacity = Math.min(MAX_CHANNEL_CAPACITY, totalSpendable)
         setMaxCapacity(newMaxCapacity)
       } catch (error) {
@@ -146,11 +148,12 @@ export const Step2 = ({
   useEffect(() => {
     if (
       takerAssetsResponse.isSuccess &&
-      takerAssetsResponse.data?.nia.length > 0
+      (takerAssetsResponse.data?.nia?.length ?? 0) > 0
     ) {
-      const filteredAssets = takerAssetsResponse.data.nia.filter(
-        (asset) => asset.balance.spendable > 0
-      )
+      const filteredAssets =
+        takerAssetsResponse.data?.nia?.filter(
+          (asset: any) => (asset.balance?.spendable ?? 0) > 0
+        ) || []
 
       setHasAvailableAssets(filteredAssets.length > 0)
       if (filteredAssets.length > 0) {
@@ -166,7 +169,7 @@ export const Step2 = ({
         // If we have a previously selected asset, find and set it
         if (formData.assetId) {
           const asset = filteredAssets.find(
-            (a) => a.asset_id === formData.assetId
+            (a: any) => a.asset_id === formData.assetId
           )
           if (asset) {
             setSelectedAsset(asset)
@@ -221,17 +224,17 @@ export const Step2 = ({
   }
 
   const handleAssetSelect = (assetId: string) => {
-    const asset = takerAssetsResponse.data?.nia.find(
-      (a) => a.asset_id === assetId
+    const asset = takerAssetsResponse.data?.nia?.find(
+      (a: any) => a.asset_id === assetId
     )
     if (asset) {
       setSelectedAsset(asset)
-      setValue('assetId', asset.asset_id)
-      setValue('assetTicker', asset.ticker)
+      setValue('assetId', asset?.asset_id || '')
+      setValue('assetTicker', asset?.ticker || '')
       onFormUpdate({
         assetAmount: 0,
-        assetId: asset.asset_id,
-        assetTicker: asset.ticker, // Reset amount when changing asset
+        assetId: asset?.asset_id || '',
+        assetTicker: asset?.ticker || '', // Reset amount when changing asset
       })
     }
   }
@@ -277,7 +280,7 @@ export const Step2 = ({
 
     // Check if "Add Asset" is checked but no asset is selected
     if (addAsset && !data.assetId) {
-      toast.error('Please select an asset or uncheck the "Add Asset" option.', {
+      toast.error(t('components.createChannel.selectAssetError'), {
         autoClose: 5000,
         position: 'bottom-right',
       })
@@ -327,67 +330,95 @@ export const Step2 = ({
   }
 
   const availableAssets =
-    takerAssetsResponse.data?.nia.filter(
-      (asset) => asset.balance.spendable > 0
+    takerAssetsResponse.data?.nia?.filter(
+      (asset: any) => (asset.balance?.spendable ?? 0) > 0
     ) || []
 
   return (
     <form className="max-w-3xl mx-auto" onSubmit={handleSubmit(onSubmit)}>
       <div className="text-center mb-10">
         <h3 className="text-3xl font-bold text-white mb-4">
-          Open a Channel - Step 2
+          {t('createChannel.step2.title')}
         </h3>
-        <h4 className="text-xl text-gray-400">
-          Configure your channel capacity and assets
+        <h4 className="text-xl text-content-secondary">
+          {t('createChannel.step2.subtitle')}
         </h4>
       </div>
 
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700/50 p-8">
+      <div className="bg-surface-overlay/50 backdrop-blur-sm rounded-xl border border-border-default/50 p-8">
         {/* PubKey display section */}
         <div className="mb-8">
-          <label className="block text-sm font-medium text-gray-400 mb-2">
-            Opening Channel with Node:
+          <label className="block text-sm font-medium text-content-secondary mb-2">
+            {t('createChannel.step2.openingWith')}
           </label>
-          <div className="bg-gray-900/50 px-4 py-3 rounded-lg break-all font-mono text-sm text-white">
+          <div className="bg-surface-base/50 px-4 py-3 rounded-lg break-all font-mono text-sm text-white">
             {formData.pubKeyAndAddress}
           </div>
         </div>
 
         <div className="mb-8">
-          <label className="block text-sm font-medium text-gray-400 mb-2">
-            Channel Capacity (satoshis)
-            <span className="text-xs text-gray-500 ml-2">
-              (The amount of BTC you want to allocate to this channel)
+          <label className="block text-sm font-medium text-content-secondary mb-2">
+            {t('createChannel.step2.capacityLabel')}
+            <span className="text-xs text-content-tertiary ml-2">
+              {t('createChannel.step2.capacityHint')}
             </span>
           </label>
           <div className="flex items-center space-x-4">
             <input
-              className="flex-grow rounded bg-blue-dark px-4 py-3 outline-none text-white"
+              className="flex-grow rounded bg-surface-elevated px-4 py-3 outline-none text-white"
               onChange={(e) => handleCapacityChange(e.target.value)}
-              placeholder="Enter amount in sats"
+              placeholder={t('createChannel.step2.capacityPlaceholder')}
               type="text"
               value={capacitySat ? formatNumber(parseFloat(capacitySat)) : ''}
             />
-            <span className="text-sm text-gray-400">
-              {formatNumber(maxCapacity)} max
+            <span className="text-sm text-content-secondary">
+              {formatNumber(maxCapacity)} {t('createChannel.step2.max')}
             </span>
           </div>
           {capacitySat && parseFloat(capacitySat) > 0 && (
-            <>
-              <input
-                className="w-full mt-2"
-                max={maxCapacity}
-                min={MIN_CHANNEL_CAPACITY}
-                onChange={(e) => handleCapacityChange(e.target.value)}
-                step={1000}
-                type="range"
-                value={parseFloat(capacitySat)}
-              />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>Min: {formatNumber(MIN_CHANNEL_CAPACITY)}</span>
-                <span>Max: {formatNumber(maxCapacity)}</span>
+            <div className="mt-4 px-1">
+              <div className="relative">
+                {/* Filled track */}
+                <div className="relative h-2 rounded-full bg-surface-high/60 overflow-hidden">
+                  <div
+                    className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-cyan/70 to-cyan transition-all duration-200"
+                    style={{
+                      width: `${Math.max(0, Math.min(100, ((parseFloat(capacitySat) - MIN_CHANNEL_CAPACITY) / (maxCapacity - MIN_CHANNEL_CAPACITY)) * 100))}%`,
+                    }}
+                  />
+                </div>
+                <input
+                  className="absolute inset-0 w-full opacity-0 cursor-pointer h-2"
+                  max={maxCapacity}
+                  min={MIN_CHANNEL_CAPACITY}
+                  onChange={(e) => handleCapacityChange(e.target.value)}
+                  step={1000}
+                  type="range"
+                  value={parseFloat(capacitySat)}
+                />
+                {/* Thumb */}
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-2 border-cyan shadow-lg shadow-primary/30 pointer-events-none transition-all duration-200"
+                  style={{
+                    left: `calc(${Math.max(0, Math.min(100, ((parseFloat(capacitySat) - MIN_CHANNEL_CAPACITY) / (maxCapacity - MIN_CHANNEL_CAPACITY)) * 100))}% - 8px)`,
+                  }}
+                />
               </div>
-            </>
+              <div className="flex justify-between text-xs text-content-tertiary mt-3">
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-content-tertiary" />
+                  {t('createChannel.step2.minLabel', {
+                    amount: formatNumber(MIN_CHANNEL_CAPACITY),
+                  })}
+                </span>
+                <span className="flex items-center gap-1">
+                  {t('createChannel.step2.maxLabel', {
+                    amount: formatNumber(maxCapacity),
+                  })}
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+                </span>
+              </div>
+            </div>
           )}
           {formState.errors.capacitySat && (
             <p className="text-red-500 text-sm mt-1">
@@ -397,15 +428,17 @@ export const Step2 = ({
         </div>
 
         {/* Asset section */}
-        <div className="border-t border-gray-700/50 my-8"></div>
+        <div className="border-t border-border-default/50 my-8"></div>
 
         {hasAvailableAssets ? (
           <div className="mb-8">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h5 className="text-lg font-semibold text-white">RGB Assets</h5>
-                <p className="text-sm text-gray-400 mt-1">
-                  Add RGB assets to your channel for asset transfers
+                <h5 className="text-lg font-semibold text-white">
+                  {t('createChannel.step2.rgbAssetsTitle')}
+                </h5>
+                <p className="text-sm text-content-secondary mt-1">
+                  {t('createChannel.step2.rgbAssetsSubtitle')}
                 </p>
               </div>
               <button
@@ -413,20 +446,22 @@ export const Step2 = ({
                   ${
                     addAsset
                       ? 'bg-purple-600/20 border border-purple-500 text-white'
-                      : 'bg-gray-900/50 border border-gray-700 text-gray-400 hover:border-gray-600 hover:text-gray-300'
+                      : 'bg-surface-base/50 border border-border-default text-content-secondary hover:border-border-default hover:text-content-secondary'
                   }`}
                 onClick={() => handleAddAssetToggle(!addAsset)}
                 type="button"
               >
-                {addAsset ? 'Remove Asset' : 'Add Asset'}
+                {addAsset
+                  ? t('createChannel.step2.removeAsset')
+                  : t('createChannel.step2.addAsset')}
               </button>
             </div>
 
             {addAsset && (
               <div className="space-y-6">
-                <div className="bg-gray-900/50 p-6 rounded-lg">
-                  <label className="block text-sm font-medium text-gray-400 mb-3">
-                    Select Asset
+                <div className="bg-surface-base/50 p-6 rounded-lg">
+                  <label className="block text-sm font-medium text-content-secondary mb-3">
+                    {t('createChannel.step2.selectAsset')}
                   </label>
                   <Controller
                     control={control}
@@ -435,7 +470,7 @@ export const Step2 = ({
                       <>
                         <AssetSelectWithModal
                           className="w-full"
-                          fieldLabel="Choose an RGB asset for your channel"
+                          fieldLabel={t('createChannel.step2.chooseAsset')}
                           onChange={(value) => {
                             field.onChange(value)
                             handleAssetSelect(value)
@@ -450,7 +485,7 @@ export const Step2 = ({
                           placeholder="Select an RGB asset"
                           searchPlaceholder="Search by name, ticker or asset ID..."
                           title="Select RGB Asset"
-                          value={field.value}
+                          value={field.value ?? ''}
                         />
 
                         {!field.value && addAsset && (
@@ -466,22 +501,22 @@ export const Step2 = ({
                 </div>
 
                 {selectedAsset && (
-                  <div className="bg-gray-900/50 p-6 rounded-lg space-y-4">
+                  <div className="bg-surface-base/50 p-6 rounded-lg space-y-4">
                     {/* Enhanced Asset Amount Input */}
                     <div className="space-y-3">
-                      <label className="block text-sm font-medium text-slate-300">
+                      <label className="block text-sm font-medium text-content-secondary">
                         Asset Amount
                       </label>
 
                       {selectedAsset ? (
                         <div className="space-y-4">
                           {/* Asset Preview Card */}
-                          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+                          <div className="bg-surface-overlay/50 rounded-xl p-4 border border-border-default/50">
                             {/* Asset Header with Icon */}
-                            <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-700/50">
+                            <div className="flex items-center gap-3 mb-4 pb-3 border-b border-border-default/50">
                               <img
                                 alt={selectedAsset.ticker}
-                                className="w-10 h-10 rounded-full border-2 border-slate-600/50"
+                                className="w-10 h-10 rounded-full border-2 border-border-default/50"
                                 onError={() => setAssetIconSrc(defaultIcon)}
                                 src={assetIconSrc}
                               />
@@ -490,11 +525,11 @@ export const Step2 = ({
                                   <span className="text-lg font-semibold text-white">
                                     {selectedAsset.ticker}
                                   </span>
-                                  <span className="text-sm text-slate-400">
+                                  <span className="text-sm text-content-secondary">
                                     ({selectedAsset.name})
                                   </span>
                                 </div>
-                                <div className="text-xs text-slate-500">
+                                <div className="text-xs text-content-tertiary">
                                   {selectedAsset.precision} decimal places
                                 </div>
                               </div>
@@ -504,12 +539,12 @@ export const Step2 = ({
                               {/* Asset Info */}
                               <div className="space-y-2">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs text-slate-400">
+                                  <span className="text-xs text-content-secondary">
                                     Full Asset ID:
                                   </span>
                                 </div>
                                 <div
-                                  className="text-xs font-mono text-slate-300 break-all bg-slate-900/50 p-2 rounded border border-slate-700/30"
+                                  className="text-xs font-mono text-content-secondary break-all bg-surface-base/50 p-2 rounded border border-border-default/30"
                                   title={selectedAsset.asset_id}
                                 >
                                   {selectedAsset.asset_id}
@@ -519,7 +554,7 @@ export const Step2 = ({
                               {/* Balance Info */}
                               <div className="space-y-2">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs text-slate-400">
+                                  <span className="text-xs text-content-secondary">
                                     Available:
                                   </span>
                                   <span className="text-sm font-medium text-green-400">
@@ -535,7 +570,7 @@ export const Step2 = ({
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs text-slate-400">
+                                  <span className="text-xs text-content-secondary">
                                     Max for Channels:
                                   </span>
                                   <span className="text-sm text-blue-400 font-medium">
@@ -556,14 +591,14 @@ export const Step2 = ({
 
                           {/* Amount Input */}
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-300">
+                            <label className="text-sm font-medium text-content-secondary">
                               Amount ({selectedAsset.ticker})
                             </label>
                             <input
                               className={twJoin(
-                                'w-full px-4 py-3 bg-slate-900/70 border rounded-xl',
-                                'text-white text-lg font-medium placeholder:text-slate-500',
-                                'border-slate-600/50 hover:border-slate-500/70',
+                                'w-full px-4 py-3 bg-surface-base/70 border rounded-xl',
+                                'text-white text-lg font-medium placeholder:text-content-tertiary',
+                                'border-border-default/50 hover:border-border-subtle/70',
                                 'focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none',
                                 'transition-all duration-200'
                               )}
@@ -703,8 +738,8 @@ export const Step2 = ({
                               <button
                                 className={twJoin(
                                   'px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200',
-                                  'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white',
-                                  'border border-slate-600/30 hover:border-slate-500/50'
+                                  'bg-surface-high/50 text-content-secondary hover:bg-surface-elevated/50 hover:text-white',
+                                  'border border-border-default/30 hover:border-border-subtle/50'
                                 )}
                                 onClick={() => {
                                   setAssetAmountInput('')
@@ -861,8 +896,8 @@ export const Step2 = ({
                           </div>
                         </div>
                       ) : (
-                        <div className="bg-slate-900/50 border border-slate-600/50 rounded-xl p-6 text-center">
-                          <div className="text-slate-400 text-sm">
+                        <div className="bg-surface-base/50 border border-border-default/50 rounded-xl p-6 text-center">
+                          <div className="text-content-secondary text-sm">
                             Please select an asset first to enter an amount
                           </div>
                         </div>
@@ -898,10 +933,10 @@ export const Step2 = ({
         )}
 
         {/* Fee selection section */}
-        <div className="border-t border-gray-700/50 my-8"></div>
+        <div className="border-t border-border-default/50 my-8"></div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-4">
+          <label className="block text-sm font-medium text-content-secondary mb-4">
             Transaction Fee Rate
           </label>
           <div className="flex space-x-4">
@@ -911,7 +946,7 @@ export const Step2 = ({
                   ${
                     selectedFee === speed
                       ? 'bg-purple-600/20 border border-purple-500 text-white shadow-lg'
-                      : 'bg-gray-900/50 border border-gray-700 text-gray-400 hover:border-gray-600 hover:text-gray-300'
+                      : 'bg-surface-base/50 border border-border-default text-content-secondary hover:border-border-default hover:text-content-secondary'
                   }`}
                 key={speed}
                 onClick={() =>
@@ -920,7 +955,7 @@ export const Step2 = ({
                 type="button"
               >
                 <div className="font-medium capitalize">{speed}</div>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-content-tertiary mt-1">
                   {`${feeRates[speed]} sat/vB`}
                 </div>
               </button>
@@ -929,19 +964,19 @@ export const Step2 = ({
         </div>
 
         {/* Channel Privacy section */}
-        <div className="border-t border-gray-700/50 my-8"></div>
+        <div className="border-t border-border-default/50 my-8"></div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-4">
+          <label className="block text-sm font-medium text-content-secondary mb-4">
             Channel Privacy
           </label>
-          <div className="bg-gray-900/50 p-6 rounded-lg">
+          <div className="bg-surface-base/50 p-6 rounded-lg">
             <div className="flex items-center justify-between">
               <div>
                 <h5 className="text-white font-medium mb-1">
                   {isPublic ? 'Public Channel' : 'Private Channel'}
                 </h5>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-content-secondary">
                   {isPublic
                     ? 'Visible on the Lightning Network and can be used for routing payments'
                     : 'Only known to the two parties and cannot be used for routing'}
@@ -953,7 +988,7 @@ export const Step2 = ({
                 aria-checked={isPublic}
                 aria-label="Toggle channel privacy"
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 ${
-                  isPublic ? 'bg-purple-600' : 'bg-gray-600'
+                  isPublic ? 'bg-purple-600' : 'bg-surface-elevated'
                 }`}
                 onClick={() => {
                   const newValue = !isPublic
@@ -987,9 +1022,13 @@ export const Step2 = ({
                   />
                 </svg>
                 <div className="text-sm text-blue-300">
-                  <strong>Public channels</strong> are discoverable and can
+                  <strong>
+                    {t('components.createChannel.publicChannelsDesc')}
+                  </strong>{' '}
                   route payments for the network.
-                  <strong>Private channels</strong> provide direct connectivity
+                  <strong>
+                    {t('components.createChannel.privateChannelsDesc')}
+                  </strong>{' '}
                   without network visibility.
                 </div>
               </div>

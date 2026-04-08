@@ -1,8 +1,10 @@
 import { AlertTriangle, Wallet, Info } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 
 import { CHANNELS_PATH } from '../../app/router/paths'
+import { FormError } from '../../components/FormError'
 import { useAppDispatch } from '../../app/store/hooks'
 import { CreateUTXOModal } from '../../components/CreateUTXOModal'
 import { Spinner } from '../../components/Spinner'
@@ -12,7 +14,6 @@ import { TNewChannelForm } from '../../slices/channel/channel.slice'
 import { nodeApi } from '../../slices/nodeApi/nodeApi.slice'
 import { uiSliceActions } from '../../slices/ui/ui.slice'
 
-import { FormError } from './FormError'
 import { Step1 } from './Step1'
 import { Step2 } from './Step2'
 import { Step3 } from './Step3'
@@ -35,6 +36,7 @@ const initialFormState: TNewChannelForm = {
 }
 
 export const Component = () => {
+  const { t } = useTranslation()
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
   const [feeRates, setFeeRates] = useState(DEFAULT_FEE_RATES)
   const [formError, setFormError] = useState<string | null>(null)
@@ -43,7 +45,7 @@ export const Component = () => {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
 
-  const [openChannel] = nodeApi.endpoints.openChannel.useLazyQuery()
+  const [openChannel] = nodeApi.endpoints.openChannel.useMutation()
   const [getBtcBalance] = nodeApi.endpoints.btcBalance.useLazyQuery()
   const [estimateFee] = nodeApi.endpoints.estimateFee.useLazyQuery()
   const [getNetworkInfo] = nodeApi.endpoints.networkInfo.useLazyQuery()
@@ -83,56 +85,61 @@ export const Component = () => {
           estimateFee({ blocks: 1 }).unwrap(),
         ])
         setFeeRates({
-          fast: fastFee.fee_rate,
-          medium: mediumFee.fee_rate,
-          slow: slowFee.fee_rate,
+          fast: Math.round(fastFee.fee_rate ?? DEFAULT_FEE_RATES.fast),
+          medium: Math.round(mediumFee.fee_rate ?? DEFAULT_FEE_RATES.medium),
+          slow: Math.round(slowFee.fee_rate ?? DEFAULT_FEE_RATES.slow),
         })
       } catch (e) {
-        setFormError('Failed to fetch fee rates. Please try again.')
+        setFormError(t('createChannel.errorFetchFeeRates'))
       }
     }
 
     fetchFees()
-  }, [estimateFee, getNetworkInfo])
+  }, [estimateFee, getNetworkInfo, t])
 
   useEffect(() => {
     const checkInitialBalance = async () => {
       setIsLoading(true)
       try {
-        const response = await getBtcBalance({ skip_sync: false })
+        const response = await getBtcBalance()
         if (response.data) {
           const totalSpendable =
-            response.data.vanilla.spendable + response.data.colored.spendable
+            (response.data.vanilla?.spendable ?? 0) +
+            (response.data.colored?.spendable ?? 0)
 
           setInsufficientBalance(totalSpendable < MIN_CHANNEL_CAPACITY)
         } else {
-          throw new Error('Failed to fetch balance')
+          throw new Error(t('createChannel.errorFetchBalance'))
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch balance')
+        setError(
+          err instanceof Error
+            ? err.message
+            : t('createChannel.errorFetchBalance')
+        )
       } finally {
         setIsLoading(false)
       }
     }
 
     checkInitialBalance()
-  }, [getBtcBalance])
+  }, [getBtcBalance, t])
 
   const validateForm = () => {
     if (!formData.pubKeyAndAddress) {
-      setFormError('Peer connection information is required')
+      setFormError(t('createChannel.errorPeerRequired'))
       return false
     }
 
     if (!formData.capacitySat || formData.capacitySat < MIN_CHANNEL_CAPACITY) {
       setFormError(
-        `Channel capacity must be at least ${MIN_CHANNEL_CAPACITY} satoshis`
+        t('createChannel.errorMinCapacity', { amount: MIN_CHANNEL_CAPACITY })
       )
       return false
     }
 
     if (!formData.fee) {
-      setFormError('Please select a fee rate')
+      setFormError(t('createChannel.errorFeeRequired'))
       return false
     }
 
@@ -140,14 +147,18 @@ export const Component = () => {
   }
 
   const openChannelOperation = async () => {
-    return await openChannel({
-      asset_amount: formData.assetAmount,
-      asset_id: formData.assetId,
+    const payload: any = {
       capacity_sat: formData.capacitySat,
-      fee_rate_msat: feeRates[formData.fee],
       peer_pubkey_and_opt_addr: formData.pubKeyAndAddress,
       public: formData.public,
-    }).unwrap()
+    }
+
+    if (formData.assetId && formData.assetAmount > 0) {
+      payload.asset_amount = formData.assetAmount
+      payload.asset_id = formData.assetId
+    }
+
+    return await openChannel(payload).unwrap()
   }
 
   const onSubmit = useCallback(async () => {
@@ -199,10 +210,12 @@ export const Component = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-gradient-to-b from-gray-900 to-gray-950 py-8 px-6 rounded-xl border border-gray-800/50 shadow-xl w-full text-white">
+      <div className="bg-gradient-to-b from-gray-900 to-gray-950 py-8 px-6 rounded-xl border border-border-subtle/50 shadow-xl w-full text-white">
         <div className="flex justify-center items-center h-64">
           <Spinner color="#8FD5EA" overlay={false} size={120} />
-          <div className="ml-4 text-gray-400">Checking balance...</div>
+          <div className="ml-4 text-content-secondary">
+            {t('createChannel.checkingBalance')}
+          </div>
         </div>
       </div>
     )
@@ -210,14 +223,14 @@ export const Component = () => {
 
   if (error) {
     return (
-      <div className="bg-gradient-to-b from-gray-900 to-gray-950 py-8 px-6 rounded-xl border border-gray-800/50 shadow-xl w-full text-white">
+      <div className="bg-gradient-to-b from-gray-900 to-gray-950 py-8 px-6 rounded-xl border border-border-subtle/50 shadow-xl w-full text-white">
         <div className="text-center">
           <FormError message={error} />
           <button
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             onClick={() => window.location.reload()}
           >
-            Retry
+            {t('createChannel.retry')}
           </button>
         </div>
       </div>
@@ -226,98 +239,102 @@ export const Component = () => {
 
   return (
     <>
-      <div className="bg-gradient-to-b from-gray-900 to-gray-950 py-4 px-4 rounded-xl border border-gray-800/50 shadow-xl w-full text-white">
+      <div className="bg-gradient-to-b from-gray-900 to-gray-950 py-4 px-4 rounded-xl border border-border-subtle/50 shadow-xl w-full text-white">
         {/* Step Progress Indicator */}
         {!insufficientBalance && (
           <div className="flex justify-between mb-4">
             <div className="flex items-center">
               <div
-                className={`w-8 h-8 ${step >= 1 ? 'bg-blue-500' : 'bg-gray-700'} rounded-full flex items-center justify-center text-white font-bold text-sm`}
+                className={`w-8 h-8 ${step >= 1 ? 'bg-primary text-primary-foreground' : 'bg-surface-high text-content-secondary'} rounded-full flex items-center justify-center font-bold text-sm`}
               >
                 1
               </div>
               <div className="ml-2">
                 <p className="font-medium text-white text-sm">
-                  Peer Connection
+                  {t('createChannel.stepPeerConnection')}
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-content-secondary">
                   {step === 1
-                    ? 'Current step'
+                    ? t('createChannel.currentStep')
                     : step > 1
-                      ? 'Completed'
-                      : 'Pending'}
+                      ? t('createChannel.completed')
+                      : t('createChannel.pending')}
                 </p>
               </div>
             </div>
             <div className="flex-1 mx-2 mt-5">
-              <div className="h-1 bg-gray-700">
+              <div className="h-1 bg-surface-high">
                 <div
-                  className={`h-1 bg-blue-500 transition-all duration-300 ${step > 1 ? 'w-full' : 'w-0'}`}
+                  className={`h-1 bg-primary transition-all duration-300 ${step > 1 ? 'w-full' : 'w-0'}`}
                 ></div>
               </div>
             </div>
             <div className="flex items-center">
               <div
-                className={`w-8 h-8 ${step >= 2 ? 'bg-blue-500' : 'bg-gray-700'} rounded-full flex items-center justify-center text-white font-bold text-sm`}
+                className={`w-8 h-8 ${step >= 2 ? 'bg-primary text-primary-foreground' : 'bg-surface-high text-content-secondary'} rounded-full flex items-center justify-center font-bold text-sm`}
               >
                 2
               </div>
               <div className="ml-2">
                 <p className="font-medium text-white text-sm">
-                  Channel Settings
+                  {t('createChannel.stepChannelSettings')}
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-content-secondary">
                   {step === 2
-                    ? 'Current step'
+                    ? t('createChannel.currentStep')
                     : step > 2
-                      ? 'Completed'
-                      : 'Pending'}
+                      ? t('createChannel.completed')
+                      : t('createChannel.pending')}
                 </p>
               </div>
             </div>
             <div className="flex-1 mx-2 mt-5">
-              <div className="h-1 bg-gray-700">
+              <div className="h-1 bg-surface-high">
                 <div
-                  className={`h-1 bg-blue-500 transition-all duration-300 ${step > 2 ? 'w-full' : 'w-0'}`}
+                  className={`h-1 bg-primary transition-all duration-300 ${step > 2 ? 'w-full' : 'w-0'}`}
                 ></div>
               </div>
             </div>
             <div className="flex items-center">
               <div
-                className={`w-8 h-8 ${step >= 3 ? 'bg-blue-500' : 'bg-gray-700'} rounded-full flex items-center justify-center text-white font-bold text-sm`}
+                className={`w-8 h-8 ${step >= 3 ? 'bg-primary text-primary-foreground' : 'bg-surface-high text-content-secondary'} rounded-full flex items-center justify-center font-bold text-sm`}
               >
                 3
               </div>
               <div className="ml-2">
                 <p className="font-medium text-white text-sm">
-                  Review & Confirm
+                  {t('createChannel.stepReviewConfirm')}
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-content-secondary">
                   {step === 3
-                    ? 'Current step'
+                    ? t('createChannel.currentStep')
                     : step > 3
-                      ? 'Completed'
-                      : 'Pending'}
+                      ? t('createChannel.completed')
+                      : t('createChannel.pending')}
                 </p>
               </div>
             </div>
             <div className="flex-1 mx-2 mt-5">
-              <div className="h-1 bg-gray-700">
+              <div className="h-1 bg-surface-high">
                 <div
-                  className={`h-1 bg-blue-500 transition-all duration-300 ${step > 3 ? 'w-full' : 'w-0'}`}
+                  className={`h-1 bg-primary transition-all duration-300 ${step > 3 ? 'w-full' : 'w-0'}`}
                 ></div>
               </div>
             </div>
             <div className="flex items-center">
               <div
-                className={`w-8 h-8 ${step >= 4 ? 'bg-green-500' : 'bg-gray-700'} rounded-full flex items-center justify-center text-white font-bold text-sm`}
+                className={`w-8 h-8 ${step >= 4 ? 'bg-green-500' : 'bg-surface-high'} rounded-full flex items-center justify-center text-white font-bold text-sm`}
               >
                 4
               </div>
               <div className="ml-2">
-                <p className="font-medium text-white text-sm">Complete</p>
-                <p className="text-xs text-gray-400">
-                  {step === 4 ? 'Current step' : 'Pending'}
+                <p className="font-medium text-white text-sm">
+                  {t('createChannel.stepComplete')}
+                </p>
+                <p className="text-xs text-content-secondary">
+                  {step === 4
+                    ? t('createChannel.currentStep')
+                    : t('createChannel.pending')}
                 </p>
               </div>
             </div>
@@ -330,18 +347,16 @@ export const Component = () => {
               <AlertTriangle className="h-8 w-8 text-red-500" />
             </div>
             <h3 className="text-xl font-semibold text-white mb-3">
-              Insufficient Balance
+              {t('createChannel.insufficientBalance')}
             </h3>
-            <p className="text-gray-300 mb-6 text-center max-w-md">
-              You need at least{' '}
-              <span className="font-medium text-white">
-                {MIN_CHANNEL_CAPACITY} satoshis
-              </span>{' '}
-              to open a channel. Please fund your wallet first.
+            <p className="text-content-secondary mb-6 text-center max-w-md">
+              {t('createChannel.insufficientBalanceMessage', {
+                amount: MIN_CHANNEL_CAPACITY,
+              })}
             </p>
             <div className="flex gap-4">
               <button
-                className="px-5 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition text-white font-medium shadow-lg shadow-blue-700/20 flex items-center gap-2"
+                className="px-5 py-3 rounded-lg bg-primary hover:bg-primary-emphasis transition text-primary-foreground font-medium shadow-lg shadow-primary/20 flex items-center gap-2"
                 onClick={() =>
                   dispatch(
                     uiSliceActions.setModal({
@@ -352,12 +367,12 @@ export const Component = () => {
                 }
               >
                 <Wallet className="h-5 w-5" />
-                Deposit
+                {t('createChannel.deposit')}
               </button>
             </div>
           </div>
         ) : (
-          <div className="bg-gradient-to-b from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-700/50 shadow-lg py-4 px-4">
+          <div className="bg-gradient-to-b from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl border border-border-default/50 shadow-lg py-4 px-4">
             {formError && <FormError message={formError} />}
 
             {step === 1 && (
@@ -400,13 +415,9 @@ export const Component = () => {
         )}
 
         {/* Info Section */}
-        <div className="flex items-center space-x-2 text-sm text-gray-400 mt-3 p-3 bg-blue-900/20 border border-blue-800/30 rounded-lg">
+        <div className="flex items-center space-x-2 text-sm text-content-secondary mt-3 p-3 bg-blue-900/20 border border-blue-800/30 rounded-lg">
           <Info className="h-5 w-5 text-blue-400 flex-shrink-0" />
-          <p>
-            Opening a channel requires an on-chain transaction. Make sure you
-            have sufficient Bitcoin balance to cover the channel capacity and
-            transaction fees.
-          </p>
+          <p>{t('createChannel.infoMessage')}</p>
         </div>
       </div>
 

@@ -19,15 +19,15 @@
   - [Supported Networks](#supported-networks)
   - [Installation 🛠️](#installation-️)
     - [1. Download Binaries](#1-download-binaries)
+      - [Verifying Downloads with GPG](#verifying-downloads-with-gpg)
     - [2. Building Locally](#2-building-locally)
       - [Common Prerequisites](#common-prerequisites)
       - [Windows-Specific Instructions](#windows-specific-instructions)
       - [Linux-Specific Instructions](#linux-specific-instructions)
-      - [Arch Linux (AUR)](#arch-linux-aur)
       - [Building and Running](#building-and-running)
   - [Usage 💡](#usage-)
     - [Connecting to an RGB Lightning Node](#connecting-to-an-rgb-lightning-node)
-    - [Getting Started with Trading](#getting-started-with-trading)
+    - [Trading and Swapping Assets](#trading-and-swapping-assets)
     - [Managing Channels](#managing-channels)
     - [Deposits and Withdrawals](#deposits-and-withdrawals)
     - [Backup](#backup)
@@ -47,10 +47,14 @@
 ## Features 🚀
 
 - **Asset Trading and Swapping**: Connect to market makers over the Lightning Network to trade BTC and RGB assets.
+- **DCA Automation**: Create recurring or price-target DCA orders that buy BTC using your USDT Lightning balance.
 - **Channel Management**: Open, close, and manage Lightning channels with optional RGB assets.
 - **Deposits & Withdrawals**: Handle on-chain and LN transactions for both Bitcoin and RGB assets.
 - **Channel Requests**: Request channels from Lightning Service Providers (LSPs) with configurable capacity and included assets.
 - **Transaction History**: View deposits, withdrawals, and swap history.
+- **Local and Remote Node Support**: Run a local RGB Lightning node from the app or connect to a remote node.
+- **Tray and Background Operation**: Keep the app running in the background while the local node stays active.
+- **Multi-language UI**: Use the app in multiple supported languages through the built-in i18n system.
 - **Node Backup**: Secure node data backups directly from the settings.
 
 ## Supported Networks
@@ -67,35 +71,49 @@ You can install the app in two ways:
 
 ### 1. Download Binaries
 
-1. Download the appropriate binary for your operating system from the [Releases](https://github.com/kaleidoswap/desktop-app/releases) page.
-2. Download the manifest.txt file and its corresponding `.sig` signature file.
-3. Import our public GPG key:
-   ```sh
-      curl https://github.com/bitwalt.gpg | gpg --import
-   ```
-4. Verify the manifest signature:
-   ```sh
-   # For Linux
-   gpg --verify kaleido-swap_0.0.1_amd64.AppImage.asc kaleido-swap_0.0.1_amd64.AppImage
+1. **Download** the appropriate binary for your operating system from the [Releases](https://github.com/kaleidoswap/desktop-app/releases) page.
 
-   # For macOS (Intel)
-   gpg --verify Kaleido-Swap_0.0.1_x64.dmg.asc Kaleido-Swap_0.0.1_x64.dmg
-    
-   # For macOS (Apple Silicon)
-   gpg --verify Kaleido-Swap_0.0.1_aarch64.dmg.asc Kaleido-Swap_0.0.1_aarch64.dmg
+2. **Verify** the download using GPG signatures (recommended for security).
 
-   # For Windows
-   gpg --verify KaleidoSwap_0.0.1_x64-setup.exe.asc KaleidoSwap_0.0.1_x64-setup.exe
-   ```
-5. Verify the SHA256 checksum of your binary against the one listed in the manifest.txt file.
-6. Run the app by executing the binary.
+3. **Run** the app by executing the binary.
+
+#### Verifying Downloads with GPG
+
+Each release is signed with a hardware security key (Yubikey) to guarantee authenticity. Download both the binary and its `.asc` signature file, then verify:
+
+**Step 1: Import the public GPG key** (first time only)
+```sh
+curl https://keybase.io/bitwalt/pgp_keys.asc | gpg --import
+```
+
+**Step 2: Download binary and signature**
+```sh
+# Example: replace VERSION and ASSET with the current release tag and asset name
+VERSION=v0.4.0
+ASSET=KaleidoSwap_0.4.0_amd64_linux.AppImage
+
+curl -LO https://github.com/kaleidoswap/desktop-app/releases/download/$VERSION/$ASSET
+curl -LO https://github.com/kaleidoswap/desktop-app/releases/download/$VERSION/$ASSET.asc
+```
+
+**Step 3: Verify the signature**
+```sh
+gpg --verify "$ASSET.asc" "$ASSET"
+```
+
+**Expected output:**
+```
+gpg: Good signature from "Walter Maffione <your-email>"
+```
+
+> **Note:** The `.asc` files are GPG signatures created post-build with a hardware security key. The `.sig` files in releases are for the app's auto-updater functionality. macOS binaries are also code-signed and notarized by Apple.
 
 ### 2. Building Locally
 
 #### Common Prerequisites
 
-- **Tauri 1.6.0**  
-  Make sure you have installed all the [official Tauri prerequisites](https://tauri.app/start/prerequisites/) (Rust, Node.js, npm, pnpm).
+- **Tauri 2 prerequisites**  
+  Install the [official Tauri prerequisites](https://tauri.app/start/prerequisites/) for your platform, including Rust, Node.js, and pnpm.
 - **Repository**  
   ```sh
   git clone https://github.com/kaleidoswap/desktop-app
@@ -120,18 +138,11 @@ You can install the app in two ways:
 3. **Tauri Prerequisites**  
    Confirm correct installation of Rust, Node.js, npm, and pnpm.
 
-#### Arch Linux (AUR)
-
-- Install via an AUR helper like `yay`:
-  ```sh
-  yay -S kaleidoswap
-  ```
-
 #### Building and Running
 
 1. **Install dependencies**:  
    ```sh
-   npm install
+   pnpm install
    ```
 2. **Build the Tauri app**:  
    ```sh
@@ -154,30 +165,27 @@ You can install the app in two ways:
 ### Connecting to an RGB Lightning Node
 
 1. **Launch** Kaleidoswap.
-2. **Setup Your Node**:
-   - Create a new local node using the setup wizard, or
-   - Connect to a remote instance of [rgb-lightning-node](https://github.com/RGB-Tools/rgb-lightning-node) by providing the correct host/port and any additional configuration details required.
+2. **Choose your node mode** during setup:
+   - Run a local instance of [rgb-lightning-node](https://github.com/RGB-Tools/rgb-lightning-node) managed by the app, or
+   - Connect to an existing remote node.
+3. **Review connection settings** in the app when needed:
+   - Node URL
+   - Bitcoind RPC
+   - Indexer URL
+   - RGB proxy endpoint
 
-### Getting Started with Trading
+### Trading and Swapping Assets
 
-1. **Deposit Bitcoin**:
-   - Use one of the available faucets to deposit some Bitcoin to your wallet.
-   - Wait for the transaction to confirm.
-
-2. **Buy a Channel with RGB Assets**:
-   - Navigate to the **Buy New Channel** page.
-   - Request a channel from an LSP, specifying capacity and the RGB asset you want included.
-   - Wait for the channel to be opened and confirmed.
-
-3. **Select or Add a Market Maker**:
-   - KaleidoSwap currently provides two built-in makers: one for **regtest** and another for **signet** (mutinynet).
-   - Supported assets and pairs can be found at [KaleidoSwap RGB Registry](https://registry.kaleidoswap.com/).
-   - Go to the **Settings** page if you want to add a different market maker.
-
-4. **Initiate the Swap**:
-   - Go to the trading interface and select a supported trading pair.
-   - Ensure you have at least one Lightning channel funded with the RGB asset you want to trade.
+1. **Select or Add a Market Maker** on the **Settings** page.
+   - KaleidoSwap currently provides two built-in makers: one for **regtest** and another for **signet** (mutinynet). Supported assets and pairs can be found at [KaleidoSwap RGB Registry](https://registry.kaleidoswap.com/).
+2. **Check Supported Pairs**: Ensure you have at least one Lightning channel funded with the RGB asset you want to trade.
+   - If you lack a channel, you can **buy one** from an LSP that supports your chosen RGB asset.
+3. **Initiate the Swap**:
+   - Go to the trading interface, pick your maker and select a supported trading pair.
    - Accept the RFQ price to execute the swap.
+4. **Optionally configure DCA**:
+   - Create scheduled or price-target DCA orders to automate BTC buys using your USDT Lightning balance.
+   - Keep the node unlocked and online while DCA orders are active.
 
 > **Important**: Since Kaleidoswap is in alpha, swaps may fail or get stuck. Check the [docs](https://docs.kaleidoswap.com) for troubleshooting, and feel free to [open an issue](#support-) if you encounter problems.
 
@@ -195,6 +203,7 @@ You can install the app in two ways:
 ### Backup
 
 - Use the **Settings** page to back up your node data. Store your backup securely to prevent data loss.
+- Keep your recovery phrase and exported backups offline and encrypted where possible.
 
 ## Security Considerations 🔒
 
@@ -206,11 +215,10 @@ You can install the app in two ways:
 
 ### Coming Soon
 
-- **🌍 Multi-language Support:** Broaden accessibility by adding support for multiple languages.
-
 - **📊 Advanced Trading Dashboard:** Support for limit orders, stop-loss, and more advanced trading features.
 - **🔗 P2P Trading via Nostr:** Enable decentralized peer-to-peer trading using the Nostr protocol.
 - **🔐 TOR Support:** Integrate TOR for enhanced privacy and anonymity.
+- **🤖 Expanded Automation:** Broaden recurring trading and execution controls beyond the current DCA flows.
 - **✨ Improved UI/UX Design:** Further refine the user interface for a better overall experience.
   
 ## Contributing 🤝
@@ -237,7 +245,7 @@ We welcome contributions of all forms—bug reports, feature requests, and pull 
 
 ## License 📜
 
-Kaleidoswap is licensed under the [MIT License](LICENSE.md).
+Kaleidoswap is licensed under the [MIT License](LICENSE).
 
 ## No Responsibility Disclaimer ⚠️
 

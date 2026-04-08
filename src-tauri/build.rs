@@ -18,8 +18,7 @@ fn main() {
     let build_rgb_lightning_node = if cfg!(target_os = "windows") {
         false
     } else {
-        env::var("BUILD_AND_RUN_RGB_LIGHTNING_NODE")
-            .unwrap_or_else(|_| "true".to_string())
+        env::var("BUILD_AND_RUN_RGB_LIGHTNING_NODE").unwrap_or_else(|_| "true".to_string())
             == "true"
     };
 
@@ -73,7 +72,7 @@ fn main() {
             "../bin/rgb-lightning-node"
         };
         config.remove_resource(resource_name);
-        
+
         // On Windows, also remove the Unix version to be safe
         if cfg!(target_os = "windows") {
             config.remove_resource("../bin/rgb-lightning-node");
@@ -188,7 +187,7 @@ impl BuildManager {
 
         // Always build in release mode instead of checking the PROFILE env var
         // let is_release = env::var("PROFILE").unwrap_or_else(|_| "debug".to_string()) == "release";
-        let is_release = true;  // Always build in release mode for better performance
+        let is_release = true; // Always build in release mode for better performance
 
         // Build the project
         self.project_builder.build(is_release);
@@ -268,7 +267,7 @@ impl DependencyChecker {
             }
 
             let openssl_check = Command::new("pkg-config")
-                .args(&["--exists", "openssl"])
+                .args(["--exists", "openssl"])
                 .status()
                 .expect("Failed to run pkg-config");
             if !openssl_check.success() {
@@ -286,11 +285,11 @@ impl DependencyChecker {
             if !self.command_exists("cc") {
                 println!("Compiler 'cc' not found. Installing gcc...");
                 let install_gcc = Command::new("sudo")
-                    .args(&["apt-get", "update", "-y"])
+                    .args(["apt-get", "update", "-y"])
                     .status()
                     .and_then(|_| {
                         Command::new("sudo")
-                            .args(&["apt-get", "install", "-y", "build-essential"])
+                            .args(["apt-get", "install", "-y", "build-essential"])
                             .status()
                     })
                     .expect("Failed to install gcc");
@@ -302,14 +301,14 @@ impl DependencyChecker {
             // Try multiple compiler commands that might be available
             let compilers = ["cl", "cl.exe"];
             let mut compiler_found = false;
-            
+
             for compiler in &compilers {
                 if self.command_exists(compiler) {
                     compiler_found = true;
                     break;
                 }
             }
-            
+
             // Also check if we're in a CI environment where the compiler might be available
             // but not in the standard location
             if !compiler_found {
@@ -332,12 +331,12 @@ impl DependencyChecker {
             Command::new("where")
                 .arg(command)
                 .output()
-                .map_or(false, |output| output.status.success())
+                .is_ok_and(|output| output.status.success())
         } else {
             Command::new("which")
                 .arg(command)
                 .output()
-                .map_or(false, |output| output.status.success())
+                .is_ok_and(|output| output.status.success())
         }
     }
 }
@@ -366,7 +365,7 @@ impl ProjectBuilder {
 
         // Clone
         let clone_status = Command::new("git")
-            .args(&[
+            .args([
                 "clone",
                 "https://github.com/kaleidoswap/rgb-lightning-node",
                 "--recurse-submodules",
@@ -422,19 +421,19 @@ impl ProjectBuilder {
         self.copy_executable(&target_dir, &bin_dir, release);
     }
 
-    fn run_cargo_build(&self, project_dir: &PathBuf, release: bool) -> ExitStatus {
+    fn run_cargo_build(&self, project_dir: &Path, release: bool) -> ExitStatus {
         let mut cmd = Command::new("cargo");
         if release {
-            cmd.args(&["build", "--release", "--manifest-path"]);
+            cmd.args(["build", "--release", "--manifest-path"]);
         } else {
-            cmd.args(&["build", "--manifest-path"]);
+            cmd.args(["build", "--manifest-path"]);
         }
         cmd.arg(project_dir.join("Cargo.toml"))
             .status()
             .expect("Failed to run cargo build")
     }
 
-    fn copy_executable(&self, target_dir: &PathBuf, bin_dir: &PathBuf, release: bool) {
+    fn copy_executable(&self, target_dir: &Path, bin_dir: &Path, release: bool) {
         let source_path = if cfg!(target_os = "windows") {
             target_dir
                 .join(if release { "release" } else { "debug" })

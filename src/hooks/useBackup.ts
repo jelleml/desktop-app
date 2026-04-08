@@ -50,10 +50,9 @@ export const useBackup = ({
       },
     })
 
-  const [backup, { isLoading: isBackupLoading }] =
-    nodeApi.endpoints.backup.useLazyQuery()
-  const [lock] = nodeApi.endpoints.lock.useLazyQuery()
-  const [unlock] = nodeApi.endpoints.unlock.useLazyQuery()
+  const [backup, { isLoading: isBackupLoading }] = nodeApi.useBackupMutation()
+  const [lock] = nodeApi.endpoints.lock.useMutation()
+  const [unlock] = nodeApi.endpoints.unlock.useMutation()
 
   const backupPath = watch('backupPath')
 
@@ -71,6 +70,8 @@ export const useBackup = ({
     try {
       const rpcConfig = parseRpcUrl(nodeSettings.rpc_connection_url)
       await unlock({
+        announce_addresses: [],
+        announce_alias: 'kaleidoswap-desktop',
         bitcoind_rpc_host: rpcConfig.host,
         bitcoind_rpc_password: rpcConfig.password,
         bitcoind_rpc_port: rpcConfig.port,
@@ -157,6 +158,8 @@ export const useBackup = ({
   const handleSuccessfulBackup = async (data: BackupFormFields) => {
     const rpcConfig = parseRpcUrl(nodeSettings.rpc_connection_url)
     await unlock({
+      announce_addresses: [],
+      announce_alias: 'kaleidoswap-desktop',
       bitcoind_rpc_host: rpcConfig.host,
       bitcoind_rpc_password: rpcConfig.password,
       bitcoind_rpc_port: rpcConfig.port,

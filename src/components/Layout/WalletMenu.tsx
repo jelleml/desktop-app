@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { twJoin } from 'tailwind-merge'
 
-import { WALLET_DASHBOARD_PATH, SETTINGS_PATH} from '../../app/router/paths'
+import { WALLET_DASHBOARD_PATH, SETTINGS_PATH } from '../../app/router/paths'
 import { useOnClickOutside } from '../../hooks/useOnClickOutside'
 import { ArrowDownIcon } from '../../icons/ArrowDown'
 import { nodeApi } from '../../slices/nodeApi/nodeApi.slice'
@@ -45,7 +45,7 @@ export const WalletMenu = () => {
 
       <ul
         className={twJoin(
-          'absolute top-full right-0 bg-section-lighter divide-y divide-divider rounded w-64 z-40',
+          'absolute top-full right-0 bg-surface-high divide-y divide-divider rounded w-64 z-40',
           !isOpen ? 'hidden' : undefined
         )}
       >

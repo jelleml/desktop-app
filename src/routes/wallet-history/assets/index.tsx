@@ -1,5 +1,6 @@
 import { Coins, Search, RefreshCw, Copy, ArrowDownRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
@@ -11,32 +12,11 @@ import {
   renderStatusBadge,
 } from '../../../components/ui/Table'
 import { formatDate } from '../../../helpers/date'
-import {
-  nodeApi,
-  Transfer,
-  Assignment,
-} from '../../../slices/nodeApi/nodeApi.slice'
-
-// Helper function to extract amount from assignment
-const getAssignmentAmount = (
-  assignment: Assignment | null | undefined
-): number => {
-  if (!assignment) return 0
-
-  switch (assignment.type) {
-    case 'Fungible':
-      return assignment.value
-    case 'InflationRight':
-      return assignment.value
-    case 'Any':
-    case 'NonFungible':
-    case 'ReplaceRight':
-    default:
-      return 0
-  }
-}
+import { nodeApi, Transfer } from '../../../slices/nodeApi/nodeApi.slice'
+import { getAssignmentAmount } from '../../../utils/rgbUtils'
 
 export const Component = () => {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const urlAssetId = searchParams.get('assetId')
 
@@ -67,19 +47,21 @@ export const Component = () => {
   }, [assets])
 
   useEffect(() => {
-    if (assetsResponse.data?.nia.length) {
+    if ((assetsResponse?.data?.nia || []).length) {
       if (urlAssetId) {
         // Check if the URL asset ID exists in the assets list
-        const assetExists = assetsResponse.data.nia.some(
-          (asset) => asset.asset_id === urlAssetId
+        const assetExists = (assetsResponse?.data?.nia || []).some(
+          (asset: any) => asset.asset_id === urlAssetId
         )
         if (assetExists) {
           setSelectedAssetId(urlAssetId)
-        } else if (!selectedAssetId) {
-          setSelectedAssetId(assetsResponse.data.nia[0].asset_id)
+        } else if (!selectedAssetId && (assetsResponse?.data?.nia || [])[0]) {
+          setSelectedAssetId(
+            (assetsResponse.data?.nia || [])[0].asset_id || null
+          )
         }
-      } else if (!selectedAssetId) {
-        setSelectedAssetId(assetsResponse.data.nia[0].asset_id)
+      } else if (!selectedAssetId && (assetsResponse?.data?.nia || [])[0]) {
+        setSelectedAssetId((assetsResponse.data?.nia || [])[0].asset_id || null)
       }
     }
   }, [assetsResponse.data, selectedAssetId, urlAssetId])
@@ -89,7 +71,7 @@ export const Component = () => {
       if (selectedAssetId) {
         setIsLoading(true)
         try {
-          await getTransfers({ asset_id: selectedAssetId })
+          await getTransfers(selectedAssetId)
         } finally {
           setIsLoading(false)
         }
@@ -104,14 +86,14 @@ export const Component = () => {
     try {
       await assets()
       if (selectedAssetId) {
-        await getTransfers({ asset_id: selectedAssetId })
+        await getTransfers(selectedAssetId)
       }
     } finally {
       setIsRefreshing(false)
     }
   }
 
-  const getStatusBadgeVariant = (status: Transfer['status']) => {
+  const getStatusBadgeVariant = (status: Transfer['status'] | undefined) => {
     switch (status) {
       case 'Settled':
         return 'success'
@@ -125,7 +107,7 @@ export const Component = () => {
     }
   }
 
-  const getKindLabel = (kind: Transfer['kind']) => {
+  const getKindLabel = (kind: Transfer['kind'] | undefined) => {
     switch (kind) {
       case 'Send':
         return 'Sent'
@@ -134,12 +116,14 @@ export const Component = () => {
         return 'Received'
       case 'Issuance':
         return 'Issuance'
+      case 'Inflation':
+        return 'Inflation'
       default:
-        return kind
+        return kind || 'Unknown'
     }
   }
 
-  const getKindColor = (kind: Transfer['kind']) => {
+  const getKindColor = (kind: Transfer['kind'] | undefined) => {
     switch (kind) {
       case 'Send':
         return 'text-red-500'
@@ -148,12 +132,14 @@ export const Component = () => {
         return 'text-green-500'
       case 'Issuance':
         return 'text-blue-500'
+      case 'Inflation':
+        return 'text-purple-500'
       default:
-        return 'text-slate-400'
+        return 'text-content-secondary'
     }
   }
 
-  const getKindBadgeVariant = (kind: Transfer['kind']) => {
+  const getKindBadgeVariant = (kind: Transfer['kind'] | undefined) => {
     switch (kind) {
       case 'Send':
         return 'danger'
@@ -162,16 +148,18 @@ export const Component = () => {
         return 'success'
       case 'Issuance':
         return 'info'
+      case 'Inflation':
+        return 'warning'
       default:
         return 'default'
     }
   }
 
-  const copyToClipboard = (text: string, message: string) => {
+  const copyToClipboard = (text: string, translationKey: string) => {
     navigator.clipboard
       .writeText(text)
       .then(() => {
-        toast.success(message)
+        toast.success(t(translationKey))
       })
       .catch((err) => {
         console.error('Failed to copy:', err)
@@ -179,15 +167,17 @@ export const Component = () => {
   }
 
   const filteredTransfers =
-    transfersResponse.data?.transfers.filter((transfer) => {
+    (transfersResponse.data?.transfers || []).filter((transfer: Transfer) => {
       // Apply search filter
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase()
-        const matchesTxid = transfer.txid.toLowerCase().includes(searchLower)
-        const matchesType = getKindLabel(transfer.kind)
+        const matchesTxid = (transfer.txid || '')
           .toLowerCase()
           .includes(searchLower)
-        const matchesStatus = transfer.status
+        const matchesType = (getKindLabel(transfer.kind) || '')
+          .toLowerCase()
+          .includes(searchLower)
+        const matchesStatus = (transfer.status || '')
           .toLowerCase()
           .includes(searchLower)
 
@@ -219,8 +209,8 @@ export const Component = () => {
     }) || []
 
   const getSelectedAsset = () => {
-    return assetsResponse.data?.nia.find(
-      (asset) => asset.asset_id === selectedAssetId
+    return (assetsResponse.data?.nia || []).find(
+      (asset: any) => asset.asset_id === selectedAssetId
     )
   }
 
@@ -228,7 +218,7 @@ export const Component = () => {
     const selectedAsset = getSelectedAsset()
     if (!selectedAsset) return amount.toString()
 
-    const formattedAmount = amount / Math.pow(10, selectedAsset.precision)
+    const formattedAmount = amount / Math.pow(10, selectedAsset.precision ?? 8)
     return formattedAmount.toLocaleString('en-US', {
       maximumFractionDigits: selectedAsset.precision,
       minimumFractionDigits: 0,
@@ -238,13 +228,15 @@ export const Component = () => {
 
   // Get unique statuses for filter dropdown
   const uniqueStatuses = Array.from(
-    new Set(transfersResponse.data?.transfers.map((t) => t.status) || [])
+    new Set<string>(
+      (transfersResponse.data?.transfers || []).map((t: any) => t.status) || []
+    )
   )
 
   return (
     <div className="space-y-6">
       {selectedAssetId && (
-        <Card className="bg-gray-800/50 border border-gray-700/50">
+        <Card className="bg-surface-overlay/50 border border-border-default/50">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-lg bg-purple-500/10">
@@ -255,16 +247,13 @@ export const Component = () => {
                   {getSelectedAsset()?.name} ({getSelectedAsset()?.ticker})
                 </h3>
                 <div className="flex items-center mt-1">
-                  <p className="text-xs text-gray-400 truncate max-w-[200px] md:max-w-[300px]">
+                  <p className="text-xs text-content-secondary truncate max-w-[200px] md:max-w-[300px]">
                     {selectedAssetId}
                   </p>
                   <button
-                    className="ml-2 text-gray-400 hover:text-gray-200 transition-colors"
+                    className="ml-2 text-content-secondary hover:text-content-primary transition-colors"
                     onClick={() =>
-                      copyToClipboard(
-                        selectedAssetId,
-                        'Asset ID copied to clipboard'
-                      )
+                      copyToClipboard(selectedAssetId, 'assets.assetIdCopied')
                     }
                   >
                     <Copy className="h-3.5 w-3.5" />
@@ -285,7 +274,7 @@ export const Component = () => {
                 size="sm"
                 variant="outline"
               >
-                {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                {isRefreshing ? t('assets.refreshing') : t('assets.refresh')}
               </Button>
             </div>
           </div>
@@ -293,12 +282,12 @@ export const Component = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-400" />
+                <Search className="h-4 w-4 text-content-secondary" />
               </div>
               <input
-                className="block w-full pl-9 pr-3 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="block w-full pl-9 pr-3 py-2 border border-border-default rounded-lg bg-surface-overlay text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search transactions..."
+                placeholder={t('assets.searchPlaceholder')}
                 type="text"
                 value={searchTerm}
               />
@@ -306,21 +295,21 @@ export const Component = () => {
 
             <div className="relative">
               <select
-                className="appearance-none w-full pl-9 pr-8 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="appearance-none w-full pl-9 pr-8 py-2 border border-border-default rounded-lg bg-surface-overlay text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                 onChange={(e) => setTypeFilter(e.target.value)}
                 value={typeFilter}
               >
-                <option value="all">All Types</option>
-                <option value="sent">Sent</option>
-                <option value="received">Received</option>
-                <option value="issuance">Issuance</option>
+                <option value="all">{t('assets.allTypes')}</option>
+                <option value="sent">{t('assets.sent')}</option>
+                <option value="received">{t('assets.received')}</option>
+                <option value="issuance">{t('assets.issuance')}</option>
               </select>
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <ArrowDownRight className="h-4 w-4 text-gray-400" />
+                <ArrowDownRight className="h-4 w-4 text-content-secondary" />
               </div>
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                 <svg
-                  className="h-4 w-4 text-gray-400"
+                  className="h-4 w-4 text-content-secondary"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -338,11 +327,11 @@ export const Component = () => {
 
             <div className="relative">
               <select
-                className="appearance-none w-full pl-9 pr-8 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="appearance-none w-full pl-9 pr-8 py-2 border border-border-default rounded-lg bg-surface-overlay text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                 onChange={(e) => setStatusFilter(e.target.value)}
                 value={statusFilter}
               >
-                <option value="all">All Statuses</option>
+                <option value="all">{t('assets.allStatuses')}</option>
                 {uniqueStatuses.map((status) => (
                   <option key={status} value={status}>
                     {status}
@@ -350,11 +339,11 @@ export const Component = () => {
                 ))}
               </select>
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Coins className="h-4 w-4 text-gray-400" />
+                <Coins className="h-4 w-4 text-content-secondary" />
               </div>
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                 <svg
-                  className="h-4 w-4 text-gray-400"
+                  className="h-4 w-4 text-content-secondary"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -373,12 +362,12 @@ export const Component = () => {
 
           <div className="mb-4 relative">
             <select
-              className="appearance-none w-full pl-9 pr-8 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-              disabled={isLoading || !assetsResponse.data?.nia.length}
+              className="appearance-none w-full pl-9 pr-8 py-2 border border-border-default rounded-lg bg-surface-overlay text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              disabled={isLoading || !(assetsResponse.data?.nia || []).length}
               onChange={(e) => setSelectedAssetId(e.target.value)}
               value={selectedAssetId || ''}
             >
-              {assetsResponse.data?.nia.map((asset) => (
+              {(assetsResponse.data?.nia || []).map((asset: any) => (
                 <option key={asset.asset_id} value={asset.asset_id}>
                   {asset.name} ({asset.ticker})
                 </option>
@@ -389,7 +378,7 @@ export const Component = () => {
             </div>
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               <svg
-                className="h-4 w-4 text-gray-400"
+                className="h-4 w-4 text-content-secondary"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -422,7 +411,7 @@ export const Component = () => {
                     </Badge>
                   ),
                   className: 'col-span-1',
-                  header: 'Type',
+                  header: t('assets.type'),
                 },
                 {
                   accessor: (transfer: Transfer) => (
@@ -431,46 +420,48 @@ export const Component = () => {
                     >
                       {transfer.kind === 'Send' ? '-' : '+'}
                       {formatAmount(
-                        getAssignmentAmount(transfer.requested_assignment)
+                        transfer.requested_assignment
+                          ? getAssignmentAmount(transfer.requested_assignment)
+                          : 0
                       )}
                     </span>
                   ),
                   className: 'col-span-1',
-                  header: 'Amount',
+                  header: t('assets.amount'),
                 },
                 {
                   accessor: (transfer: Transfer) =>
-                    renderDateField(transfer.created_at * 1000),
+                    renderDateField((transfer.created_at || 0) * 1000),
                   className: 'col-span-1',
-                  header: 'Date',
+                  header: t('assets.date'),
                 },
                 {
                   accessor: (transfer: Transfer) =>
                     renderCopyableField(
-                      transfer.txid,
+                      transfer.txid || '',
                       true,
                       4,
-                      'Transaction ID'
+                      t('assets.transactionId')
                     ),
                   className: 'col-span-1',
-                  header: 'Transaction ID',
+                  header: t('assets.transactionId'),
                 },
                 {
                   accessor: (transfer: Transfer) =>
                     renderStatusBadge(
-                      transfer.status,
+                      transfer.status || 'Unknown',
                       getStatusBadgeVariant(transfer.status)
                     ),
                   className: 'col-span-1',
-                  header: 'Status',
+                  header: t('assets.status'),
                 },
               ]}
               data={filteredTransfers}
               emptyState={
-                <div className="text-center py-8 text-slate-400 bg-slate-800/30 rounded-lg border border-slate-700">
+                <div className="text-center py-8 text-content-secondary bg-surface-overlay/30 rounded-lg border border-border-default">
                   {searchTerm || statusFilter !== 'all' || typeFilter !== 'all'
-                    ? 'No transfers found matching your search criteria'
-                    : 'No transfers found for this asset'}
+                    ? t('assets.noTransfersFiltered')
+                    : t('assets.noTransfers')}
                   {(searchTerm ||
                     statusFilter !== 'all' ||
                     typeFilter !== 'all') && (
@@ -484,7 +475,7 @@ export const Component = () => {
                       size="sm"
                       variant="outline"
                     >
-                      Clear Filters
+                      {t('assets.clearFilters')}
                     </Button>
                   )}
                 </div>
@@ -498,15 +489,15 @@ export const Component = () => {
                 )
               }
               rowClassName={(transfer: Transfer) =>
-                `cursor-pointer ${showTxDetails === `${transfer.txid}-${transfer.idx}` ? 'bg-gray-700/30' : ''}`
+                `cursor-pointer ${showTxDetails === `${transfer.txid}-${transfer.idx}` ? 'bg-surface-high/30' : ''}`
               }
             />
           ) : (
             <div className="py-12 text-center">
-              <p className="text-gray-400">
+              <p className="text-content-secondary">
                 {searchTerm || statusFilter !== 'all' || typeFilter !== 'all'
-                  ? 'No transfers found matching your search criteria'
-                  : 'No transfers found for this asset'}
+                  ? t('assets.noTransfersFiltered')
+                  : t('assets.noTransfers')}
               </p>
               {(searchTerm ||
                 statusFilter !== 'all' ||
@@ -521,7 +512,7 @@ export const Component = () => {
                   size="sm"
                   variant="outline"
                 >
-                  Clear Filters
+                  {t('assets.clearFilters')}
                 </Button>
               )}
             </div>
@@ -529,32 +520,32 @@ export const Component = () => {
 
           {/* Expanded transaction details */}
           {filteredTransfers.map(
-            (transfer) =>
+            (transfer: any) =>
               showTxDetails === `${transfer.txid}-${transfer.idx}` && (
                 <div
-                  className="mt-4 bg-gray-800/50 rounded-lg p-4"
+                  className="mt-4 bg-surface-overlay/50 rounded-lg p-4"
                   key={`${transfer.txid}-${transfer.idx}`}
                 >
-                  <div className="bg-gray-900/50 rounded-lg p-4 space-y-3">
+                  <div className="bg-surface-base/50 rounded-lg p-4 space-y-3">
                     <div>
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">
-                        Transaction Details
+                      <h4 className="text-sm font-medium text-content-secondary mb-1">
+                        {t('assets.transactionDetails')}
                       </h4>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-400">
-                          Transaction ID:
+                        <span className="text-xs text-content-secondary">
+                          {t('assets.transactionIdLabel')}
                         </span>
                         <div className="flex items-center">
-                          <span className="text-xs text-gray-300">
+                          <span className="text-xs text-content-secondary">
                             {transfer.txid}
                           </span>
                           <button
-                            className="ml-2 text-gray-400 hover:text-gray-200 transition-colors"
+                            className="ml-2 text-content-secondary hover:text-content-primary transition-colors"
                             onClick={(e) => {
                               e.stopPropagation()
                               copyToClipboard(
-                                transfer.txid,
-                                'Transaction ID copied to clipboard'
+                                transfer.txid || '',
+                                'assets.transactionIdCopied'
                               )
                             }}
                           >
@@ -565,55 +556,65 @@ export const Component = () => {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-400">Amount:</span>
+                      <span className="text-xs text-content-secondary">
+                        {t('assets.amountLabel')}
+                      </span>
                       <span
                         className={`text-xs ${getKindColor(transfer.kind)}`}
                       >
                         {transfer.kind === 'Send' ? '-' : '+'}
                         {formatAmount(
-                          getAssignmentAmount(transfer.requested_assignment)
+                          transfer.requested_assignment
+                            ? getAssignmentAmount(transfer.requested_assignment)
+                            : 0
                         )}{' '}
                         {getSelectedAsset()?.ticker}
                       </span>
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-400">Type:</span>
+                      <span className="text-xs text-content-secondary">
+                        {t('assets.typeLabel')}
+                      </span>
                       <Badge variant={getKindBadgeVariant(transfer.kind)}>
                         {getKindLabel(transfer.kind)}
                       </Badge>
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-400">Status:</span>
+                      <span className="text-xs text-content-secondary">
+                        {t('assets.statusLabel')}
+                      </span>
                       <Badge variant={getStatusBadgeVariant(transfer.status)}>
                         {transfer.status}
                       </Badge>
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-400">Date:</span>
-                      <span className="text-xs text-gray-300">
-                        {formatDate(transfer.created_at * 1000)}
+                      <span className="text-xs text-content-secondary">
+                        {t('assets.dateLabel')}
+                      </span>
+                      <span className="text-xs text-content-secondary">
+                        {formatDate((transfer.created_at || 0) * 1000)}
                       </span>
                     </div>
 
                     {transfer.recipient_id && (
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-400">
-                          Recipient ID:
+                        <span className="text-xs text-content-secondary">
+                          {t('assets.recipientIdLabel')}
                         </span>
                         <div className="flex items-center">
-                          <span className="text-xs text-gray-300 truncate max-w-[200px]">
+                          <span className="text-xs text-content-secondary truncate max-w-[200px]">
                             {transfer.recipient_id}
                           </span>
                           <button
-                            className="ml-2 text-gray-400 hover:text-gray-200 transition-colors"
+                            className="ml-2 text-content-secondary hover:text-content-primary transition-colors"
                             onClick={(e) => {
                               e.stopPropagation()
                               copyToClipboard(
                                 transfer.recipient_id || '',
-                                'Recipient ID copied to clipboard'
+                                'assets.recipientIdCopied'
                               )
                             }}
                           >

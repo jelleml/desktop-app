@@ -1,5 +1,6 @@
 import { Info } from 'lucide-react'
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 
 // Countdown Timer Component
 interface CountdownTimerProps {
@@ -11,6 +12,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
   expiresAt,
   onExpiry,
 }) => {
+  const { t } = useTranslation()
   const expiryDate = new Date(expiresAt)
   const now = new Date()
   const initialSecondsRef = React.useRef(
@@ -45,20 +47,22 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
   }
 
   return (
-    <div className="bg-gray-800/70 p-4 rounded-xl border border-gray-700">
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="text-sm text-gray-400">Payment Expires In</h4>
-        <div className="flex items-center">
-          <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-2"></div>
-          <span className="text-white font-mono bg-gray-700/70 px-3 py-1 rounded-lg text-lg">
+    <div className="rounded-[14px] border border-border-subtle bg-surface-base/60 px-3 py-2">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h4 className="text-[10px] font-semibold uppercase tracking-[0.26em] text-content-tertiary">
+          {t('orderChannel.step3.paymentExpiresIn')}
+        </h4>
+        <div className="flex items-center gap-1.5">
+          <div className="h-2.5 w-2.5 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin"></div>
+          <span className="rounded-md bg-surface-overlay/80 px-1.5 py-0.5 font-mono text-sm text-content-primary">
             {formatCountdown(countdown)}
           </span>
         </div>
       </div>
 
-      <div className="w-full bg-gray-700/50 rounded-full h-2">
+      <div className="h-1.5 w-full rounded-full bg-surface-high/50">
         <div
-          className="h-2 rounded-full transition-all duration-1000 ease-linear"
+          className="h-1.5 rounded-full transition-all duration-1000 ease-linear"
           style={{
             backgroundColor:
               countdown < 60
@@ -72,14 +76,14 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
       </div>
 
       {countdown < 180 && (
-        <div className="mt-3 flex items-start">
-          <div className="text-yellow-400 mr-2 mt-0.5">
-            <Info size={16} />
+        <div className="mt-2 flex items-start rounded-lg border border-yellow-500/15 bg-yellow-500/6 px-2 py-1">
+          <div className="mr-1.5 shrink-0 text-yellow-400">
+            <Info size={12} />
           </div>
-          <p className="text-gray-400 text-xs">
+          <p className="text-[11px] text-content-secondary">
             {countdown < 60
-              ? 'Payment expires soon!'
-              : 'Payment expiring soon.'}
+              ? t('orderChannel.step3.expiresVerySoon')
+              : t('orderChannel.step3.expiresSoon')}
           </p>
         </div>
       )}

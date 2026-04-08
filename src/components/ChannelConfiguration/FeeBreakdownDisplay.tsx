@@ -1,11 +1,12 @@
 import { Info } from 'lucide-react'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { formatNumberWithCommas } from '../../helpers/number'
 import { ChannelFees } from '../../slices/makerApi/makerApi.slice'
 
 interface FeeBreakdownDisplayProps {
-  fees: ChannelFees
+  fees: ChannelFees | null
   isLoading?: boolean
   showGrandTotal?: boolean
   additionalCosts?: Array<{
@@ -21,9 +22,12 @@ export const FeeBreakdownDisplay: React.FC<FeeBreakdownDisplayProps> = ({
   isLoading = false,
   showGrandTotal = false,
   additionalCosts = [],
-  containerClassName = 'bg-gradient-to-br from-blue-900/30 to-purple-900/30 border border-blue-700/50 rounded-xl p-4',
+  containerClassName = 'bg-surface-elevated border border-border-default rounded-xl p-4',
 }) => {
+  const { t } = useTranslation()
+
   const calculateGrandTotal = () => {
+    if (!fees) return 0
     const additionalTotal = additionalCosts.reduce(
       (sum, cost) => sum + cost.amount,
       0
@@ -31,55 +35,89 @@ export const FeeBreakdownDisplay: React.FC<FeeBreakdownDisplayProps> = ({
     return fees.total_fee + additionalTotal
   }
 
+  const SkeletonBar = ({ wide }: { wide?: boolean }) => (
+    <div
+      className={`h-4 rounded bg-surface-high/60 animate-pulse ${wide ? 'w-24' : 'w-16'}`}
+    />
+  )
+
   return (
     <div className={containerClassName}>
-      <h3 className="text-lg font-semibold text-blue-200 mb-3 flex items-center gap-2">
-        <Info className="w-5 h-5" />
+      <h3 className="text-lg font-semibold text-content-primary mb-3 flex items-center gap-2">
+        <Info className="w-5 h-5 text-primary" />
         {showGrandTotal && additionalCosts.length > 0
-          ? 'Total Cost Breakdown'
-          : 'Estimated Costs'}
+          ? t('channelConfiguration.feeBreakdown.totalCostBreakdown')
+          : t('channelConfiguration.feeBreakdown.estimatedCosts')}
         {isLoading && (
-          <span className="ml-2 text-sm text-gray-400">(calculating...)</span>
+          <span className="ml-2 text-sm text-content-secondary">
+            {t('channelConfiguration.feeBreakdown.calculating')}
+          </span>
         )}
       </h3>
       <div className="space-y-2">
         {/* Channel Fees */}
         <div className="flex justify-between text-sm items-center">
-          <span className="text-gray-300">Setup Fee</span>
-          <span className="text-white font-medium">
-            {formatNumberWithCommas(fees.setup_fee.toString())} sats
+          <span className="text-content-secondary">
+            {t('channelConfiguration.feeBreakdown.setupFee')}
           </span>
+          {fees ? (
+            <span className="text-content-primary font-medium">
+              {formatNumberWithCommas(fees.setup_fee.toString())} sats
+            </span>
+          ) : (
+            <SkeletonBar />
+          )}
         </div>
         <div className="flex justify-between text-sm items-center">
-          <span className="text-gray-300">Capacity Fee</span>
-          <span className="text-white font-medium">
-            {formatNumberWithCommas(fees.capacity_fee.toString())} sats
+          <span className="text-content-secondary">
+            {t('channelConfiguration.feeBreakdown.capacityFee')}
           </span>
+          {fees ? (
+            <span className="text-content-primary font-medium">
+              {formatNumberWithCommas(fees.capacity_fee.toString())} sats
+            </span>
+          ) : (
+            <SkeletonBar />
+          )}
         </div>
         <div className="flex justify-between text-sm items-center">
-          <span className="text-gray-300">Duration Fee</span>
-          <span className="text-white font-medium">
-            {formatNumberWithCommas(fees.duration_fee.toString())} sats
+          <span className="text-content-secondary">
+            {t('channelConfiguration.feeBreakdown.durationFee')}
           </span>
+          {fees ? (
+            <span className="text-content-primary font-medium">
+              {formatNumberWithCommas(fees.duration_fee.toString())} sats
+            </span>
+          ) : (
+            <SkeletonBar />
+          )}
         </div>
 
         {/* Discount if applicable */}
-        {fees.applied_discount && fees.discount_code && (
-          <div className="flex justify-between items-center py-2 border-b border-green-700/30 bg-green-900/20 -mx-3 px-3">
-            <span className="text-green-300 font-medium">
-              Discount ({fees.discount_code})
+        {fees?.applied_discount && fees?.discount_code && (
+          <div className="flex justify-between items-center py-2 border-b border-status-success/20 bg-status-success/10 -mx-3 px-3">
+            <span className="text-status-success font-medium">
+              {t('channelConfiguration.feeBreakdown.discount', {
+                code: fees.discount_code,
+              })}
             </span>
-            <span className="font-medium text-green-400">
+            <span className="font-medium text-status-success">
               -{Math.round(fees.applied_discount * 100)}%
             </span>
           </div>
         )}
 
-        <div className="flex justify-between text-sm pt-2 border-t border-blue-700/30">
-          <span className="text-gray-300 font-medium">Channel Fees</span>
-          <span className="text-white font-semibold">
-            {formatNumberWithCommas(fees.total_fee.toString())} sats
+        <div className="flex justify-between text-sm pt-2 border-t border-border-default/30">
+          <span className="text-content-secondary font-medium">
+            {t('channelConfiguration.feeBreakdown.channelFees')}
           </span>
+          {fees ? (
+            <span className="text-content-primary font-semibold">
+              {formatNumberWithCommas(fees.total_fee.toString())} sats
+            </span>
+          ) : (
+            <SkeletonBar wide />
+          )}
         </div>
 
         {/* Additional costs */}
@@ -88,10 +126,14 @@ export const FeeBreakdownDisplay: React.FC<FeeBreakdownDisplayProps> = ({
             className={`flex justify-between text-sm ${cost.className || ''}`}
             key={index}
           >
-            <span className={cost.className ? '' : 'text-gray-300'}>
+            <span className={cost.className ? '' : 'text-content-secondary'}>
               {cost.label}
             </span>
-            <span className={cost.className ? '' : 'text-white font-medium'}>
+            <span
+              className={
+                cost.className ? '' : 'text-content-primary font-medium'
+              }
+            >
               {formatNumberWithCommas(cost.amount.toString())} sats
             </span>
           </div>
@@ -99,24 +141,24 @@ export const FeeBreakdownDisplay: React.FC<FeeBreakdownDisplayProps> = ({
 
         {/* Grand Total */}
         {showGrandTotal && (
-          <div className="flex justify-between pt-2 border-t-2 border-blue-700/50">
-            <span className="text-blue-100 font-bold text-base">
-              Total Payment
+          <div className="flex justify-between pt-2 border-t border-border-default">
+            <span className="text-content-primary font-bold text-base">
+              {t('channelConfiguration.feeBreakdown.totalPayment')}
             </span>
-            <span className="text-blue-200 font-bold text-base">
-              {formatNumberWithCommas(calculateGrandTotal().toString())} sats
-            </span>
+            {fees ? (
+              <span className="text-primary font-bold text-base">
+                {formatNumberWithCommas(calculateGrandTotal().toString())} sats
+              </span>
+            ) : (
+              <SkeletonBar wide />
+            )}
           </div>
         )}
       </div>
 
       {!showGrandTotal && (
-        <div className="mt-4 text-xs text-gray-400">
-          <p>
-            This fee covers the cost of setting up and maintaining your channel.
-            The total amount you'll need to pay includes this fee plus your
-            desired channel liquidity.
-          </p>
+        <div className="mt-4 text-xs text-content-secondary">
+          <p>{t('channelConfiguration.feeBreakdown.feeExplanation')}</p>
         </div>
       )}
     </div>

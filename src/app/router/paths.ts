@@ -23,6 +23,8 @@ export const TRADE_PATH = makePath(['trade'])
 export const TRADE_MARKET_MAKER_PATH = makePath(['market-maker'])
 export const TRADE_MANUAL_PATH = makePath(['manual'])
 export const TRADE_NOSTR_P2P_PATH = makePath(['nostr-p2p'])
+export const TRADE_DCA_PATH = makePath(['dca'])
+export const TRADE_LIMIT_PATH = makePath(['limit-orders'])
 
 export const WALLET_DASHBOARD_PATH = makePath(['wallet-dashboard'])
 
@@ -59,7 +61,3 @@ export const CREATE_NEW_CHANNEL_PATH = makePath(['create-new-channel'])
 export const ORDER_CHANNEL_PATH = makePath(['order-new-channel'])
 
 export const CREATEUTXOS_PATH = makePath(['createutxos'])
-
-// Legal
-export const TERMS_PATH = '/terms'
-export const PRIVACY_PATH = '/privacy'

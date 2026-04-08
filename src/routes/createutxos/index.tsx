@@ -1,6 +1,7 @@
 import { Info, DollarSign, Zap, ArrowLeft, Wallet } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
@@ -36,33 +37,36 @@ export const Component = () => {
   const num = watch('num')
   const size = watch('size')
   const feeRate = watch('fee_rate')
+  const { t } = useTranslation()
 
   const [btcBalance, btcBalanceResponse] =
     nodeApi.endpoints.btcBalance.useLazyQuery()
-  const [createutxos] = nodeApi.useLazyCreateUTXOsQuery()
+  const [createutxos] = nodeApi.useCreateUtxosMutation()
   const [estimateFee] = nodeApi.useLazyEstimateFeeQuery()
 
   const onSubmit = (data: FormFields) => {
     setIsLoading(true)
     createutxos({
       fee_rate:
-        data.fee_rate !== 'custom' ? parseFloat(data.fee_rate) : customFee,
+        data.fee_rate !== 'custom'
+          ? Math.round(parseFloat(data.fee_rate))
+          : Math.round(customFee),
       num: data.num,
       size: data.size,
-      skip_sync: false,
+      up_to: false,
     }).then((res: any) => {
       setIsLoading(false)
       if (res.error) {
         toast.error(res.error.data.error)
       } else {
         navigate(-1)
-        toast.success('UTXOs created successfully')
+        toast.success(t('createUtxos.toastSuccess'))
       }
     })
   }
 
   const refreshData = useCallback(() => {
-    btcBalance({ skip_sync: false })
+    btcBalance()
   }, [btcBalance])
 
   useEffect(() => {
@@ -78,9 +82,9 @@ export const Component = () => {
           fastFeePromise,
         ])
         setFeeRates({
-          fast: fastFee.fee_rate,
-          normal: normalFee.fee_rate,
-          slow: slowFee.fee_rate,
+          fast: Math.round(fastFee.fee_rate ?? 3),
+          normal: Math.round(normalFee.fee_rate ?? 2),
+          slow: Math.round(slowFee.fee_rate ?? 1),
         })
       } catch (e) {
         console.error(e)
@@ -92,7 +96,7 @@ export const Component = () => {
 
   useEffect(() => {
     refreshData()
-    const intervalId = setInterval(refreshData, 3000)
+    const intervalId = setInterval(refreshData, 15_000)
     return () => clearInterval(intervalId)
   }, [refreshData])
 
@@ -105,23 +109,20 @@ export const Component = () => {
         size="sm"
         variant="ghost"
       >
-        Back
+        {t('common.back')}
       </Button>
 
       <Card className="mb-6">
         <div className="flex flex-col items-center mb-6">
           <Wallet className="w-12 h-12 text-blue-500 mb-4" />
           <h3 className="text-2xl font-bold text-white mb-4">
-            Create Colored UTXOs
+            {t('createUtxos.title')}
           </h3>
 
           <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 flex items-start gap-3 w-full">
             <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-slate-300">
-              Colored UTXOs are necessary for opening RGB asset lightning
-              channels. They allow for the creation of asset-specific payment
-              channels, enabling fast and secure transactions of RGB assets over
-              the Lightning Network.
+            <p className="text-sm text-content-secondary">
+              {t('createUtxos.description')}
             </p>
           </div>
         </div>
@@ -129,38 +130,39 @@ export const Component = () => {
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-slate-300">
-                Number of UTXOs
+              <label className="block text-sm font-medium text-content-secondary">
+                {t('createUtxos.fields.numberOfUtxos')}
               </label>
               <input
                 {...register('num', { valueAsNumber: true })}
-                className="w-full bg-slate-800/50 text-white px-4 py-3 rounded-lg border border-slate-600 
+                className="w-full bg-surface-overlay/50 text-white px-4 py-3 rounded-lg border border-border-default 
                          focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 max={10}
                 min={1}
-                placeholder="Enter amount"
+                placeholder={t('createUtxos.fields.numberPlaceholder')}
                 type="number"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-slate-300">
-                UTXO Size (in satoshis)
+              <label className="block text-sm font-medium text-content-secondary">
+                {t('createUtxos.fields.sizeLabel')}
               </label>
               <div className="flex items-center gap-4">
                 <input
                   {...register('size', { valueAsNumber: true })}
-                  className="flex-1 bg-slate-800/50 text-white px-4 py-3 rounded-lg border border-slate-600 
+                  className="flex-1 bg-surface-overlay/50 text-white px-4 py-3 rounded-lg border border-border-default 
                            focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   max={
                     btcBalanceResponse.data
                       ? Math.floor(
-                          btcBalanceResponse.data?.vanilla.spendable / num
+                          (btcBalanceResponse.data?.vanilla?.spendable ?? 0) /
+                            num
                         )
                       : 0
                   }
                   min={0}
-                  placeholder="Enter size"
+                  placeholder={t('createUtxos.fields.sizePlaceholder')}
                   type="number"
                 />
                 <span className="text-lg font-semibold text-white min-w-[100px] text-right">
@@ -168,11 +170,11 @@ export const Component = () => {
                 </span>
               </div>
               <input
-                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer mt-4"
+                className="w-full h-2 bg-surface-high rounded-lg appearance-none cursor-pointer mt-4"
                 max={
                   btcBalanceResponse.data
                     ? Math.floor(
-                        btcBalanceResponse.data?.vanilla.spendable / num
+                        (btcBalanceResponse.data?.vanilla?.spendable ?? 0) / num
                       )
                     : 0
                 }
@@ -185,29 +187,37 @@ export const Component = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-slate-300">
-                Fee Rate
+              <label className="block text-sm font-medium text-content-secondary">
+                {t('createUtxos.fields.feeRate')}
               </label>
               <select
-                className="w-full bg-slate-800/50 text-white px-4 py-3 rounded-lg border border-slate-600 
+                className="w-full bg-surface-overlay/50 text-white px-4 py-3 rounded-lg border border-border-default 
                          focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 value={feeRate}
                 {...register('fee_rate')}
               >
                 <option value={feeRates.slow}>
-                  Slow ({feeRates.slow} sat/vB)
+                  {t('createUtxos.feeOptions.slow', {
+                    fee: feeRates.slow,
+                  })}
                 </option>
                 <option value={feeRates.normal}>
-                  Normal ({feeRates.normal} sat/vB)
+                  {t('createUtxos.feeOptions.normal', {
+                    fee: feeRates.normal,
+                  })}
                 </option>
                 <option value={feeRates.fast}>
-                  Fast ({feeRates.fast} sat/vB)
+                  {t('createUtxos.feeOptions.fast', {
+                    fee: feeRates.fast,
+                  })}
                 </option>
-                <option value="custom">Custom</option>
+                <option value="custom">
+                  {t('createUtxos.feeOptions.custom')}
+                </option>
               </select>
               {feeRate === 'custom' && (
                 <input
-                  className="w-full bg-slate-800/50 text-white px-4 py-3 mt-4 rounded-lg border border-slate-600 
+                  className="w-full bg-surface-overlay/50 text-white px-4 py-3 mt-4 rounded-lg border border-border-default 
                            focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   defaultValue={customFee}
                   onChange={(e) => setCustomFee(parseFloat(e.target.value))}
@@ -219,12 +229,16 @@ export const Component = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row justify-between items-center mt-8 gap-4">
-            <div className="flex items-center text-slate-300">
+            <div className="flex items-center text-content-secondary">
               <DollarSign className="text-yellow-500 mr-2" size={20} />
               <span>
-                Available Balance:{' '}
-                {btcBalanceResponse.data?.vanilla.spendable.toLocaleString()}{' '}
-                sats
+                {t('createUtxos.availableBalance', {
+                  amount: btcBalanceResponse.data
+                    ? (
+                        btcBalanceResponse.data?.vanilla?.spendable ?? 0
+                      ).toLocaleString()
+                    : '0',
+                })}
               </span>
             </div>
             <Button
@@ -235,7 +249,7 @@ export const Component = () => {
               type="submit"
               variant="primary"
             >
-              Create UTXOs
+              {t('createUtxos.actions.create')}
             </Button>
           </div>
         </form>

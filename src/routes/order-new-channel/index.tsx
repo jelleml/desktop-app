@@ -1,10 +1,11 @@
-import { invoke } from '@tauri-apps/api/core'
 import { Info } from 'lucide-react'
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ClipLoader } from 'react-spinners'
 import { toast } from 'react-toastify'
 
 import { MIN_CHANNEL_CAPACITY, MAX_CHANNEL_CAPACITY } from '../../constants'
+import { useChannelOrderPaymentMonitor } from '../../hooks/useChannelOrderPaymentMonitor'
 import {
   makerApi,
   Lsps1CreateOrderResponse,
@@ -13,6 +14,7 @@ import { nodeApi } from '../../slices/nodeApi/nodeApi.slice'
 import {
   AssetInfo,
   buildChannelOrderPayload,
+  getChannelOrderAccessToken,
   validateChannelParams,
   formatRtkQueryError,
 } from '../../utils/channelOrderUtils'
@@ -24,155 +26,38 @@ import { Step4 } from './Step4'
 import 'react-toastify/dist/ReactToastify.css'
 
 export const Component = () => {
+  const { t } = useTranslation()
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
   const [loading, setLoading] = useState(false)
   const [orderId, setOrderId] = useState<string | null>(null)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
   const [orderPayload, setOrderPayload] = useState<any>(null)
   const [showBackConfirmation, setShowBackConfirmation] = useState(false)
-  const [paymentStatus, setPaymentStatus] = useState<
-    'success' | 'error' | 'expired' | null
-  >(null)
-  const [paymentReceived, setPaymentReceived] = useState(false)
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState<
-    'lightning' | 'onchain' | null
-  >(null)
 
   const [nodeInfoRequest] = nodeApi.endpoints.nodeInfo.useLazyQuery()
   const [addressRequest] = nodeApi.endpoints.address.useLazyQuery()
   const [createOrderRequest, createOrderResponse] =
     makerApi.endpoints.create_order.useLazyQuery()
-  const [getOrderRequest, getOrderResponse] =
-    makerApi.endpoints.get_order.useLazyQuery()
+  const [getOrderRequest] = makerApi.endpoints.get_order.useLazyQuery()
   const [getInfoRequest] = makerApi.endpoints.get_info.useLazyQuery()
 
   const toastId: string | number | null = null
 
-  useEffect(() => {
-    if (orderId && step === 3) {
-      const timeoutId: ReturnType<typeof setTimeout> | null = null
-
-      const intervalId = setInterval(async () => {
-        const orderResponse = await getOrderRequest({ order_id: orderId })
-        const orderData = orderResponse.data
-
-        // Check if payment has been received (either in HOLD or PAID state)
-        // Properly detect which payment method was used
-        const bolt11State = orderData?.payment?.bolt11?.state
-        const onchainState = orderData?.payment?.onchain?.state
-
-        let actualPaymentState = null
-        let detectedPaymentMethod = null
-
-        // Check if bolt11 payment was made
-        if (bolt11State && ['HOLD', 'PAID'].includes(bolt11State)) {
-          actualPaymentState = bolt11State
-          detectedPaymentMethod = 'lightning'
-        }
-        // Check if onchain payment was made (only if bolt11 wasn't paid)
-        else if (onchainState && ['HOLD', 'PAID'].includes(onchainState)) {
-          actualPaymentState = onchainState
-          detectedPaymentMethod = 'onchain'
-        }
-        // Fall back to any payment state if neither is in HOLD/PAID
-        else {
-          actualPaymentState = bolt11State || onchainState
-        }
-
-        const paymentJustReceived =
-          actualPaymentState &&
-          ['HOLD', 'PAID'].includes(actualPaymentState) &&
-          !paymentReceived
-
-        if (paymentJustReceived) {
-          setPaymentReceived(true)
-          setIsProcessingPayment(true)
-          setPaymentMethod(detectedPaymentMethod as 'lightning' | 'onchain')
-
-          console.log('Payment just received! Saving order to database...')
-          console.log('Order ID:', orderId)
-          console.log('Payment method:', detectedPaymentMethod)
-          console.log('Payment state:', actualPaymentState)
-          console.log('Order payload:', orderPayload)
-          console.log('Order data:', orderData)
-
-          // Save the order to the database when payment is received
-          if (orderPayload) {
-            try {
-              await invoke('insert_channel_order', {
-                createdAt: orderData?.created_at || new Date().toISOString(),
-                orderId: orderId,
-                payload: JSON.stringify(orderPayload),
-                status: orderData?.order_state || 'paid',
-              })
-              console.log('Order saved to database successfully!')
-            } catch (error) {
-              console.error('Error saving order to database:', error)
-            }
-          } else {
-            console.log('No order payload available to save')
-          }
-        }
-
-        if (orderData?.order_state === 'COMPLETED') {
-          clearInterval(intervalId)
-          if (timeoutId) clearTimeout(timeoutId)
-          setIsProcessingPayment(false)
-          setPaymentStatus('success')
-          setStep(4)
-        } else if (orderData?.order_state === 'FAILED') {
-          // Check if payment was actually made or not
-          const now = new Date().getTime()
-          const bolt11ExpiresAt = orderData?.payment?.bolt11?.expires_at
-            ? new Date(orderData.payment.bolt11.expires_at).getTime()
-            : 0
-          const onchainExpiresAt = orderData?.payment?.onchain?.expires_at
-            ? new Date(orderData.payment.onchain.expires_at).getTime()
-            : 0
-
-          // Get payment states
-          const bolt11State = orderData?.payment?.bolt11?.state
-          const onchainState = orderData?.payment?.onchain?.state
-
-          // Check if no payment was actually made
-          // Payment states that indicate no payment was made:
-          // - EXPECT_PAYMENT: waiting for payment
-          // - TIMEOUT: payment timed out before being made
-          // - EXPIRED: payment expired
-          const noPaymentMadeStates = ['EXPECT_PAYMENT', 'TIMEOUT', 'EXPIRED']
-          const bolt11NoPayment = bolt11State
-            ? noPaymentMadeStates.includes(bolt11State)
-            : true
-          const onchainNoPayment = onchainState
-            ? noPaymentMadeStates.includes(onchainState)
-            : true
-
-          // If no payment was made on either method, show expired instead of error
-          // This prevents showing refund messages when no payment was actually made
-          const noPaymentMade = bolt11NoPayment && onchainNoPayment
-
-          // Also check if we're past the expiry time as an additional indicator
-          const isPastExpiry =
-            (bolt11ExpiresAt > 0 && now > bolt11ExpiresAt) ||
-            (onchainExpiresAt > 0 && now > onchainExpiresAt)
-
-          clearInterval(intervalId)
-          if (timeoutId) clearTimeout(timeoutId)
-          setIsProcessingPayment(false)
-
-          // Show 'expired' if no payment was made or if past expiry time
-          // Show 'error' only if payment was made but still failed (requires refund)
-          setPaymentStatus(noPaymentMade || isPastExpiry ? 'expired' : 'error')
-          setStep(4)
-        }
-      }, 5000)
-
-      return () => {
-        clearInterval(intervalId)
-        if (timeoutId) clearTimeout(timeoutId)
-      }
-    }
-  }, [orderId, getOrderRequest, step, paymentReceived, orderPayload])
+  const {
+    isProcessingPayment,
+    paymentMethod,
+    paymentReceived,
+    paymentStatus,
+    reset: resetPaymentMonitor,
+    setPaymentStatus,
+  } = useChannelOrderPaymentMonitor({
+    accessToken,
+    enabled: step === 3,
+    getOrder: getOrderRequest,
+    onTerminalState: () => setStep(4),
+    orderId,
+    orderPayload,
+  })
 
   const onSubmitStep1 = useCallback(
     async (data: { connectionUrl: string; success: boolean }) => {
@@ -183,7 +68,7 @@ export const Component = () => {
         setStep(4)
       }
     },
-    []
+    [setPaymentStatus]
   )
 
   const onSubmitStep2 = useCallback(
@@ -225,6 +110,8 @@ export const Component = () => {
           clientBalanceSat,
           assetId,
           lspAssetAmount,
+          clientAssetAmount,
+          rfqId,
           channelExpireBlocks,
         } = data
 
@@ -269,7 +156,8 @@ export const Component = () => {
             channelExpireBlocks,
             clientBalanceSat,
             clientPubKey,
-            lspAssetAmount: lspAssetAmount || undefined,
+            lspAssetAmount:
+              (lspAssetAmount || 0) + (clientAssetAmount || 0) || undefined,
             lspOptions,
           },
           assets,
@@ -287,10 +175,12 @@ export const Component = () => {
           assetId: assetId || undefined,
           capacitySat,
           channelExpireBlocks,
+          clientAssetAmount: clientAssetAmount || undefined,
           clientBalanceSat,
           clientPubKey,
           lspAssetAmount: lspAssetAmount || undefined,
           lspOptions,
+          rfqId: rfqId || undefined,
         })
 
         // Log the payload for the request
@@ -316,7 +206,11 @@ export const Component = () => {
           if (!orderId) {
             throw new Error('Could not get order id from server response')
           }
+          const orderAccessToken = getChannelOrderAccessToken(
+            channelResponse.data
+          )
           setOrderId(orderId)
+          setAccessToken(orderAccessToken)
           setOrderPayload(payload)
           setStep(3)
         }
@@ -335,13 +229,7 @@ export const Component = () => {
         setLoading(false)
       }
     },
-    [
-      createOrderRequest,
-      nodeInfoRequest,
-      addressRequest,
-      getInfoRequest,
-      extractErrorMessage,
-    ]
+    [createOrderRequest, nodeInfoRequest, addressRequest, getInfoRequest]
   )
 
   const onStepBack = useCallback(() => {
@@ -356,53 +244,53 @@ export const Component = () => {
 
   const handleRestartFlow = useCallback(() => {
     // Reset all state
-    setStep(1)
+    setStep(2)
     setOrderId(null)
+    setAccessToken(null)
     setOrderPayload(null)
-    setPaymentStatus(null)
-    setPaymentReceived(false)
-    setIsProcessingPayment(false)
-    setPaymentMethod(null)
+    resetPaymentMonitor()
     if (toastId) {
       toast.dismiss(toastId)
     }
-  }, [])
+  }, [resetPaymentMonitor])
 
   const handleConfirmBack = useCallback(() => {
     setShowBackConfirmation(false)
     setOrderId(null)
+    setAccessToken(null)
+    setOrderPayload(null)
+    resetPaymentMonitor()
     if (toastId) {
       toast.dismiss(toastId)
     }
     setStep(2)
-  }, [])
+  }, [resetPaymentMonitor])
 
   const BackConfirmationModal = () => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="absolute inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
         onClick={() => setShowBackConfirmation(false)}
       />
-      <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full relative z-10">
+      <div className="bg-surface-overlay rounded-xl p-6 max-w-md w-full relative z-10">
         <h3 className="text-xl font-bold text-white mb-4">
-          Are you sure you want to go back?
+          {t('orderChannel.backConfirmTitle')}
         </h3>
-        <p className="text-gray-300 mb-6">
-          Going back will cancel your current order. You'll need to create a new
-          order if you want to proceed later.
+        <p className="text-content-secondary mb-6">
+          {t('orderChannel.backConfirmMessage')}
         </p>
         <div className="flex gap-4">
           <button
-            className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            className="flex-1 px-4 py-2 bg-surface-high text-white rounded-lg hover:bg-surface-elevated transition-colors"
             onClick={() => setShowBackConfirmation(false)}
           >
-            Cancel
+            {t('orderChannel.backConfirmCancel')}
           </button>
           <button
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex-1 px-4 py-2 bg-primary text-[#12131C] rounded-lg hover:bg-primary-emphasis transition-colors"
             onClick={handleConfirmBack}
           >
-            Go Back
+            {t('orderChannel.backConfirmGoBack')}
           </button>
         </div>
       </div>
@@ -410,26 +298,22 @@ export const Component = () => {
   )
 
   return (
-    <div className="bg-gradient-to-b from-gray-900 to-gray-950 py-4 px-4 rounded-xl border border-gray-800/50 shadow-xl w-full text-white relative min-h-fit">
+    <div className="bg-gradient-to-b from-gray-900 to-gray-950 py-4 px-4 rounded-xl border border-border-subtle/50 shadow-xl w-full text-white relative isolate min-h-fit">
       {loading && (
         <div className="absolute inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50">
           <ClipLoader color={'#123abc'} loading={loading} size={50} />
         </div>
       )}
       {showBackConfirmation && <BackConfirmationModal />}
-      <div className={step !== 1 ? 'hidden' : ''}>
-        <Step1 onNext={onSubmitStep1} />
-      </div>
+      {step === 1 && <Step1 onNext={onSubmitStep1} />}
 
-      <div className={step !== 2 ? 'hidden' : ''}>
-        <Step2 onBack={onStepBack} onNext={onSubmitStep2} />
-      </div>
+      {step === 2 && <Step2 onBack={onStepBack} onNext={onSubmitStep2} />}
 
-      <div className={step !== 3 ? 'hidden' : ''}>
+      {step === 3 && (
         <Step3
           detectedPaymentMethod={paymentMethod}
           isProcessingPayment={isProcessingPayment}
-          loading={getOrderResponse.isLoading}
+          key={orderId ?? 'draft-order'}
           onBack={onStepBack}
           onRestart={handleRestartFlow}
           order={(createOrderResponse.data as Lsps1CreateOrderResponse) || null}
@@ -437,24 +321,20 @@ export const Component = () => {
           paymentReceived={paymentReceived}
           paymentStatus={paymentStatus}
         />
-      </div>
+      )}
 
-      <div className={step !== 4 ? 'hidden' : ''}>
+      {step === 4 && (
         <Step4
           onRestart={handleRestartFlow}
           orderId={orderId ?? undefined}
           paymentStatus={paymentStatus || 'error'}
         />
-      </div>
+      )}
 
       {/* Info Section */}
-      <div className="flex items-center space-x-2 text-sm text-gray-400 mt-3 p-3 bg-blue-900/20 border border-blue-800/30 rounded-lg">
+      <div className="flex items-center space-x-2 text-sm text-content-secondary mt-3 p-3 bg-blue-900/20 border border-blue-800/30 rounded-lg">
         <Info className="h-5 w-5 text-blue-400 flex-shrink-0" />
-        <p>
-          LSP channels provide instant liquidity without requiring you to manage
-          on-chain transactions. The LSP handles channel opening and provides
-          inbound liquidity for receiving payments.
-        </p>
+        <p>{t('orderChannel.infoMessage')}</p>
       </div>
     </div>
   )

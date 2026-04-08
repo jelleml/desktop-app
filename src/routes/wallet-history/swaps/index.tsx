@@ -7,6 +7,7 @@ import {
   Calendar,
 } from 'lucide-react'
 import React, { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 
 import { RootState } from '../../../app/store'
@@ -77,6 +78,7 @@ const getStatusBadgeVariant = (status: SwapStatus) => {
 }
 
 export const Component: React.FC = () => {
+  const { t } = useTranslation()
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [assetFilter, setAssetFilter] = useState<string>('all')
@@ -114,10 +116,12 @@ export const Component: React.FC = () => {
   const assetInfo = useMemo(() => {
     const info: Record<string, AssetInfo> = {}
     if (assetsData?.nia) {
-      assetsData.nia.forEach((asset) => {
-        info[asset.asset_id] = {
-          precision: asset.precision,
-          ticker: asset.ticker,
+      assetsData.nia.forEach((asset: any) => {
+        if ((asset as any).asset_id) {
+          info[(asset as any).asset_id] = {
+            precision: asset.precision ?? 8,
+            ticker: asset.ticker || 'UNKNOWN',
+          }
         }
       })
     }
@@ -128,12 +132,12 @@ export const Component: React.FC = () => {
   const allSwaps = useMemo(() => {
     if (!swapsData) return []
 
-    const makerSwaps = swapsData.maker.map((swap) => ({
+    const makerSwaps = (swapsData?.maker || []).map((swap: any) => ({
       ...swap,
       type: 'maker' as const,
     }))
 
-    const takerSwaps = swapsData.taker.map((swap) => ({
+    const takerSwaps = (swapsData?.taker || []).map((swap: any) => ({
       ...swap,
       type: 'taker' as const,
     }))
@@ -195,9 +199,9 @@ export const Component: React.FC = () => {
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase()
         return (
-          swap.payment_hash.toLowerCase().includes(searchLower) ||
-          swap.status.toLowerCase().includes(searchLower) ||
-          swap.type.toLowerCase().includes(searchLower)
+          (swap.payment_hash || '').toLowerCase().includes(searchLower) ||
+          (swap.status || '').toLowerCase().includes(searchLower) ||
+          (swap.type || '').toLowerCase().includes(searchLower)
         )
       }
 
@@ -209,22 +213,22 @@ export const Component: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <Loader className="w-12 h-12 animate-spin text-blue-500" />
-        <p className="text-slate-400">Loading swap history...</p>
+        <p className="text-content-secondary">{t('swaps.loading')}</p>
       </div>
     )
   }
 
   if (isError) {
     return (
-      <Alert title="Error Loading Data" variant="error">
-        <p>There was an error loading your swap history. Please try again.</p>
+      <Alert title={t('swaps.errorLoading')} variant="error">
+        <p>{t('swaps.errorMessage')}</p>
         <div className="mt-4">
           <Button
             icon={<RefreshCw className="w-4 h-4" />}
             onClick={handleRefresh}
             variant="outline"
           >
-            Try Again
+            {t('swaps.tryAgain')}
           </Button>
         </div>
       </Alert>
@@ -232,17 +236,17 @@ export const Component: React.FC = () => {
   }
 
   return (
-    <Card className="bg-gray-800/50 border border-gray-700/50">
+    <Card className="bg-surface-overlay/50 border border-border-default/50">
       <div className="flex justify-between items-center flex-wrap gap-4 mb-6">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-lg bg-blue-500/10">
             <ArrowDownUp className="h-6 w-6 text-blue-500" />
           </div>
-          <h2 className="text-xl font-bold text-white">Swap History</h2>
+          <h2 className="text-xl font-bold text-white">{t('swaps.title')}</h2>
         </div>
 
         <IconButton
-          aria-label="Refresh"
+          aria-label={t('swaps.refresh')}
           disabled={isRefreshing}
           icon={
             isRefreshing ? (
@@ -259,12 +263,12 @@ export const Component: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-gray-400" />
+            <Search className="h-4 w-4 text-content-secondary" />
           </div>
           <input
-            className="block w-full pl-9 pr-3 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="block w-full pl-9 pr-3 py-2 border border-border-default rounded-lg bg-surface-overlay text-white placeholder-content-secondary focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search swaps..."
+            placeholder={t('swaps.searchPlaceholder')}
             type="text"
             value={searchTerm}
           />
@@ -272,20 +276,20 @@ export const Component: React.FC = () => {
 
         <div className="relative">
           <select
-            className="appearance-none w-full pl-9 pr-8 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="appearance-none w-full pl-9 pr-8 py-2 border border-border-default rounded-lg bg-surface-overlay text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             onChange={(e) => setTypeFilter(e.target.value)}
             value={typeFilter}
           >
-            <option value="all">All Types</option>
-            <option value="maker">Maker</option>
-            <option value="taker">Taker</option>
+            <option value="all">{t('swaps.allTypes')}</option>
+            <option value="maker">{t('swaps.maker')}</option>
+            <option value="taker">{t('swaps.taker')}</option>
           </select>
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <ArrowDownUp className="h-4 w-4 text-gray-400" />
+            <ArrowDownUp className="h-4 w-4 text-content-secondary" />
           </div>
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
             <svg
-              className="h-4 w-4 text-gray-400"
+              className="h-4 w-4 text-content-secondary"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -303,11 +307,11 @@ export const Component: React.FC = () => {
 
         <div className="relative">
           <select
-            className="appearance-none w-full pl-9 pr-8 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="appearance-none w-full pl-9 pr-8 py-2 border border-border-default rounded-lg bg-surface-overlay text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             onChange={(e) => setStatusFilter(e.target.value)}
             value={statusFilter}
           >
-            <option value="all">All Statuses</option>
+            <option value="all">{t('swaps.allStatuses')}</option>
             {Object.values(SwapStatus).map((status) => (
               <option key={status} value={status}>
                 {status}
@@ -315,11 +319,11 @@ export const Component: React.FC = () => {
             ))}
           </select>
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Calendar className="h-4 w-4 text-gray-400" />
+            <Calendar className="h-4 w-4 text-content-secondary" />
           </div>
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
             <svg
-              className="h-4 w-4 text-gray-400"
+              className="h-4 w-4 text-content-secondary"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -337,11 +341,11 @@ export const Component: React.FC = () => {
 
         <div className="relative">
           <select
-            className="appearance-none w-full pl-9 pr-8 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="appearance-none w-full pl-9 pr-8 py-2 border border-border-default rounded-lg bg-surface-overlay text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             onChange={(e) => setAssetFilter(e.target.value)}
             value={assetFilter}
           >
-            <option value="all">All Assets</option>
+            <option value="all">{t('swaps.allAssets')}</option>
             {uniqueAssets.map((asset) => (
               <option key={asset} value={asset}>
                 {asset}
@@ -349,11 +353,11 @@ export const Component: React.FC = () => {
             ))}
           </select>
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <ArrowDownUp className="h-4 w-4 rotate-90 text-gray-400" />
+            <ArrowDownUp className="h-4 w-4 rotate-90 text-content-secondary" />
           </div>
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
             <svg
-              className="h-4 w-4 text-gray-400"
+              className="h-4 w-4 text-content-secondary"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -371,13 +375,13 @@ export const Component: React.FC = () => {
       </div>
 
       {filteredSwaps.length === 0 ? (
-        <div className="text-center py-8 text-slate-400 bg-slate-800/30 rounded-lg border border-slate-700">
+        <div className="text-center py-8 text-content-secondary bg-surface-overlay/30 rounded-lg border border-border-default">
           {searchTerm ||
           statusFilter !== 'all' ||
           typeFilter !== 'all' ||
           assetFilter !== 'all' ? (
             <>
-              <p>No swaps found matching your filters.</p>
+              <p>{t('swaps.noSwapsFiltered')}</p>
               <Button
                 className="mt-4"
                 onClick={() => {
@@ -389,11 +393,11 @@ export const Component: React.FC = () => {
                 size="sm"
                 variant="outline"
               >
-                Clear Filters
+                {t('swaps.clearFilters')}
               </Button>
             </>
           ) : (
-            <p>No swaps found.</p>
+            <p>{t('swaps.noSwaps')}</p>
           )}
         </div>
       ) : (
@@ -433,14 +437,14 @@ export const Component: React.FC = () => {
                   : assetInfo[swap.to_asset || '']?.precision || 8
 
                 const fromAmount = formatAmount(
-                  swap.qty_from,
+                  swap.qty_from ?? 0,
                   fromPrecision,
                   fromAssetIsBtc,
                   bitcoinUnit
                 )
 
                 const toAmount = formatAmount(
-                  swap.qty_to,
+                  swap.qty_to ?? 0,
                   toPrecision,
                   toAssetIsBtc,
                   bitcoinUnit
@@ -451,14 +455,14 @@ export const Component: React.FC = () => {
                     <span className="text-red-500 font-semibold text-sm">
                       {fromAmount}
                     </span>
-                    <span className="text-gray-400 text-xs">
+                    <span className="text-content-secondary text-xs">
                       {fromAssetTicker}
                     </span>
-                    <ArrowRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                    <ArrowRight className="w-3 h-3 text-content-secondary flex-shrink-0" />
                     <span className="text-green-500 font-semibold text-sm">
                       {toAmount}
                     </span>
-                    <span className="text-gray-400 text-xs">
+                    <span className="text-content-secondary text-xs">
                       {toAssetTicker}
                     </span>
                   </div>
@@ -479,15 +483,22 @@ export const Component: React.FC = () => {
             },
             {
               accessor: (swap: SwapDetails & { type: 'maker' | 'taker' }) =>
-                renderCopyableField(swap.payment_hash, true, 4, 'Payment hash'),
+                renderCopyableField(
+                  swap.payment_hash || '',
+                  true,
+                  4,
+                  'Payment hash'
+                ),
               className: 'col-span-1',
               header: 'Payment Hash',
             },
             {
               accessor: (swap: SwapDetails & { type: 'maker' | 'taker' }) =>
                 renderStatusBadge(
-                  swap.status,
-                  getStatusBadgeVariant(swap.status)
+                  swap.status || '',
+                  getStatusBadgeVariant(
+                    (swap.status || 'Pending') as SwapStatus
+                  )
                 ),
               className: 'col-span-1',
               header: 'Status',
@@ -495,13 +506,13 @@ export const Component: React.FC = () => {
           ]}
           data={filteredSwaps}
           emptyState={
-            <div className="text-center py-8 text-slate-400 bg-slate-800/30 rounded-lg border border-slate-700">
+            <div className="text-center py-8 text-content-secondary bg-surface-overlay/30 rounded-lg border border-border-default">
               {searchTerm ||
               statusFilter !== 'all' ||
               typeFilter !== 'all' ||
               assetFilter !== 'all' ? (
                 <>
-                  <p>No swaps found matching your filters.</p>
+                  <p>{t('components.walletHistory.swaps.noSwapsFiltered')}</p>
                   <Button
                     className="mt-4"
                     onClick={() => {
@@ -517,18 +528,20 @@ export const Component: React.FC = () => {
                   </Button>
                 </>
               ) : (
-                <p>No swaps found.</p>
+                <p>{t('components.walletHistory.swaps.noSwaps')}</p>
               )}
             </div>
           }
           gridClassName="grid-cols-5"
           onRowClick={(swap: SwapDetails & { type: 'maker' | 'taker' }) =>
             setExpandedSwap(
-              expandedSwap === swap.payment_hash ? null : swap.payment_hash
+              expandedSwap === swap.payment_hash
+                ? null
+                : swap.payment_hash || null
             )
           }
           rowClassName={(swap: SwapDetails & { type: 'maker' | 'taker' }) =>
-            `cursor-pointer ${expandedSwap === swap.payment_hash ? 'bg-gray-700/30' : ''}`
+            `cursor-pointer ${expandedSwap === swap.payment_hash ? 'bg-surface-high/30' : ''}`
           }
         />
       )}

@@ -15,6 +15,7 @@ interface AssetRowProps {
   asset: NiaAsset
   onChainBalance: number
   offChainBalance: number
+  incomingBalance?: number
   isLoading?: boolean
 }
 
@@ -43,6 +44,7 @@ export const AssetRow: React.FC<AssetRowProps> = ({
   asset,
   onChainBalance,
   offChainBalance,
+  incomingBalance = 0,
   isLoading,
 }) => {
   const dispatch = useAppDispatch()
@@ -50,17 +52,18 @@ export const AssetRow: React.FC<AssetRowProps> = ({
   const [showDetailsModal, setShowDetailsModal] = useState(false)
 
   const formatAmount = (asset: NiaAsset, amount: number) => {
-    const formattedAmount = amount / Math.pow(10, asset.precision)
-    return formattedAmount.toLocaleString(undefined, {
-      maximumFractionDigits: asset.precision,
+    const precision = asset.precision || 0
+    const formattedAmount = amount / Math.pow(10, precision)
+    return formattedAmount.toLocaleString('en-US', {
+      maximumFractionDigits: precision,
     })
   }
 
   return (
     <>
-      <div className="grid grid-cols-4 gap-2 even:bg-blue-dark rounded items-center">
+      <div className="grid grid-cols-4 gap-2 even:bg-surface-elevated/40 even:hover:bg-surface-elevated/70 odd:hover:bg-surface-elevated/20 transition-colors border-b border-border-default/20 items-center">
         <div
-          className="py-3 px-4 text-sm truncate cursor-pointer flex items-center hover:bg-blue-darker/50 rounded-l"
+          className="py-3 px-4 text-sm truncate cursor-pointer flex items-center"
           onClick={() => setShowDetailsModal(true)}
         >
           <AssetIcon ticker={asset.ticker} />
@@ -84,67 +87,69 @@ export const AssetRow: React.FC<AssetRowProps> = ({
           {isLoading ? (
             <LoadingPlaceholder />
           ) : (
-            <div className="font-bold">
-              {formatAmount(asset, onChainBalance)}
+            <div className="flex flex-col">
+              <span className="font-bold">
+                {formatAmount(asset, onChainBalance)}
+              </span>
+              {incomingBalance > 0 && (
+                <span className="text-[10px] text-content-tertiary font-medium">
+                  +{formatAmount(asset, incomingBalance)} incoming
+                </span>
+              )}
             </div>
           )}
         </div>
 
-        <div className="text-sm py-3 pl-4 pr-6 flex justify-center">
-          <div className="flex items-center gap-3 relative">
-            <div className="relative group">
-              <button
-                className="p-2 rounded-lg border border-cyan/30 hover:border-cyan/60 hover:bg-cyan/10 transition-all duration-200"
-                onClick={() =>
+        <div className="py-3 px-2 flex justify-center">
+          <div className="flex items-center gap-0.5">
+            {[
+              {
+                icon: <Download className="w-3.5 h-3.5" />,
+                label: 'Deposit',
+                color: 'text-primary hover:bg-primary/15',
+                onClick: () =>
                   dispatch(
                     uiSliceActions.setModal({
                       assetId: asset.asset_id,
                       type: 'deposit',
                     })
-                  )
-                }
-              >
-                <Download className="w-4 h-4 text-cyan" />
-              </button>
-              <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
-                Deposit
-              </div>
-            </div>
-
-            <div className="relative group">
-              <button
-                className="p-2 rounded-lg border border-red/30 hover:border-red/60 hover:bg-red/10 transition-all duration-200"
-                onClick={() =>
+                  ),
+              },
+              {
+                icon: <Upload className="w-3.5 h-3.5" />,
+                label: 'Withdraw',
+                color: 'text-emerald-300 hover:bg-emerald-900/30',
+                onClick: () =>
                   dispatch(
                     uiSliceActions.setModal({
                       assetId: asset.asset_id,
                       type: 'withdraw',
                     })
-                  )
-                }
-              >
-                <Upload className="w-4 h-4 text-red" />
-              </button>
-              <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
-                Withdraw
-              </div>
-            </div>
-
-            <div className="relative group">
-              <button
-                className="p-2 rounded-lg border border-purple/30 hover:border-purple/60 hover:bg-purple/10 transition-all duration-200"
-                onClick={() =>
+                  ),
+              },
+              {
+                icon: <History className="w-3.5 h-3.5" />,
+                label: 'History',
+                color: 'text-secondary hover:bg-secondary/15',
+                onClick: () =>
                   navigate(
                     `${WALLET_HISTORY_ASSETS_PATH}?assetId=${asset.asset_id}`
-                  )
-                }
-              >
-                <History className="w-4 h-4 text-purple" />
-              </button>
-              <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
-                History
+                  ),
+              },
+            ].map(({ icon, label, color, onClick }) => (
+              <div key={label} className="relative group/btn">
+                <button
+                  className={`p-1.5 rounded-lg transition-colors duration-150 ${color}`}
+                  onClick={onClick}
+                  title={label}
+                >
+                  {icon}
+                </button>
+                <div className="absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 bg-surface-high text-content-primary text-[10px] rounded-md py-0.5 px-1.5 opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-border-default/40 shadow-lg z-20">
+                  {label}
+                </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>

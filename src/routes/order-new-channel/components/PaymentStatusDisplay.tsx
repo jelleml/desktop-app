@@ -1,5 +1,6 @@
 import { Clock, RefreshCcw, ArrowLeft } from 'lucide-react'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { formatBitcoinAmount } from '../../../helpers/number'
 import { Lsps1CreateOrderResponse } from '../../../slices/makerApi/makerApi.slice'
@@ -28,13 +29,16 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
   onRestart,
   onBack,
 }) => {
+  const { t } = useTranslation()
   if (status === 'success') {
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-8 text-center">
-          <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="mx-auto max-w-3xl">
+        <div className="relative overflow-hidden rounded-[28px] border border-emerald-400/20 bg-surface-base/90 p-8 text-center shadow-[0_24px_80px_rgba(2,6,23,0.45)]">
+          <div className="pointer-events-none absolute -left-16 top-0 h-44 w-44 rounded-full bg-emerald-400/12 blur-3xl" />
+          <div className="pointer-events-none absolute bottom-0 right-0 h-48 w-48 rounded-full bg-cyan-400/10 blur-3xl" />
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-400/15">
             <svg
-              className="w-10 h-10 text-green-500"
+              className="h-10 w-10 text-emerald-300"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -47,16 +51,17 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
               />
             </svg>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-4">
-            Payment Successful!
+          <h3 className="mb-4 text-2xl font-bold text-white">
+            {t('orderChannel.step3.paymentSuccessful')}
           </h3>
-          <p className="text-gray-400 mb-6">
-            Your channel is being opened. This may take a few minutes to
-            complete.
+          <p className="mb-6 text-content-secondary">
+            {t('orderChannel.step3.channelOpening')}
           </p>
-          <div className="bg-gray-800/50 rounded-xl p-4 inline-block mb-6">
+          <div className="mb-6 inline-block rounded-[20px] border border-border-subtle bg-surface-overlay/50 p-4">
             <div className="flex items-center gap-4 text-sm">
-              <span className="text-gray-400">Amount:</span>
+              <span className="text-content-secondary">
+                {t('orderChannel.step3.amount')}:
+              </span>
               <span className="text-white font-medium">
                 {formatBitcoinAmount(
                   currentPayment?.order_total_sat || 0,
@@ -64,13 +69,15 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
                 )}{' '}
                 {bitcoinUnit}
               </span>
-              <span className="text-gray-400">•</span>
-              <span className="text-gray-400">Method:</span>
+              <span className="text-content-secondary">•</span>
+              <span className="text-content-secondary">
+                {t('orderChannel.step3.method')}:
+              </span>
               <span className="text-white font-medium flex items-center gap-1">
                 {paymentMethod === 'lightning' ? (
-                  <>⚡ Lightning</>
+                  <>⚡ {t('orderChannel.step3.lightning')}</>
                 ) : (
-                  <>₿ On-chain</>
+                  <>₿ {t('orderChannel.step3.onchain')}</>
                 )}
               </span>
             </div>
@@ -78,14 +85,14 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
 
           {/* Asset Information */}
           {(orderPayload?.asset_id || order?.asset_id) && (
-            <div className="bg-purple-900/20 border border-purple-500/30 rounded-xl p-4 inline-block">
+            <div className="inline-block rounded-[20px] border border-emerald-400/20 bg-emerald-400/8 p-4">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                <span className="text-purple-300 text-sm font-medium">
-                  RGB Asset Channel
+                <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+                <span className="text-sm font-medium text-emerald-200">
+                  {t('orderChannel.step3.rgbAssetChannel')}
                 </span>
               </div>
-              <div className="text-center text-sm text-gray-400 mb-2">
+              <div className="text-center text-sm text-content-secondary mb-2">
                 {assetInfo ? (
                   <>
                     {assetInfo.name} ({assetInfo.ticker})
@@ -108,8 +115,10 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
                   {(order?.lsp_asset_amount ||
                     orderPayload?.lsp_asset_amount) && (
                     <div className="flex justify-center gap-2">
-                      <span className="text-gray-500">LSP Amount:</span>
-                      <span className="text-purple-300">
+                      <span className="text-content-tertiary">
+                        {t('orderChannel.step3.lspAmount')}:
+                      </span>
+                      <span className="text-emerald-300">
                         {(
                           order?.lsp_asset_amount ||
                           orderPayload?.lsp_asset_amount
@@ -121,7 +130,9 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
                   {(order?.client_asset_amount ||
                     orderPayload?.client_asset_amount) && (
                     <div className="flex justify-center gap-2">
-                      <span className="text-gray-500">Your Amount:</span>
+                      <span className="text-content-tertiary">
+                        {t('orderChannel.step3.yourAmount')}:
+                      </span>
                       <span className="text-blue-300">
                         {(
                           order?.client_asset_amount ||
@@ -142,36 +153,37 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
 
   if (status === 'expired') {
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-2xl p-8 text-center">
-          <div className="w-20 h-20 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Clock className="w-10 h-10 text-yellow-500" />
+      <div className="mx-auto max-w-3xl">
+        <div className="relative overflow-hidden rounded-[28px] border border-yellow-500/20 bg-surface-base/90 p-8 text-center shadow-[0_24px_80px_rgba(2,6,23,0.45)]">
+          <div className="pointer-events-none absolute -left-16 top-0 h-44 w-44 rounded-full bg-yellow-500/10 blur-3xl" />
+          <div className="pointer-events-none absolute bottom-0 right-0 h-48 w-48 rounded-full bg-orange-500/10 blur-3xl" />
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-yellow-500/15">
+            <Clock className="h-10 w-10 text-yellow-300" />
           </div>
-          <h3 className="text-2xl font-bold text-white mb-4">
-            Payment Expired
+          <h3 className="mb-4 text-2xl font-bold text-white">
+            {t('orderChannel.step4.expiredTitle')}
           </h3>
-          <p className="text-gray-400 mb-6">
-            The payment window has expired. Please create a new order to
-            continue.
+          <p className="mb-6 text-content-secondary">
+            {t('orderChannel.step3.expiredMessage')}
           </p>
 
           <div className="flex gap-3 justify-center">
             {onRestart && (
               <button
-                className="flex-1 max-w-xs px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                className="flex max-w-xs flex-1 items-center justify-center gap-2 rounded-xl bg-yellow-500 px-6 py-3 font-medium text-slate-950 transition-colors hover:bg-yellow-400"
                 onClick={onRestart}
               >
                 <RefreshCcw className="w-4 h-4" />
-                Create New Order
+                {t('orderChannel.step3.createNewOrder')}
               </button>
             )}
             {onBack && (
               <button
-                className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                className="flex items-center justify-center gap-2 rounded-xl border border-border-subtle bg-surface-overlay/60 px-6 py-3 font-medium text-white transition-colors hover:border-yellow-500/30"
                 onClick={onBack}
               >
                 <ArrowLeft className="w-4 h-4" />
-                Back
+                {t('orderChannel.step3.backButton')}
               </button>
             )}
           </div>
@@ -182,11 +194,13 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
 
   if (status === 'error') {
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-gradient-to-br from-red-500/10 to-pink-500/10 border border-red-500/20 rounded-2xl p-8 text-center">
-          <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="mx-auto max-w-3xl">
+        <div className="relative overflow-hidden rounded-[28px] border border-red-500/20 bg-surface-base/90 p-8 text-center shadow-[0_24px_80px_rgba(2,6,23,0.45)]">
+          <div className="pointer-events-none absolute -left-16 top-0 h-44 w-44 rounded-full bg-red-500/10 blur-3xl" />
+          <div className="pointer-events-none absolute bottom-0 right-0 h-48 w-48 rounded-full bg-pink-500/10 blur-3xl" />
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-500/15">
             <svg
-              className="w-10 h-10 text-red-500"
+              className="h-10 w-10 text-red-300"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -199,29 +213,30 @@ export const PaymentStatusDisplay: React.FC<PaymentStatusDisplayProps> = ({
               />
             </svg>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-4">Payment Failed</h3>
-          <p className="text-gray-400 mb-6">
-            There was an issue processing your payment. You can try creating a
-            new order.
+          <h3 className="mb-4 text-2xl font-bold text-white">
+            {t('orderChannel.step4.errorTitle')}
+          </h3>
+          <p className="mb-6 text-content-secondary">
+            {t('orderChannel.step3.errorMessage')}
           </p>
 
           <div className="flex gap-3 justify-center">
             {onRestart && (
               <button
-                className="flex-1 max-w-xs px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                className="flex max-w-xs flex-1 items-center justify-center gap-2 rounded-xl bg-red-500 px-6 py-3 font-medium text-white transition-colors hover:bg-red-400"
                 onClick={onRestart}
               >
                 <RefreshCcw className="w-4 h-4" />
-                Try Again
+                {t('orderChannel.step3.tryAgain')}
               </button>
             )}
             {onBack && (
               <button
-                className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                className="flex items-center justify-center gap-2 rounded-xl border border-border-subtle bg-surface-overlay/60 px-6 py-3 font-medium text-white transition-colors hover:border-red-500/30"
                 onClick={onBack}
               >
                 <ArrowLeft className="w-4 h-4" />
-                Back
+                {t('orderChannel.step3.backButton')}
               </button>
             )}
           </div>

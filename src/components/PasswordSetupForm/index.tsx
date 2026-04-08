@@ -1,6 +1,7 @@
 import { Eye, EyeOff, AlertCircle, Loader2, ArrowRight } from 'lucide-react'
 import { useState } from 'react'
 import { UseFormReturn, SubmitHandler } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 
 import { Button, Card, Alert } from '../ui'
 
@@ -28,6 +29,7 @@ export const PasswordSetupForm = ({
   disabled = false,
   isLoading = false,
 }: PasswordSetupFormProps) => {
+  const { t } = useTranslation()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit: SubmitHandler<PasswordFields> = async (data) => {
@@ -44,14 +46,13 @@ export const PasswordSetupForm = ({
 
   return (
     <div className="w-full">
-      <p className="text-slate-400 mb-6 leading-relaxed">
-        Set a strong password to secure your node. This password will be
-        required to access your wallet.
+      <p className="text-content-secondary mb-6 leading-relaxed">
+        {t('components.passwordSetupForm.description')}
       </p>
 
       {/* Form Section */}
       <Card
-        className={`p-6 bg-blue-dark/40 border transition-all duration-500 relative overflow-hidden ${
+        className={`p-6 bg-surface-elevated/40 border transition-all duration-500 relative overflow-hidden ${
           isDisabled
             ? 'opacity-75 pointer-events-none border-cyan-500/30'
             : 'border-white/5'
@@ -66,26 +67,30 @@ export const PasswordSetupForm = ({
         >
           {/* Password Field */}
           <div className="transition-all duration-300">
-            <label className="block text-sm font-medium text-slate-300 mb-1.5 transition-opacity duration-300">
-              Create Password
+            <label className="block text-sm font-medium text-content-secondary mb-1.5 transition-opacity duration-300">
+              {t('components.passwordSetupForm.createPasswordLabel')}
             </label>
             <div className="relative group">
               <input
-                className="w-full px-4 py-2.5 rounded-lg border-2 border-slate-700/50 
-                          bg-slate-800/30 text-slate-300 
-                          focus:border-cyan focus:ring-2 focus:ring-cyan/20 
-                          outline-none transition-all duration-300 placeholder:text-slate-600
+                className="w-full px-4 py-2.5 rounded-lg border-2 border-border-default/50
+                          bg-surface-overlay/30 text-content-secondary
+                          focus:border-cyan focus:ring-2 focus:ring-cyan/20
+                          outline-none transition-all duration-300 placeholder:text-content-tertiary
                           disabled:opacity-50 disabled:cursor-not-allowed
-                          hover:border-slate-600/70"
+                          hover:border-border-default/70"
                 disabled={isDisabled}
-                placeholder="Enter a strong password"
+                placeholder={t(
+                  'components.passwordSetupForm.createPasswordPlaceholder'
+                )}
                 type={isPasswordVisible ? 'text' : 'password'}
                 {...form.register('password', {
                   minLength: {
-                    message: 'Password must be at least 8 characters',
+                    message: t(
+                      'components.passwordSetupForm.passwordMinLength'
+                    ),
                     value: 8,
                   },
-                  required: 'Password is required',
+                  required: t('components.passwordSetupForm.passwordRequired'),
                 })}
               />
               {isDisabled && (
@@ -100,8 +105,8 @@ export const PasswordSetupForm = ({
               )}
               <button
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1
-                           text-slate-400 hover:text-white rounded-lg
-                           hover:bg-slate-700/50 transition-all duration-200
+                           text-content-secondary hover:text-white rounded-lg
+                           hover:bg-surface-high/50 transition-all duration-200
                            disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isDisabled}
                 onClick={() => setIsPasswordVisible(!isPasswordVisible)}
@@ -124,29 +129,35 @@ export const PasswordSetupForm = ({
 
           {/* Confirm Password Field */}
           <div className="transition-all duration-300">
-            <label className="block text-sm font-medium text-slate-300 mb-1.5 transition-opacity duration-300">
-              Confirm Password
+            <label className="block text-sm font-medium text-content-secondary mb-1.5 transition-opacity duration-300">
+              {t('components.passwordSetupForm.confirmPasswordLabel')}
             </label>
             <div className="relative group">
               <input
-                className="w-full px-4 py-2.5 rounded-lg border-2 border-slate-700/50 
-                          bg-slate-800/30 text-slate-300 
-                          focus:border-cyan focus:ring-2 focus:ring-cyan/20 
-                          outline-none transition-all duration-300 placeholder:text-slate-600
+                className="w-full px-4 py-2.5 rounded-lg border-2 border-border-default/50
+                          bg-surface-overlay/30 text-content-secondary
+                          focus:border-cyan focus:ring-2 focus:ring-cyan/20
+                          outline-none transition-all duration-300 placeholder:text-content-tertiary
                           disabled:opacity-50 disabled:cursor-not-allowed
-                          hover:border-slate-600/70"
+                          hover:border-border-default/70"
                 disabled={isDisabled}
-                placeholder="Re-enter your password"
+                placeholder={t(
+                  'components.passwordSetupForm.confirmPasswordPlaceholder'
+                )}
                 type={isPasswordVisible ? 'text' : 'password'}
                 {...form.register('confirmPassword', {
                   minLength: {
-                    message: 'Password must be at least 8 characters',
+                    message: t(
+                      'components.passwordSetupForm.passwordMinLength'
+                    ),
                     value: 8,
                   },
-                  required: 'Password confirmation is required',
+                  required: t(
+                    'components.passwordSetupForm.passwordConfirmRequired'
+                  ),
                   validate: (value) =>
                     value === form.getValues('password') ||
-                    'Passwords do not match',
+                    t('components.passwordSetupForm.passwordsDoNotMatch'),
                 })}
               />
               {isDisabled && (
@@ -162,8 +173,8 @@ export const PasswordSetupForm = ({
               )}
               <button
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1
-                           text-slate-400 hover:text-white rounded-lg
-                           hover:bg-slate-700/50 transition-all duration-200
+                           text-content-secondary hover:text-white rounded-lg
+                           hover:bg-surface-high/50 transition-all duration-200
                            disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isDisabled}
                 onClick={() => setIsPasswordVisible(!isPasswordVisible)}
@@ -185,17 +196,17 @@ export const PasswordSetupForm = ({
           </div>
 
           {/* Password Strength Indicator */}
-          <div className="bg-slate-800/30 p-3 rounded-lg border border-slate-700/50 transition-all duration-300">
-            <h4 className="text-sm font-medium text-slate-300 mb-2">
-              Password Requirements:
+          <div className="bg-surface-overlay/30 p-3 rounded-lg border border-border-default/50 transition-all duration-300">
+            <h4 className="text-sm font-medium text-content-secondary mb-2">
+              {t('components.passwordSetupForm.requirementsTitle')}
             </h4>
             <ul className="space-y-1 text-xs">
-              <li className="flex items-center gap-1.5 text-slate-400 transition-all duration-300">
+              <li className="flex items-center gap-1.5 text-content-secondary transition-all duration-300">
                 <span
                   className={`w-3 h-3 rounded-full transition-all duration-300 ${
                     form.watch('password')?.length >= 8
                       ? 'bg-green-500 shadow-lg shadow-green-500/50 scale-110'
-                      : 'bg-slate-600'
+                      : 'bg-surface-elevated'
                   }`}
                 ></span>
                 <span
@@ -203,15 +214,15 @@ export const PasswordSetupForm = ({
                     form.watch('password')?.length >= 8 ? 'text-green-400' : ''
                   }
                 >
-                  At least 8 characters
+                  {t('components.passwordSetupForm.requirementMinLength')}
                 </span>
               </li>
-              <li className="flex items-center gap-1.5 text-slate-400 transition-all duration-300">
+              <li className="flex items-center gap-1.5 text-content-secondary transition-all duration-300">
                 <span
                   className={`w-3 h-3 rounded-full transition-all duration-300 ${
                     form.watch('password')?.match(/[A-Z]/)
                       ? 'bg-green-500 shadow-lg shadow-green-500/50 scale-110'
-                      : 'bg-slate-600'
+                      : 'bg-surface-elevated'
                   }`}
                 ></span>
                 <span
@@ -221,15 +232,15 @@ export const PasswordSetupForm = ({
                       : ''
                   }
                 >
-                  Contains uppercase letter
+                  {t('components.passwordSetupForm.requirementUppercase')}
                 </span>
               </li>
-              <li className="flex items-center gap-1.5 text-slate-400 transition-all duration-300">
+              <li className="flex items-center gap-1.5 text-content-secondary transition-all duration-300">
                 <span
                   className={`w-3 h-3 rounded-full transition-all duration-300 ${
                     form.watch('password')?.match(/[0-9]/)
                       ? 'bg-green-500 shadow-lg shadow-green-500/50 scale-110'
-                      : 'bg-slate-600'
+                      : 'bg-surface-elevated'
                   }`}
                 ></span>
                 <span
@@ -239,16 +250,16 @@ export const PasswordSetupForm = ({
                       : ''
                   }
                 >
-                  Contains number
+                  {t('components.passwordSetupForm.requirementNumber')}
                 </span>
               </li>
-              <li className="flex items-center gap-1.5 text-slate-400 transition-all duration-300">
+              <li className="flex items-center gap-1.5 text-content-secondary transition-all duration-300">
                 <span
                   className={`w-3 h-3 rounded-full transition-all duration-300 ${
                     form.watch('password') === form.watch('confirmPassword') &&
                     form.watch('password')?.length > 0
                       ? 'bg-green-500 shadow-lg shadow-green-500/50 scale-110'
-                      : 'bg-slate-600'
+                      : 'bg-surface-elevated'
                   }`}
                 ></span>
                 <span
@@ -259,7 +270,7 @@ export const PasswordSetupForm = ({
                       : ''
                   }
                 >
-                  Passwords match
+                  {t('components.passwordSetupForm.requirementMatch')}
                 </span>
               </li>
             </ul>
@@ -270,7 +281,7 @@ export const PasswordSetupForm = ({
             <div className="animate-in slide-in-from-top-2 fade-in duration-300">
               <Alert
                 icon={<AlertCircle className="w-5 h-5" />}
-                title="Error"
+                title={t('common.error')}
                 variant="error"
               >
                 <ul className="text-sm space-y-1">
@@ -307,7 +318,9 @@ export const PasswordSetupForm = ({
               type="submit"
               variant="primary"
             >
-              {isDisabled ? 'Initializing...' : 'Initialize Node'}
+              {isDisabled
+                ? t('components.passwordSetupForm.initializingButton')
+                : t('components.passwordSetupForm.initializeButton')}
             </Button>
             {isDisabled && (
               <div

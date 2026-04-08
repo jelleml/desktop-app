@@ -1,8 +1,12 @@
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { TFunction } from 'i18next'
 import { toast } from 'react-toastify'
 
-import { TradingPair } from '../../../slices/makerApi/makerApi.slice'
-import { NiaAsset } from '../../../slices/nodeApi/nodeApi.slice'
+import {
+  TradingPair,
+  getAssetId,
+} from '../../../slices/makerApi/makerApi.slice'
+import type { AssetNIA as NiaAsset } from 'kaleido-sdk/rln'
 import { logger } from '../../../utils/logger'
 
 import { handleApiError } from './apiUtils'
@@ -25,13 +29,25 @@ export interface SwapDetails {
 /**
  * Copies error details to clipboard
  */
-export const copyToClipboard = (text: string) => {
+export const copyToClipboard = (text: string, t: TFunction) => {
   navigator.clipboard.write([
     new ClipboardItem({
       'text/plain': new Blob([text], { type: 'text/plain' }),
     }),
   ])
-  toast.success('Error details copied to clipboard')
+  toast.success(t('tradeMarketMaker.swap.errorDetailsClipboard'))
+}
+
+/**
+ * Normalize asset ID for comparison (case-insensitive for BTC)
+ */
+const normalizeAssetIdForComparison = (assetId: string): string => {
+  // BTC should be case-insensitive
+  if (assetId.toLowerCase() === 'btc') {
+    return 'btc'
+  }
+  // All other assets (including RGB protocol IDs) are case-sensitive
+  return assetId
 }
 
 /**
@@ -61,12 +77,18 @@ export const validateSwapString = (
     swapPaymentHash,
   ] = swap_parts
 
+  // Normalize asset IDs for comparison (case-insensitive for BTC)
+  const normalizedFromAssetId = normalizeAssetIdForComparison(fromAssetId)
+  const normalizedToAssetId = normalizeAssetIdForComparison(toAssetId)
+  const normalizedSwapFromAsset = normalizeAssetIdForComparison(swapFromAsset)
+  const normalizedSwapToAsset = normalizeAssetIdForComparison(swapToAsset)
+
   // Validate swap string contents
   if (
     parseInt(swapFromAmount) !== fromAmount ||
-    swapFromAsset !== fromAssetId ||
+    normalizedSwapFromAsset !== normalizedFromAssetId ||
     parseInt(swapToAmount) !== toAmount ||
-    swapToAsset !== toAssetId ||
+    normalizedSwapToAsset !== normalizedToAssetId ||
     swapPaymentHash !== payment_hash
   ) {
     logger.error('Swap string contents do not match the payload')
@@ -97,11 +119,12 @@ export const createSwapExecutor = (
   formatAmount: (amount: number, asset: string) => string,
   tradablePairs: TradingPair[],
   initSwap: any,
-  taker: any,
+  whitelistTrade: any,
   execSwap: any,
   setSwapRecapDetails: (details: SwapDetails) => void,
   setShowRecap: (show: boolean) => void,
-  setErrorMessage: (message: string | null) => void
+  setErrorMessage: (message: string | null) => void,
+  t: TFunction
 ) => {
   return async (data: Fields): Promise<void> => {
     let toastId: string | number | null = null
@@ -141,11 +164,22 @@ export const createSwapExecutor = (
         throw new Error('Invalid trading pair')
       }
 
+      // Use asset_id from form (which was set from quote response) if available
+      // This ensures we use the protocol ID that the maker returned in the quote
       const fromAssetId =
-        assets.find((asset) => asset.ticker === data.fromAsset)?.asset_id ||
-        'btc'
+        data.fromAssetId ||
+        (assets.find((asset) => asset.ticker === data.fromAsset)
+          ? getAssetId(
+              assets.find((asset) => asset.ticker === data.fromAsset)! as any
+            )
+          : 'btc')
       const toAssetId =
-        assets.find((asset) => asset.ticker === data.toAsset)?.asset_id || 'btc'
+        data.toAssetId ||
+        (assets.find((asset) => asset.ticker === data.toAsset)
+          ? getAssetId(
+              assets.find((asset) => asset.ticker === data.toAsset)! as any
+            )
+          : 'btc')
 
       if (!fromAssetId || !toAssetId) {
         throw new Error('Invalid asset ID')
@@ -216,10 +250,10 @@ export const createSwapExecutor = (
         throw new Error('Invalid swap string validation')
       }
 
-      const takerResponse = await taker({ swapstring })
-      if ('error' in takerResponse) {
+      const whitelistResponse = await whitelistTrade({ swapstring })
+      if ('error' in whitelistResponse) {
         throw new Error(
-          handleApiError(takerResponse.error as FetchBaseQueryError)
+          handleApiError(whitelistResponse.error as FetchBaseQueryError)
         )
       }
 
@@ -279,16 +313,19 @@ export const createSwapExecutor = (
       // Clear any existing toasts first
       toast.dismiss()
 
-      toast.error(`Swap Failed: ${errorMessage}`, {
-        autoClose: 5000,
-        closeButton: true,
-        closeOnClick: false,
-        draggable: false,
-        isLoading: false,
-        onClick: (e) => e.stopPropagation(),
-        pauseOnFocusLoss: false,
-        pauseOnHover: true,
-      })
+      toast.error(
+        t('tradeMarketMaker.swap.swapFailed', { error: errorMessage }),
+        {
+          autoClose: 5000,
+          closeButton: true,
+          closeOnClick: false,
+          draggable: false,
+          isLoading: false,
+          onClick: (e) => e.stopPropagation(),
+          pauseOnFocusLoss: false,
+          pauseOnHover: true,
+        }
+      )
 
       if (timeoutId !== null) {
         clearTimeout(timeoutId)

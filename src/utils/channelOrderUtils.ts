@@ -21,16 +21,16 @@ export interface AssetInfo {
 export interface LspOptions {
   min_required_channel_confirmations: number
   min_funding_confirms_within_blocks: number
-  min_onchain_payment_confirmations: number
+  min_onchain_payment_confirmations?: number | null
   supports_zero_channel_reserve: boolean
-  min_onchain_payment_size_sat: number
+  min_onchain_payment_size_sat?: number | null
   max_channel_expiry_blocks: number
-  min_initial_client_balance_sat: number
-  max_initial_client_balance_sat: number
-  min_initial_lsp_balance_sat: number
-  max_initial_lsp_balance_sat: number
-  min_channel_balance_sat: number
-  max_channel_balance_sat: number
+  min_initial_client_balance_sat?: number | null
+  max_initial_client_balance_sat?: number | null
+  min_initial_lsp_balance_sat?: number | null
+  max_initial_lsp_balance_sat?: number | null
+  min_channel_balance_sat?: number | null
+  max_channel_balance_sat?: number | null
 }
 
 export interface ChannelOrderPayload {
@@ -60,6 +60,54 @@ export interface CreateChannelOrderParams {
   lspOptions?: LspOptions
   rfqId?: string
 }
+
+export type ChannelOrderPaymentMethod = 'lightning' | 'onchain'
+export type ChannelOrderTerminalStatus = 'success' | 'error' | 'expired'
+
+interface ChannelOrderPaymentLike {
+  expires_at?: string | null
+  state?: string | null
+}
+
+export interface ChannelOrderStatusLike {
+  access_token?: string | null
+  channel?: unknown | null
+  created_at?: string | null
+  order_state?: string | null
+  state?: string | null
+  status?: string | null
+  token?: string | null
+  payment?: {
+    bolt11?: ChannelOrderPaymentLike | null
+    onchain?: ChannelOrderPaymentLike | null
+  } | null
+}
+
+export interface ChannelOrderPaymentSnapshot {
+  actualPaymentState: string | null
+  bolt11State: string | null
+  onchainState: string | null
+  paymentMethod: ChannelOrderPaymentMethod | null
+  paymentReceived: boolean
+}
+
+const PAYMENT_RECEIVED_STATES = ['HOLD', 'PAID'] as const
+const NO_PAYMENT_MADE_STATES = ['EXPECT_PAYMENT', 'TIMEOUT', 'EXPIRED'] as const
+
+const normalizeOrderState = (state?: string | null): string | null =>
+  state ? state.trim().toUpperCase() : null
+
+const isPaymentReceivedState = (state?: string | null): boolean =>
+  PAYMENT_RECEIVED_STATES.includes(normalizeOrderState(state) as any)
+
+const getChannelOrderState = (
+  order: ChannelOrderStatusLike | null | undefined
+): string | null =>
+  normalizeOrderState(order?.order_state ?? order?.state ?? order?.status)
+
+export const getChannelOrderAccessToken = (
+  order: ChannelOrderStatusLike | null | undefined
+): string | null => order?.access_token || order?.token || null
 
 /**
  * Helper function to extract meaningful error messages
@@ -231,6 +279,86 @@ export const formatRtkQueryError = (error: FetchBaseQueryError): string => {
   return errorMessage
 }
 
+export const getChannelOrderPaymentSnapshot = (
+  order: ChannelOrderStatusLike | null | undefined
+): ChannelOrderPaymentSnapshot => {
+  const bolt11State = order?.payment?.bolt11?.state ?? null
+  const onchainState = order?.payment?.onchain?.state ?? null
+
+  const actualPaymentState = isPaymentReceivedState(bolt11State)
+    ? bolt11State
+    : isPaymentReceivedState(onchainState)
+      ? onchainState
+      : bolt11State || onchainState
+
+  const paymentMethod = isPaymentReceivedState(bolt11State)
+    ? 'lightning'
+    : isPaymentReceivedState(onchainState)
+      ? 'onchain'
+      : null
+
+  return {
+    actualPaymentState,
+    bolt11State,
+    onchainState,
+    paymentMethod,
+    paymentReceived: isPaymentReceivedState(actualPaymentState),
+  }
+}
+
+export const getChannelOrderFailureStatus = (
+  order: ChannelOrderStatusLike | null | undefined,
+  now = Date.now()
+): Extract<ChannelOrderTerminalStatus, 'error' | 'expired'> => {
+  const bolt11ExpiresAt = order?.payment?.bolt11?.expires_at
+    ? new Date(order.payment.bolt11.expires_at).getTime()
+    : 0
+  const onchainExpiresAt = order?.payment?.onchain?.expires_at
+    ? new Date(order.payment.onchain.expires_at).getTime()
+    : 0
+
+  const { bolt11State, onchainState } = getChannelOrderPaymentSnapshot(order)
+  const bolt11NoPayment = bolt11State
+    ? NO_PAYMENT_MADE_STATES.includes(normalizeOrderState(bolt11State) as any)
+    : true
+  const onchainNoPayment = onchainState
+    ? NO_PAYMENT_MADE_STATES.includes(normalizeOrderState(onchainState) as any)
+    : true
+
+  const noPaymentMade = bolt11NoPayment && onchainNoPayment
+  const isPastExpiry =
+    (bolt11ExpiresAt > 0 && now > bolt11ExpiresAt) ||
+    (onchainExpiresAt > 0 && now > onchainExpiresAt)
+
+  return noPaymentMade || isPastExpiry ? 'expired' : 'error'
+}
+
+export const getChannelOrderTerminalStatus = (
+  order: ChannelOrderStatusLike | null | undefined,
+  now = Date.now()
+): ChannelOrderTerminalStatus | null => {
+  const orderState = getChannelOrderState(order)
+
+  if (
+    orderState === 'COMPLETED' ||
+    orderState === 'COMPLETE' ||
+    orderState === 'SUCCESS' ||
+    orderState === 'SUCCEEDED'
+  ) {
+    return 'success'
+  }
+
+  if (
+    orderState === 'FAILED' ||
+    orderState === 'ERROR' ||
+    orderState === 'EXPIRED'
+  ) {
+    return getChannelOrderFailureStatus(order, now)
+  }
+
+  return null
+}
+
 /**
  * Validates channel parameters against LSP options
  */
@@ -266,7 +394,7 @@ export const validateChannelParams = (
   // Validate client balance
   if (
     lspOptions &&
-    clientBalanceSat < lspOptions.min_initial_client_balance_sat
+    clientBalanceSat < (lspOptions.min_initial_client_balance_sat ?? 0)
   ) {
     return {
       error: `Your channel liquidity must be at least ${lspOptions.min_initial_client_balance_sat} sats`,
@@ -275,7 +403,7 @@ export const validateChannelParams = (
   }
   if (
     lspOptions &&
-    clientBalanceSat > lspOptions.max_initial_client_balance_sat
+    clientBalanceSat > (lspOptions.max_initial_client_balance_sat ?? 0)
   ) {
     return {
       error: `Your channel liquidity cannot exceed ${lspOptions.max_initial_client_balance_sat} sats`,

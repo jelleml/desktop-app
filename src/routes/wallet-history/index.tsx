@@ -7,6 +7,7 @@ import {
   ChevronUp,
 } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { twJoin } from 'tailwind-merge'
 
@@ -18,41 +19,10 @@ import {
   WALLET_HISTORY_WITHDRAWALS_PATH,
 } from '../../app/router/paths'
 
-const TABS = [
-  {
-    color: 'green',
-    icon: <ArrowDown className="w-5 h-5" />,
-    label: 'Deposits',
-    path: WALLET_HISTORY_DEPOSITS_PATH,
-  },
-  {
-    color: 'red',
-    icon: <ArrowUp className="w-5 h-5" />,
-    label: 'Payments & Withdrawals',
-    path: WALLET_HISTORY_WITHDRAWALS_PATH,
-  },
-  {
-    color: 'blue',
-    icon: <ArrowDownUp className="w-5 h-5" />,
-    label: 'Swaps',
-    path: WALLET_HISTORY_TRADES_PATH,
-  },
-  {
-    color: 'purple',
-    icon: <Coins className="w-5 h-5" />,
-    label: 'Assets',
-    path: WALLET_HISTORY_ASSETS_PATH,
-  },
-  {
-    color: 'orange',
-    icon: <ArrowDownUp className="w-5 h-5" />,
-    label: 'Channel Orders',
-    path: WALLET_HISTORY_CHANNEL_ORDERS_PATH,
-  },
-]
-
 const getIndicatorColor = (color: string) => {
   switch (color) {
+    case 'amber':
+      return 'from-amber-500 to-yellow-500'
     case 'green':
       return 'from-green-500 to-emerald-500'
     case 'red':
@@ -68,6 +38,8 @@ const getIndicatorColor = (color: string) => {
 
 const getIconBgColor = (color: string) => {
   switch (color) {
+    case 'amber':
+      return 'bg-amber-500/10 text-amber-500'
     case 'green':
       return 'bg-green-500/10 text-green-500'
     case 'red':
@@ -77,13 +49,47 @@ const getIconBgColor = (color: string) => {
     case 'purple':
       return 'bg-purple-500/10 text-purple-500'
     default:
-      return 'bg-slate-500/10 text-slate-500'
+      return 'bg-content-tertiary/10 text-content-tertiary'
   }
 }
 
 export const Component = () => {
+  const { t } = useTranslation()
   const location = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  const TABS = [
+    {
+      color: 'green',
+      icon: <ArrowDown className="w-5 h-5" />,
+      label: t('history.deposits'),
+      path: WALLET_HISTORY_DEPOSITS_PATH,
+    },
+    {
+      color: 'red',
+      icon: <ArrowUp className="w-5 h-5" />,
+      label: t('history.paymentsWithdrawals'),
+      path: WALLET_HISTORY_WITHDRAWALS_PATH,
+    },
+    {
+      color: 'blue',
+      icon: <ArrowDownUp className="w-5 h-5" />,
+      label: t('history.swaps'),
+      path: WALLET_HISTORY_TRADES_PATH,
+    },
+    {
+      color: 'purple',
+      icon: <Coins className="w-5 h-5" />,
+      label: t('history.assets'),
+      path: WALLET_HISTORY_ASSETS_PATH,
+    },
+    {
+      color: 'orange',
+      icon: <ArrowDownUp className="w-5 h-5" />,
+      label: t('history.channelOrders'),
+      path: WALLET_HISTORY_CHANNEL_ORDERS_PATH,
+    },
+  ]
 
   const activeTabData = TABS.find((tab) =>
     location.pathname.startsWith(tab.path)
@@ -92,21 +98,22 @@ export const Component = () => {
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">
       <div className="mb-6">
-        <p className="text-slate-400 text-sm">
-          View your transaction history, including deposits, payments,
-          withdrawals, and swaps.
+        <p className="text-content-secondary text-sm">
+          {t('history.description')}
         </p>
       </div>
 
       {/* Desktop Tabs */}
-      <div className="hidden md:flex mb-6 border-b border-gray-700">
+      <div className="hidden md:flex mb-6 border-b border-border-default">
         {TABS.map((tab) => {
           const isActive = location.pathname.startsWith(tab.path)
           return (
             <Link
               className={twJoin(
                 'flex-1 flex items-center gap-2 px-6 py-3 font-medium relative justify-center',
-                isActive ? 'text-white' : 'text-slate-400 hover:text-white'
+                isActive
+                  ? 'text-white'
+                  : 'text-content-secondary hover:text-white'
               )}
               key={tab.path}
               to={tab.path}
@@ -136,7 +143,7 @@ export const Component = () => {
       {/* Mobile Dropdown */}
       <div className="md:hidden mb-6">
         <button
-          className="flex items-center justify-between w-full px-4 py-3 bg-gray-800 rounded-lg border border-gray-700"
+          className="flex items-center justify-between w-full px-4 py-3 bg-surface-overlay rounded-lg border border-border-default"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
           <div className="flex items-center gap-2">
@@ -151,14 +158,14 @@ export const Component = () => {
             <span className="font-medium">{activeTabData?.label}</span>
           </div>
           {isMobileMenuOpen ? (
-            <ChevronUp className="w-5 h-5 text-slate-400" />
+            <ChevronUp className="w-5 h-5 text-content-secondary" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-slate-400" />
+            <ChevronDown className="w-5 h-5 text-content-secondary" />
           )}
         </button>
 
         {isMobileMenuOpen && (
-          <div className="mt-2 bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+          <div className="mt-2 bg-surface-overlay rounded-lg border border-border-default overflow-hidden">
             {TABS.map((tab) => {
               const isActive = location.pathname.startsWith(tab.path)
               return (
@@ -166,8 +173,8 @@ export const Component = () => {
                   className={twJoin(
                     'flex items-center gap-2 px-4 py-3 font-medium',
                     isActive
-                      ? 'bg-gray-700 text-white'
-                      : 'text-slate-400 hover:bg-gray-700/50 hover:text-white'
+                      ? 'bg-surface-high text-white'
+                      : 'text-content-secondary hover:bg-surface-high/50 hover:text-white'
                   )}
                   key={tab.path}
                   onClick={() => setIsMobileMenuOpen(false)}

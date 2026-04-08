@@ -1,8 +1,7 @@
-import {
-  DecodeInvoiceResponse,
-  DecodeRgbInvoiceResponse,
-  NiaAsset,
-} from '../../../../slices/nodeApi/nodeApi.slice'
+import type {
+  DecodeLNInvoiceResponse as DecodeInvoiceResponse,
+  DecodeRGBInvoiceResponse,
+} from 'kaleido-sdk/rln'
 
 // Use the same enum values as in nodeApi.slice.ts
 export enum HTLCStatus {
@@ -14,7 +13,7 @@ export enum HTLCStatus {
 // Form field interface
 export interface Fields {
   address: string
-  amount: number | string
+  amount: number | string | null // Allow null for zero-amount invoices
   fee_rate: string
   asset_id: string
   network: 'on-chain' | 'lightning'
@@ -48,6 +47,11 @@ export interface AssetOption {
   value: string
 }
 
+export interface ValidationMessage {
+  type: 'error' | 'warning' | 'info'
+  message: string
+}
+
 // Fee rate option interface
 export interface FeeRateOption {
   label: string
@@ -58,24 +62,19 @@ export interface FeeRateOption {
 // LightningInvoiceDetails component props
 export interface LightningInvoiceDetailsProps {
   decodedInvoice: DecodeInvoiceResponse
-  assets: {
-    data?: {
-      nia: NiaAsset[]
-    }
-  }
+  assets: any
   bitcoinUnit: string
   maxLightningCapacity: number
-  fetchAssetBalance: (assetId: string) => Promise<void>
+  fetchAssetBalance: (
+    assetId: string,
+    mode?: 'spendable' | 'offchain_outbound'
+  ) => Promise<number>
 }
 
 // RGBInvoiceDetails component props
 export interface RGBInvoiceDetailsProps {
-  decodedRgbInvoice: DecodeRgbInvoiceResponse
-  assets: {
-    data?: {
-      nia: NiaAsset[]
-    }
-  }
+  decodedRgbInvoice: DecodeRGBInvoiceResponse
+  assets: any
   bitcoinUnit: string
 }
 
@@ -91,11 +90,7 @@ export interface BalanceDisplayProps {
   assetId: string
   assetBalance: number
   bitcoinUnit: string
-  assets: {
-    data?: {
-      nia: NiaAsset[]
-    }
-  }
+  assets: any
 }
 
 // ConfirmationModal component props
@@ -109,7 +104,7 @@ export interface ConfirmationModalProps {
   isConfirming: boolean
   onCancel: () => void
   onConfirm: () => void
-  validationError?: string | null
+  validationMessage?: ValidationMessage | null
   paymentStatus?: PaymentStatus
   isPollingStatus?: boolean
   paymentHash?: string | null
@@ -119,12 +114,12 @@ export interface ConfirmationModalProps {
 export interface WithdrawFormProps {
   form: any
   addressType: AddressType
-  validationError: string | null
+  validationMessage: ValidationMessage | null
   clearValidationError: () => void
   isDecodingInvoice: boolean
   showAssetDropdown: boolean
   decodedInvoice: DecodeInvoiceResponse | null
-  decodedRgbInvoice: DecodeRgbInvoiceResponse | null
+  decodedRgbInvoice: DecodeRGBInvoiceResponse | null
   maxLightningCapacity: number
   maxAssetCapacities: Record<string, number>
   assetId: string
@@ -136,17 +131,16 @@ export interface WithdrawFormProps {
   customFee: number
   paymentStatus: PaymentStatus
   isPollingStatus: boolean
-  assets: {
-    data?: {
-      nia: NiaAsset[]
-    }
-  }
+  assets: any
   handleInvoiceChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   handlePasteFromClipboard: () => void
   setShowAssetDropdown: (show: boolean) => void
   setValue: (name: string, value: any) => void
   fetchBtcBalance: () => Promise<void>
-  fetchAssetBalance: (assetId: string) => Promise<void>
+  fetchAssetBalance: (
+    assetId: string,
+    mode?: 'spendable' | 'offchain_outbound'
+  ) => Promise<number>
   getMinAmount: () => number
   getMinAmountMessage: () => string
   getFeeIcon: (type: string) => JSX.Element

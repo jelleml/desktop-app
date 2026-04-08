@@ -1,9 +1,30 @@
 import Decimal from 'decimal.js'
+import i18n from 'i18next'
 
 import { NiaAsset } from '../slices/nodeApi/nodeApi.slice'
 
 export const SATOSHIS_PER_BTC = 100000000
 export const MSATS_PER_SAT = 1000
+
+/**
+ * Get the locale code for number formatting based on the current language
+ */
+export const getNumberLocale = (): string => {
+  const language = i18n.language || 'en'
+
+  // Map language codes to locale codes for number formatting
+  const localeMap: Record<string, string> = {
+    de: 'de-DE',
+    en: 'en-US',
+    es: 'es-ES',
+    fr: 'fr-FR',
+    it: 'it-IT',
+    ja: 'ja-JP',
+    zh: 'zh-CN',
+  }
+
+  return localeMap[language] || 'en-US'
+}
 
 export const msatToSat = (msats: number): number => msats / MSATS_PER_SAT
 export const satToMsat = (sats: number): number => sats * MSATS_PER_SAT
@@ -24,13 +45,14 @@ export const formatBitcoinAmount = (
   bitcoinUnit: string,
   precision: number = 8
 ): string => {
+  const locale = getNumberLocale()
   if (bitcoinUnit === 'SAT') {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(locale, {
       maximumFractionDigits: 0,
       useGrouping: true,
     }).format(Math.round(amount))
   } else {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(locale, {
       maximumFractionDigits: precision,
       minimumFractionDigits: precision,
       useGrouping: true,
@@ -53,16 +75,17 @@ export const parseBitcoinAmount = (
 export const formatAmount = (
   amount: number,
   asset_ticker: string,
-  assets: NiaAsset[],
+  assets: NiaAsset[] | null,
   bitcoinUnit: 'BTC' | 'SAT'
 ): string => {
-  const asset = assets.find((a) => a.ticker === asset_ticker) || {
+  const locale = getNumberLocale()
+  const asset = assets?.find((a) => a.ticker === asset_ticker) || {
     precision: 8,
   }
   if (asset_ticker === 'BTC') {
     return formatBitcoinAmount(amount, bitcoinUnit, asset.precision)
   } else {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(locale, {
       maximumFractionDigits: asset.precision,
       minimumFractionDigits: asset.precision,
       useGrouping: true,
@@ -73,13 +96,13 @@ export const formatAmount = (
 export const parseAssetAmount = (
   amount: string,
   asset_ticker: string,
-  assets: NiaAsset[],
+  assets: NiaAsset[] | null,
   bitcoinUnit: 'BTC' | 'SAT'
 ): number => {
   if (asset_ticker === 'BTC') {
     return parseBitcoinAmount(amount, bitcoinUnit)
   } else {
-    const asset = assets.find((a) => a.ticker === asset_ticker) || {
+    const asset = assets?.find((a) => a.ticker === asset_ticker) || {
       precision: 8,
     }
     const cleanAmount = amount.replace(/[^\d.-]/g, '')
@@ -88,6 +111,7 @@ export const parseAssetAmount = (
 }
 
 export const formatNumberInput = (value: string, precision: number): string => {
+  const locale = getNumberLocale()
   // Remove all characters except digits and decimal point
   let cleanValue = value.replace(/[^\d.]/g, '')
 
@@ -116,7 +140,7 @@ export const formatNumberInput = (value: string, precision: number): string => {
     }
 
     // Only format complete numbers
-    return num.toLocaleString('en-US', {
+    return num.toLocaleString(locale, {
       maximumFractionDigits: precision,
       minimumFractionDigits: 0,
     })
@@ -135,8 +159,13 @@ export const formatNumberInput = (value: string, precision: number): string => {
 export const getAssetPrecision = (
   asset: string,
   bitcoinUnit: string,
-  assets?: NiaAsset[]
+  assets?: NiaAsset[] | null
 ): number => {
+  // Handle undefined, null or empty asset
+  if (!asset) {
+    return 8 // Default precision
+  }
+
   // Normalize asset ticker to uppercase for case-insensitive comparison
   const normalizedAsset = asset.toUpperCase()
 
@@ -148,7 +177,7 @@ export const getAssetPrecision = (
   // If assets array is provided, look for the asset's precision
   if (assets && assets.length > 0) {
     const assetInfo = assets.find(
-      (a) => a.ticker.toUpperCase() === normalizedAsset
+      (a) => a.ticker?.toUpperCase() === normalizedAsset
     )
     if (assetInfo && typeof assetInfo.precision === 'number') {
       return assetInfo.precision
@@ -160,6 +189,7 @@ export const getAssetPrecision = (
 }
 
 export const getBitcoinPrecision = (bitcoinUnit: string): number => {
+  if (!bitcoinUnit) return 8 // Default to BTC precision
   switch (bitcoinUnit.toUpperCase()) {
     case 'SAT':
       return 0
@@ -184,14 +214,15 @@ export const formatAssetAmountWithPrecision = (
   amount: number,
   asset: string,
   bitcoinUnit: string,
-  assets?: NiaAsset[]
+  assets?: NiaAsset[] | null
 ): string => {
+  const locale = getNumberLocale()
   const precision = getAssetPrecision(asset, bitcoinUnit, assets)
 
   // For precision 0, the amount is already in base units, no division needed
   // Example: amount = 3000, precision = 0 -> display as "3,000"
   if (precision === 0) {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(locale, {
       maximumFractionDigits: 0,
       minimumFractionDigits: 0,
       useGrouping: true,
@@ -203,7 +234,7 @@ export const formatAssetAmountWithPrecision = (
   const divisor = Math.pow(10, precision)
   const formattedAmount = (amount / divisor).toFixed(precision)
 
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat(locale, {
     maximumFractionDigits: precision,
     minimumFractionDigits: precision,
     useGrouping: true,
@@ -222,7 +253,7 @@ export const parseAssetAmountWithPrecision = (
   amount: string | undefined | null,
   asset: string,
   bitcoinUnit: string,
-  assets?: NiaAsset[]
+  assets?: NiaAsset[] | null
 ): number => {
   const precision = getAssetPrecision(asset, bitcoinUnit, assets)
 
@@ -280,9 +311,10 @@ export const calculateExchangeRate = (
  * @returns Formatted exchange rate string
  */
 export const formatExchangeRate = (rate: number, precision: number): string => {
+  const locale = getNumberLocale()
   const adjustedPrecision = precision > 4 ? precision : 4
 
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat(locale, {
     maximumFractionDigits: adjustedPrecision,
     minimumFractionDigits: precision,
     useGrouping: true,
@@ -344,7 +376,6 @@ export const calculateAndFormatRate = (
 ): string => {
   if (!price || !selectedPair) return 'Price not available'
 
-  let rate = price
   const displayFromAsset = fromAsset
   const displayToAsset = toAsset
 
@@ -360,44 +391,44 @@ export const calculateAndFormatRate = (
   const toUnit = displayToAsset === 'BTC' ? bitcoinUnit : displayToAsset
 
   // Calculate the rate considering asset precisions
-  if (isInverted) {
-    // When inverted, we need to show how many fromAsset units per toAsset unit
-    // First convert price to base units, then invert and scale by precision difference
-    const basePrice = price / Math.pow(10, toPrecision)
-    rate = (1 / basePrice) * Math.pow(10, fromPrecision - toPrecision)
-  } else {
-    // When not inverted, we need to show how many toAsset units per fromAsset unit
-    // The price is already in the correct units, just need to adjust for display
-    rate = price / Math.pow(10, toPrecision)
-  }
+  const rate = isInverted
+    ? (() => {
+        // When inverted, we need to show how many fromAsset units per toAsset unit
+        // First convert price to base units, then invert and scale by precision difference
+        const basePrice = price / Math.pow(10, toPrecision)
+        return (1 / basePrice) * Math.pow(10, fromPrecision - toPrecision)
+      })()
+    : // When not inverted, we need to show how many toAsset units per fromAsset unit
+      // The price is already in the correct units, just need to adjust for display
+      price / Math.pow(10, toPrecision)
 
   // Handle SAT unit conversion if needed
-  if (fromUnit === 'SAT') {
-    rate = rate / SATOSHIS_PER_BTC
-  } else if (toUnit === 'SAT') {
-    rate = rate * SATOSHIS_PER_BTC
-  }
+  const adjustedRate =
+    fromUnit === 'SAT'
+      ? rate / SATOSHIS_PER_BTC
+      : toUnit === 'SAT'
+        ? rate * SATOSHIS_PER_BTC
+        : rate
 
   // Determine the appropriate precision for display
   // For small rates (< 0.01), use more precision
   // For large rates, use less precision but at least 2 decimal places
-  let displayPrecision = 2
-  if (rate < 0.01) {
-    displayPrecision = Math.min(Math.max(fromPrecision, toPrecision), 8)
-  } else if (rate < 1) {
-    displayPrecision = 4
-  } else if (rate < 100) {
-    displayPrecision = 2
-  } else {
-    displayPrecision = 0
-  }
+  const displayPrecision =
+    adjustedRate < 0.01
+      ? Math.min(Math.max(fromPrecision, toPrecision), 8)
+      : adjustedRate < 1
+        ? 4
+        : adjustedRate < 100
+          ? 2
+          : 0
 
   // Format the rate with the determined precision
-  const formattedRate = new Intl.NumberFormat('en-US', {
+  const locale = getNumberLocale()
+  const formattedRate = new Intl.NumberFormat(locale, {
     maximumFractionDigits: displayPrecision,
     minimumFractionDigits: displayPrecision,
     useGrouping: true,
-  }).format(rate)
+  }).format(adjustedRate)
 
   return formattedRate
 }

@@ -1,5 +1,6 @@
 import { Clock, Rocket, Settings, Zap } from 'lucide-react'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface FeeSelectorProps {
   selectedFee: string
@@ -21,31 +22,32 @@ const getFeeIcon = (type: string) => {
   }
 }
 
-const feeRates = [
-  { label: 'Slow', rate: 1, value: 'slow' },
-  { label: 'Normal', rate: 2, value: 'normal' },
-  { label: 'Fast', rate: 3, value: 'fast' },
-  { label: 'Custom', rate: 0, value: 'custom' },
-]
-
 export const FeeSelector: React.FC<FeeSelectorProps> = ({
   selectedFee,
   customFee,
   onFeeChange,
   onCustomFeeChange,
 }) => {
+  const { t } = useTranslation()
+
+  const feeRates = [
+    { label: t('orderChannel.step3.feeSlow'), rate: 1, value: 'slow' },
+    { label: t('orderChannel.step3.feeNormal'), rate: 2, value: 'normal' },
+    { label: t('orderChannel.step3.feeFast'), rate: 3, value: 'fast' },
+    { label: t('orderChannel.step3.feeCustom'), rate: 0, value: 'custom' },
+  ]
   return (
-    <div>
-      <label className="text-sm font-medium text-gray-400 mb-3 block">
-        Fee Rate
+    <div className="space-y-3">
+      <label className="block text-[11px] font-semibold uppercase tracking-[0.28em] text-content-tertiary">
+        {t('orderChannel.step3.feeRateLabel')}
       </label>
       <div className="grid grid-cols-2 gap-3">
         {feeRates.map((rate) => (
           <button
-            className={`p-3 rounded-xl border-2 transition-all duration-200 flex items-center justify-between text-sm ${
+            className={`flex items-center justify-between rounded-2xl border px-3 py-3 text-sm transition-all duration-200 ${
               selectedFee === rate.value
-                ? 'border-blue-500 bg-blue-500/10 text-blue-500'
-                : 'border-gray-700 text-gray-400 hover:border-blue-500/50'
+                ? 'border-cyan-400/25 bg-cyan-400/10 text-cyan-100'
+                : 'border-border-subtle bg-surface-base/45 text-content-secondary hover:border-cyan-400/25 hover:text-content-primary'
             }`}
             key={rate.value}
             onClick={() => onFeeChange(rate.value)}
@@ -55,15 +57,19 @@ export const FeeSelector: React.FC<FeeSelectorProps> = ({
               {getFeeIcon(rate.value)}
               <span>{rate.label}</span>
             </div>
-            {rate.value !== 'custom' && <span>{rate.rate} sat/vB</span>}
+            {rate.value !== 'custom' && (
+              <span>
+                {rate.rate} {t('orderChannel.feeUnit')}
+              </span>
+            )}
           </button>
         ))}
       </div>
       {selectedFee === 'custom' && (
         <input
-          className="mt-3 w-full px-4 py-3 bg-gray-800/50 rounded-xl border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white"
+          className="w-full rounded-2xl border border-border-subtle bg-surface-base/60 px-4 py-3 text-white focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/30"
           onChange={(e) => onCustomFeeChange(parseFloat(e.target.value))}
-          placeholder="Custom fee rate (sat/vB)"
+          placeholder={t('orderChannel.step3.customFeePlaceholder')}
           step="0.1"
           type="number"
           value={customFee}

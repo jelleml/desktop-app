@@ -1,6 +1,7 @@
 import { Folder, Loader2 } from 'lucide-react'
 import React from 'react'
 import { Controller } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 
 interface BackupModalProps {
   showModal: boolean
@@ -25,28 +26,30 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   onSelectFolder,
   setValue,
 }) => {
+  const { t } = useTranslation()
+
   if (!showModal) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center text-white">
-          Create Backup
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-surface-overlay p-8 rounded-xl shadow-2xl w-full max-w-md">
+        <h2 className="text-2xl font-bold mb-6 text-center text-content-primary">
+          {t('backupModal.title')}
         </h2>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Backup File Path
+            <label className="block text-sm font-medium text-content-secondary mb-1">
+              {t('backupModal.backupFilePath')}
             </label>
             <div className="flex">
               <input
-                className="flex-grow px-3 py-2 text-white bg-gray-700 border border-gray-600 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-grow px-3 py-2 text-content-primary bg-surface-high border border-border-default rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary"
                 onChange={(e) => setValue('backupPath', e.target.value)}
                 type="text"
                 value={backupPath}
               />
               <button
-                className="px-3 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800"
+                className="px-3 py-2 bg-primary text-content-inverse rounded-r-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-overlay"
                 onClick={onSelectFolder}
                 type="button"
               >
@@ -54,7 +57,9 @@ export const BackupModal: React.FC<BackupModalProps> = ({
               </button>
             </div>
             {formState.errors.backupPath && (
-              <p className="mt-1 text-sm text-red-500">Invalid backup path</p>
+              <p className="mt-1 text-sm text-status-danger">
+                {t('backupModal.invalidBackupPath')}
+              </p>
             )}
           </div>
           <Controller
@@ -62,13 +67,13 @@ export const BackupModal: React.FC<BackupModalProps> = ({
             name="nodePassword"
             render={({ field }) => (
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Node Password
+                <label className="block text-sm font-medium text-content-secondary mb-1">
+                  {t('backupModal.nodePassword')}
                 </label>
                 <input
                   {...field}
-                  className="w-full px-3 py-2 text-white bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter node password"
+                  className="w-full px-3 py-2 text-content-primary bg-surface-high border border-border-default rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder={t('backupModal.nodePasswordPlaceholder')}
                   type="password"
                 />
               </div>
@@ -77,30 +82,30 @@ export const BackupModal: React.FC<BackupModalProps> = ({
           {isBackupInProgress && (
             <div className="mt-4">
               <div className="flex items-center justify-center mb-2">
-                <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+                <Loader2 className="w-6 h-6 text-primary animate-spin" />
               </div>
-              <p className="text-white text-center">
-                Please wait, the backup is in progress...
+              <p className="text-content-primary text-center">
+                {t('backupModal.backupInProgressMessage')}
                 <br />
-                The node will be locked until the backup process is finished.
+                {t('backupModal.backupLockedMessage')}
               </p>
             </div>
           )}
           <div className="flex justify-between space-x-4 pt-6">
             <button
-              className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 bg-surface-elevated text-content-primary rounded-md hover:bg-surface-high border border-border-default focus:outline-none focus:ring-2 focus:ring-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isBackupInProgress}
               onClick={onClose}
               type="button"
             >
-              Cancel
+              {t('backupModal.cancel')}
             </button>
             <button
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 bg-primary text-content-inverse rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-overlay disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isBackupInProgress}
               type="submit"
             >
-              Create Backup
+              {t('backupModal.createBackup')}
             </button>
           </div>
         </form>

@@ -9,10 +9,11 @@ import {
   RefreshCw,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
-import { useAppSelector } from '../../../app/store/hooks'
+import { useSettings } from '../../../hooks/useSettings'
 import { Loader } from '../../../components/Loader'
 // import { StatusToast } from '../../../components/StatusToast'
 import { NoChannelsMessage, ManualSwapForm } from '../../../components/Trade'
@@ -50,7 +51,8 @@ export const Component = () => {
     }
   )
 
-  const bitcoinUnit = useAppSelector((state) => state.settings.bitcoinUnit)
+  const { bitcoinUnit } = useSettings()
+  const { t } = useTranslation()
 
   // Utility functions
   const getDisplayAsset = (asset: string) => {
@@ -93,40 +95,40 @@ export const Component = () => {
       try {
         const [listChannelsResponse, balanceResponse] = await Promise.all([
           listChannels(),
-          btcBalance({ skip_sync: false }),
+          btcBalance(),
         ])
 
         if ('data' in listChannelsResponse && listChannelsResponse.data) {
           const channelsList = listChannelsResponse.data.channels
 
           // Check if there's at least one channel with an asset that is ready and usable
-          const hasValidChannels = channelsList.some(
+          const hasValidChannels = channelsList?.some(
             (channel: Channel) =>
               channel.asset_id !== null &&
               channel.ready &&
-              (channel.outbound_balance_msat > 0 ||
-                channel.inbound_balance_msat > 0)
+              ((channel.outbound_balance_msat ?? 0) > 0 ||
+                (channel.inbound_balance_msat ?? 0) > 0)
           )
-          setHasValidChannelsForTrading(hasValidChannels)
+          setHasValidChannelsForTrading(hasValidChannels ?? false)
         }
 
         // Check if there's enough balance to open a channel
         if ('data' in balanceResponse && balanceResponse.data) {
-          const { vanilla } = balanceResponse.data
+          const vanilla = balanceResponse.data?.vanilla
           // Assuming minimum balance needed is 20000 sats (adjust as needed)
-          setHasEnoughBalance(vanilla.spendable >= 20000)
+          if (vanilla) {
+            setHasEnoughBalance((vanilla?.spendable ?? 0) >= 20000)
+          }
         }
 
-        if (assetsData) {
+        if (assetsData && assetsData.nia) {
           setAssets(assetsData.nia)
         }
 
         logger.info('Initial data fetched successfully')
       } catch (error) {
         logger.error('Error during setup:', error)
-        toast.error(
-          'Failed to initialize the manual swap component. Please try again.'
-        )
+        toast.error(t('tradeManual.errors.initializationFailed'))
       } finally {
         setIsLoading(false)
       }
@@ -145,25 +147,25 @@ export const Component = () => {
         const channelsList = listChannelsResponse.data.channels
 
         // Check if there's at least one channel with an asset that is ready and usable
-        const hasValidChannels = channelsList.some(
-          (channel) =>
+        const hasValidChannels = channelsList?.some(
+          (channel: any) =>
             channel.asset_id !== null &&
             channel.ready &&
-            (channel.outbound_balance_msat > 0 ||
-              channel.inbound_balance_msat > 0)
+            ((channel.outbound_balance_msat ?? 0) > 0 ||
+              (channel.inbound_balance_msat ?? 0) > 0)
         )
-        setHasValidChannelsForTrading(hasValidChannels)
+        setHasValidChannelsForTrading(hasValidChannels ?? false)
       }
 
-      if (assetsData) {
+      if (assetsData && assetsData.nia) {
         setAssets(assetsData.nia)
       }
 
       logger.info('Data refreshed successfully')
-      toast.success('Data refreshed successfully')
+      toast.success(t('tradeManual.toast.refreshSuccess'))
     } catch (error) {
       logger.error('Error refreshing data:', error)
-      toast.error('Failed to refresh data. Please try again.')
+      toast.error(t('tradeManual.toast.refreshError'))
     } finally {
       setIsLoading(false)
       setIsRefreshing(false)
@@ -179,235 +181,267 @@ export const Component = () => {
   )
 
   const renderRoleSelector = () => (
-    <div className="bg-slate-900/80 backdrop-blur-sm rounded-xl border border-slate-700/50 p-4 shadow-lg mb-6 role-selector">
+    <div className="bg-surface-base/80 backdrop-blur-sm rounded-xl border border-border-default/50 p-4 shadow-lg mb-6 role-selector">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <User className="w-5 h-5 text-blue-400" />
-          <h3 className="text-md font-medium text-white">Your Role</h3>
+          <h3 className="text-md font-medium text-white">
+            {t('tradeManual.roleSelector.title')}
+          </h3>
         </div>
         <button
-          className="p-2 rounded-lg hover:bg-slate-800 transition-colors"
+          className="p-2 rounded-lg hover:bg-surface-overlay transition-colors"
           disabled={isRefreshing}
           onClick={refreshData}
-          title="Refresh data"
+          title={t('tradeManual.roleSelector.refresh')}
         >
           <RefreshCw
-            className={`w-4 h-4 text-slate-400 ${isRefreshing ? 'animate-spin' : ''}`}
+            className={`w-4 h-4 text-content-secondary ${isRefreshing ? 'animate-spin' : ''}`}
           />
         </button>
       </div>
 
       <div className="mt-4 flex gap-3">
         <button
-          className={`flex-1 px-4 py-3 ${activeRole === 'maker' ? 'bg-blue-600' : 'bg-slate-700 hover:bg-slate-600'} text-white rounded-lg transition-colors button-animate`}
+          className={`flex-1 px-4 py-3 ${activeRole === 'maker' ? 'bg-primary text-primary-foreground' : 'bg-surface-high hover:bg-surface-elevated text-white'} rounded-lg transition-colors button-animate`}
           disabled={activeRole === 'maker'}
           onClick={() => handleRoleChange('maker')}
         >
-          Maker
+          {t('tradeManual.roles.maker')}
         </button>
         <button
-          className={`flex-1 px-4 py-3 ${activeRole === 'taker' ? 'bg-emerald-600' : 'bg-slate-700 hover:bg-slate-600'} text-white rounded-lg transition-colors button-animate`}
+          className={`flex-1 px-4 py-3 ${activeRole === 'taker' ? 'bg-emerald-600' : 'bg-surface-high hover:bg-surface-elevated'} text-white rounded-lg transition-colors button-animate`}
           disabled={activeRole === 'taker'}
           onClick={() => handleRoleChange('taker')}
         >
-          Taker
+          {t('tradeManual.roles.taker')}
         </button>
       </div>
 
-      <p className="mt-3 text-xs text-slate-400">
-        {activeRole === 'maker' ? (
-          <>
-            As a <span className="font-semibold text-blue-400">maker</span>, you
-            can initiate and execute swaps. Switch to{' '}
-            <span className="font-semibold text-emerald-400">taker</span> role
-            to whitelist incoming swaps.
-          </>
-        ) : (
-          <>
-            As a <span className="font-semibold text-emerald-400">taker</span>,
-            you can whitelist incoming swaps. Switch to{' '}
-            <span className="font-semibold text-blue-400">maker</span> role to
-            initiate and execute swaps.
-          </>
-        )}
+      <p className="mt-3 text-xs text-content-secondary">
+        <Trans
+          components={{
+            maker: <span className="font-semibold text-blue-400" />,
+            taker: <span className="font-semibold text-emerald-400" />,
+          }}
+          i18nKey={
+            activeRole === 'maker'
+              ? 'tradeManual.roleSelector.makerDescription'
+              : 'tradeManual.roleSelector.takerDescription'
+          }
+        />
       </p>
     </div>
   )
 
   const renderSwapExplanation = () => (
-    <div className="bg-slate-900/80 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6 shadow-lg mb-6 explanation-card">
+    <div className="bg-surface-base/80 backdrop-blur-sm rounded-xl border border-border-default/50 p-6 shadow-lg mb-6 explanation-card">
       <div
         className="flex items-center justify-between cursor-pointer"
         onClick={toggleExplanation}
       >
         <h2 className="text-xl font-semibold text-white">
-          How Atomic Swaps Work
+          {t('tradeManual.swapExplanation.title')}
         </h2>
-        <button className="p-1 rounded-full hover:bg-slate-800 transition-colors">
+        <button className="p-1 rounded-full hover:bg-surface-overlay transition-colors">
           {isExplanationExpanded ? (
-            <ChevronUp className="w-5 h-5 text-slate-400" />
+            <ChevronUp className="w-5 h-5 text-content-secondary" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-slate-400" />
+            <ChevronDown className="w-5 h-5 text-content-secondary" />
           )}
         </button>
       </div>
 
       {isExplanationExpanded && (
         <div className="mt-4 explanation-content">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 swap-step-card">
-              <div className="flex items-center justify-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
-                  <Zap className="w-6 h-6" />
+          {(() => {
+            const swapInfoCards = [
+              {
+                description: t(
+                  'tradeManual.swapExplanation.cards.trustless.description'
+                ),
+                icon: <Zap className="w-6 h-6" />,
+                key: 'trustless',
+                title: t('tradeManual.swapExplanation.cards.trustless.title'),
+                wrapperClass: 'bg-blue-500/20 text-blue-400',
+              },
+              {
+                description: t(
+                  'tradeManual.swapExplanation.cards.locks.description'
+                ),
+                icon: <Lock className="w-6 h-6" />,
+                key: 'locks',
+                title: t('tradeManual.swapExplanation.cards.locks.title'),
+                wrapperClass: 'bg-purple-500/20 text-purple-400',
+              },
+              {
+                description: t(
+                  'tradeManual.swapExplanation.cards.guarantee.description'
+                ),
+                icon: <Unlock className="w-6 h-6" />,
+                key: 'guarantee',
+                title: t('tradeManual.swapExplanation.cards.guarantee.title'),
+                wrapperClass: 'bg-emerald-500/20 text-emerald-400',
+              },
+            ]
+
+            const processSteps = [
+              {
+                description: t(
+                  'tradeManual.swapExplanation.process.makerInitiates.description'
+                ),
+                title: t(
+                  'tradeManual.swapExplanation.process.makerInitiates.title'
+                ),
+              },
+              {
+                description: t(
+                  'tradeManual.swapExplanation.process.takerWhitelists.description'
+                ),
+                title: t(
+                  'tradeManual.swapExplanation.process.takerWhitelists.title'
+                ),
+              },
+              {
+                description: t(
+                  'tradeManual.swapExplanation.process.makerExecutes.description'
+                ),
+                title: t(
+                  'tradeManual.swapExplanation.process.makerExecutes.title'
+                ),
+              },
+            ]
+
+            const makerRoleItems = t(
+              'tradeManual.swapExplanation.makerRole.items',
+              { returnObjects: true }
+            ) as string[]
+
+            const takerRoleItems = t(
+              'tradeManual.swapExplanation.takerRole.items',
+              { returnObjects: true }
+            ) as string[]
+
+            const liquidityItems = t(
+              'tradeManual.swapExplanation.liquidity.items',
+              { returnObjects: true }
+            ) as string[]
+
+            return (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                  {swapInfoCards.map((card) => (
+                    <div
+                      className="bg-surface-overlay/50 rounded-lg p-4 border border-border-default/50 swap-step-card"
+                      key={card.key}
+                    >
+                      <div className="flex items-center justify-center mb-4">
+                        <div
+                          className={`w-12 h-12 rounded-full flex items-center justify-center ${card.wrapperClass}`}
+                        >
+                          {card.icon}
+                        </div>
+                      </div>
+                      <h3 className="text-md font-medium text-white text-center mb-2">
+                        {card.title}
+                      </h3>
+                      <p className="text-sm text-content-secondary text-center">
+                        {card.description}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              </div>
-              <h3 className="text-md font-medium text-white text-center mb-2">
-                Trustless Exchange
-              </h3>
-              <p className="text-sm text-slate-400 text-center">
-                Atomic swaps allow two parties to exchange different assets
-                without trusting each other or using a third party.
-              </p>
-            </div>
 
-            <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 swap-step-card">
-              <div className="flex items-center justify-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400">
-                  <Lock className="w-6 h-6" />
+                <div className="bg-surface-overlay/50 rounded-lg p-5 border border-border-default/50 mb-6">
+                  <h3 className="text-lg font-medium text-white mb-3">
+                    {t('tradeManual.swapExplanation.process.title')}
+                  </h3>
+                  <ol className="space-y-4 ml-6 relative before:absolute before:left-0 before:top-2 before:h-[calc(100%-16px)] before:w-[2px] before:bg-surface-high">
+                    {processSteps.map((step) => (
+                      <li
+                        className="pl-8 relative before:absolute before:left-0 before:top-2 before:h-4 before:w-4 before:rounded-full before:border-2 before:border-blue-500 before:bg-surface-base"
+                        key={step.title}
+                      >
+                        <h4 className="text-md font-medium text-white">
+                          {step.title}
+                        </h4>
+                        <p className="text-sm text-content-secondary">
+                          {step.description}
+                        </p>
+                      </li>
+                    ))}
+                  </ol>
                 </div>
-              </div>
-              <h3 className="text-md font-medium text-white text-center mb-2">
-                Cryptographic Locks
-              </h3>
-              <p className="text-sm text-slate-400 text-center">
-                The swap uses cryptographic hash locks to ensure that either
-                both parties receive their assets or neither does.
-              </p>
-            </div>
 
-            <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 swap-step-card">
-              <div className="flex items-center justify-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                  <Unlock className="w-6 h-6" />
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="flex-1 bg-surface-overlay/50 rounded-lg p-4 border border-border-default/50 role-card">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
+                        M
+                      </div>
+                      <h3 className="text-md font-medium text-white">
+                        {t('tradeManual.swapExplanation.makerRole.title')}
+                      </h3>
+                    </div>
+                    <p className="text-sm text-content-secondary ml-8 mb-2">
+                      {t('tradeManual.swapExplanation.makerRole.intro')}
+                    </p>
+                    <ul className="list-disc list-inside text-sm text-content-secondary ml-8 space-y-1">
+                      {makerRoleItems.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="hidden md:flex items-center justify-center">
+                    <ArrowRight className="w-6 h-6 text-content-tertiary" />
+                  </div>
+
+                  <div className="flex-1 bg-surface-overlay/50 rounded-lg p-4 border border-border-default/50 role-card">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-xs font-bold text-white">
+                        T
+                      </div>
+                      <h3 className="text-md font-medium text-white">
+                        {t('tradeManual.swapExplanation.takerRole.title')}
+                      </h3>
+                    </div>
+                    <p className="text-sm text-content-secondary ml-8 mb-2">
+                      {t('tradeManual.swapExplanation.takerRole.intro')}
+                    </p>
+                    <ul className="list-disc list-inside text-sm text-content-secondary ml-8 space-y-1">
+                      {takerRoleItems.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-              </div>
-              <h3 className="text-md font-medium text-white text-center mb-2">
-                Atomic Guarantee
-              </h3>
-              <p className="text-sm text-slate-400 text-center">
-                The "atomic" property ensures that the swap either completes
-                fully or not at all, eliminating counterparty risk.
-              </p>
-            </div>
-          </div>
 
-          <div className="bg-slate-800/50 rounded-lg p-5 border border-slate-700/50 mb-6">
-            <h3 className="text-lg font-medium text-white mb-3">
-              Swap Process
-            </h3>
-            <ol className="space-y-4 ml-6 relative before:absolute before:left-0 before:top-2 before:h-[calc(100%-16px)] before:w-[2px] before:bg-slate-700">
-              <li className="pl-8 relative before:absolute before:left-0 before:top-2 before:h-4 before:w-4 before:rounded-full before:border-2 before:border-blue-500 before:bg-slate-900">
-                <h4 className="text-md font-medium text-white">
-                  Maker Initiates
-                </h4>
-                <p className="text-sm text-slate-400">
-                  The maker defines the assets and amounts to swap and generates
-                  a swap string.
-                </p>
-              </li>
-              <li className="pl-8 relative before:absolute before:left-0 before:top-2 before:h-4 before:w-4 before:rounded-full before:border-2 before:border-blue-500 before:bg-slate-900">
-                <h4 className="text-md font-medium text-white">
-                  Taker Whitelists
-                </h4>
-                <p className="text-sm text-slate-400">
-                  The taker reviews the swap terms and whitelists the swap
-                  string to accept the trade.
-                </p>
-              </li>
-              <li className="pl-8 relative before:absolute before:left-0 before:top-2 before:h-4 before:w-4 before:rounded-full before:border-2 before:border-blue-500 before:bg-slate-900">
-                <h4 className="text-md font-medium text-white">
-                  Maker Executes
-                </h4>
-                <p className="text-sm text-slate-400">
-                  The maker executes the swap, triggering the atomic exchange of
-                  assets between both parties.
-                </p>
-              </li>
-            </ol>
-          </div>
-
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1 bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 role-card">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold text-white">
-                  M
+                <div className="mt-6 bg-surface-overlay/50 rounded-lg p-4 border border-border-default/50">
+                  <h3 className="text-md font-medium text-white mb-2">
+                    {t('tradeManual.swapExplanation.liquidity.title')}
+                  </h3>
+                  <p className="text-sm text-content-secondary mb-2">
+                    {t('tradeManual.swapExplanation.liquidity.intro')}
+                  </p>
+                  <ul className="list-disc list-inside text-sm text-content-secondary space-y-1 ml-2">
+                    {liquidityItems.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                  <p className="text-sm text-content-secondary mt-2">
+                    {t('tradeManual.swapExplanation.liquidity.note')}
+                  </p>
                 </div>
-                <h3 className="text-md font-medium text-white">Maker Role</h3>
-              </div>
-              <p className="text-sm text-slate-400 ml-8 mb-2">
-                As a maker, you can:
-              </p>
-              <ul className="list-disc list-inside text-sm text-slate-400 ml-8 space-y-1">
-                <li>Initiate swaps by defining assets and amounts</li>
-                <li>Generate and share swap strings with takers</li>
-                <li>Execute swaps once the taker has whitelisted you</li>
-                <li>Control both the initiation and execution phases</li>
-              </ul>
-            </div>
-
-            <div className="hidden md:flex items-center justify-center">
-              <ArrowRight className="w-6 h-6 text-slate-500" />
-            </div>
-
-            <div className="flex-1 bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 role-card">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-xs font-bold text-white">
-                  T
-                </div>
-                <h3 className="text-md font-medium text-white">Taker Role</h3>
-              </div>
-              <p className="text-sm text-slate-400 ml-8 mb-2">
-                As a taker, you can:
-              </p>
-              <ul className="list-disc list-inside text-sm text-slate-400 ml-8 space-y-1">
-                <li>Receive swap strings from makers</li>
-                <li>Review the proposed swap terms</li>
-                <li>Whitelist the swap string to accept the trade</li>
-                <li>Wait for the maker to execute the swap</li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="mt-6 bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
-            <h3 className="text-md font-medium text-white mb-2">
-              Liquidity Requirements
-            </h3>
-            <p className="text-sm text-slate-400 mb-2">
-              For atomic swaps to succeed, both parties need:
-            </p>
-            <ul className="list-disc list-inside text-sm text-slate-400 space-y-1 ml-2">
-              <li>
-                Sufficient liquidity of the assets being exchanged in their
-                lightning channels
-              </li>
-              <li>
-                Bitcoin liquidity for routing payments between the maker and
-                taker
-              </li>
-              <li>Active and balanced channels connecting both parties</li>
-            </ul>
-            <p className="text-sm text-slate-400 mt-2">
-              If liquidity is insufficient, the swap may fail even if it has
-              been properly whitelisted.
-            </p>
-          </div>
+              </>
+            )
+          })()}
         </div>
       )}
 
       {!isExplanationExpanded && (
-        <p className="mt-2 text-sm text-slate-400">
-          Click to expand and learn more about how atomic swaps work and the
-          roles involved.
+        <p className="mt-2 text-sm text-content-secondary">
+          {t('tradeManual.swapExplanation.collapsedHint')}
         </p>
       )}
     </div>
@@ -417,7 +451,7 @@ export const Component = () => {
     <div className="swap-form-container w-full max-w-4xl">
       {renderRoleSelector()}
       {renderSwapExplanation()}
-      <div className="bg-gradient-to-b from-slate-900/80 to-slate-800/80 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6 shadow-lg w-full swap-form">
+      <div className="bg-gradient-to-b from-surface-base/80 to-surface-overlay/80 backdrop-blur-sm rounded-xl border border-border-default/50 p-6 shadow-lg w-full swap-form">
         {activeRole === 'maker' ? (
           <ManualSwapForm
             assets={assets}

@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { BTC_ASSET_ID } from '../../../../../constants'
 import { NiaAsset } from '../../../../../slices/nodeApi/nodeApi.slice'
@@ -12,11 +13,15 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
   bitcoinUnit,
   assets,
 }) => {
+  const { t } = useTranslation()
+
   if (addressType === 'bitcoin') {
     return (
-      <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 mb-4">
+      <div className="p-3 bg-primary/10 rounded-xl border border-primary/20 mb-4">
         <div className="flex justify-between items-center">
-          <span className="text-slate-400 text-sm">Available BTC Balance:</span>
+          <span className="text-content-secondary text-sm">
+            {t('withdrawModal.balance.btcLabel')}
+          </span>
           <span className="text-white font-medium">
             {/* assetBalance is now always in satoshis, so convert for display */}
             {bitcoinUnit === 'SAT'
@@ -45,10 +50,10 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
       const displayBalance = assetBalance / Math.pow(10, precision)
 
       return (
-        <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 mb-4">
+        <div className="p-3 bg-primary/10 rounded-xl border border-primary/20 mb-4">
           <div className="flex justify-between items-center">
-            <span className="text-slate-400 text-sm">
-              Available {ticker} Balance:
+            <span className="text-content-secondary text-sm">
+              {t('withdrawModal.balance.assetLabel', { ticker })}
             </span>
             <span className="text-white font-medium">
               {displayBalance.toFixed(precision)} {ticker}

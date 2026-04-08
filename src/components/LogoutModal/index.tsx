@@ -1,5 +1,6 @@
 import { AlertTriangle, LogOut } from 'lucide-react'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface LogoutModalProps {
   isOpen: boolean
@@ -14,19 +15,23 @@ export const LogoutModal: React.FC<LogoutModalProps> = ({
   onConfirm,
   isLoggingOut = false,
 }) => {
+  const { t } = useTranslation()
+
   if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 p-6 rounded-xl shadow-2xl w-full max-w-sm border border-gray-700 animate-fade-in">
+      <div className="bg-surface-overlay p-6 rounded-xl shadow-2xl w-full max-w-sm border border-border-default animate-fade-in">
         {isLoggingOut ? (
           <div className="flex flex-col items-center py-6">
             <div className="w-16 h-16 mb-4">
               <div className="w-full h-full border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">Logging Out</h3>
-            <p className="text-gray-400 text-center">
-              Please wait while your wallet is being locked...
+            <h3 className="text-xl font-bold text-white mb-2">
+              {t('logoutModal.loggingOut')}
+            </h3>
+            <p className="text-content-secondary text-center">
+              {t('logoutModal.loggingOutMessage')}
             </p>
           </div>
         ) : (
@@ -35,25 +40,25 @@ export const LogoutModal: React.FC<LogoutModalProps> = ({
               <AlertTriangle size={48} />
             </div>
             <h2 className="text-2xl font-bold mb-4 text-center text-white">
-              Confirm Logout
+              {t('logoutModal.confirmLogoutTitle')}
             </h2>
-            <p className="text-gray-300 text-center mb-6">
-              Are you sure you want to logout? This will lock your wallet.
+            <p className="text-content-secondary text-center mb-6">
+              {t('logoutModal.confirmLogoutMessage')}
             </p>
             <div className="flex justify-between space-x-4">
               <button
-                className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors"
+                className="flex-1 px-4 py-2 bg-surface-elevated text-white rounded-md hover:bg-surface-high focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors"
                 onClick={onClose}
                 type="button"
               >
-                Cancel
+                {t('logoutModal.cancel')}
               </button>
               <button
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors"
+                className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary-emphasis focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-overlay transition-colors"
                 onClick={onConfirm}
                 type="button"
               >
-                Confirm Logout
+                {t('logoutModal.confirmLogout')}
               </button>
             </div>
           </>
@@ -66,13 +71,15 @@ export const LogoutModal: React.FC<LogoutModalProps> = ({
 export const LogoutButton: React.FC<{ onClick: () => void }> = ({
   onClick,
 }) => {
+  const { t } = useTranslation()
+
   return (
     <div
-      className="px-4 py-3 flex items-center space-x-3 cursor-pointer hover:bg-blue-darker transition-colors text-red-400"
+      className="px-4 py-3 flex items-center space-x-3 cursor-pointer hover:bg-surface-overlay transition-colors text-red-400"
       onClick={onClick}
     >
       <LogOut className="w-4 h-4" />
-      <span className="text-sm font-medium">Logout</span>
+      <span className="text-sm font-medium">{t('logoutModal.logout')}</span>
     </div>
   )
 }
