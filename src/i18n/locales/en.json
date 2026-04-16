@@ -308,7 +308,7 @@
     "description": "View your transaction history, including deposits, payments, withdrawals, and swaps.",
     "bitcoin": "Bitcoin",
     "deposits": "Deposits",
-    "paymentsWithdrawals": "Payments & Withdrawals",
+    "paymentsWithdrawals": "Withdrawals",
     "swaps": "Swaps",
     "assets": "Assets",
     "channelOrders": "Channel Orders"
@@ -1357,7 +1357,7 @@
     },
     "main": {
       "errorLoading": "Error loading nodes: {{error}}",
-      "title": "Your Nodes",
+      "title": "Your Accounts",
       "exitEditMode": "Exit Edit Mode",
       "enterEditMode": "Enter Edit Mode",
       "editNodes": "Edit Nodes",
@@ -2031,6 +2031,9 @@
       "colored": "Colored UTXOs",
       "normal": "Normal UTXOs"
     },
+    "filter": {
+      "all": "All"
+    },
     "empty": "No UTXOs found. Create some to get started."
   },
   "depositModal": {
@@ -2667,7 +2670,7 @@
       "availableLabel": "Available",
       "capacityFee": "Capacity fee",
       "discount": "Discount",
-      "continue": "Continue ->",
+      "continue": "Continue",
       "confirmationTime": "Confirmation Time:",
       "durationFee": "Duration fee",
       "expiresLabel": "Expires",
@@ -2718,7 +2721,7 @@
       "completePayment": "Complete Payment",
       "orderStatus": "Order Status",
       "reviewAndConfirm": "Review and confirm or customize your purchase",
-      "configureChannel": "Configure your channel and asset parameters",
+      "configureChannel": "Configure your channel and asset parameters.",
       "payForChannel": "Pay for your channel to complete the order",
       "orderCompleted": "Channel order completed successfully!",
       "orderStatusSubtitle": "Order status",
@@ -2886,7 +2889,7 @@
       "buyButton": "Buy USDT Channel",
       "onChainTitle": "Open with On-Chain USDT",
       "onChainBalance": "On-chain balance: {{amount}} USDT",
-      "noOnChain": "No on-chain USDT available",
+      "noOnChain": "No on-chain USDT available.",
       "useAll": "Use all",
       "usdtAmountLabel": "USDT amount",
       "capacityLabel": "Channel capacity",

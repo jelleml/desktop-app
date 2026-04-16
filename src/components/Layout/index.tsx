@@ -11,6 +11,8 @@ import {
   HelpCircle,
   User,
   Loader2,
+  Download,
+  Upload,
 } from 'lucide-react'
 import React, { useEffect, useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -140,7 +142,7 @@ const SidebarNavItem = ({ item, isCollapsed }: NavItemProps) => {
           flex items-center py-3.5 px-4 rounded-xl transition-all duration-300
           ${
             isActive
-              ? 'bg-primary/10 text-white font-semibold border-l-2 border-cyan'
+              ? 'bg-gradient-to-r from-primary/15 to-transparent text-primary font-semibold border-l-2 border-cyan shadow-lg shadow-primary/5'
               : 'text-content-secondary hover:text-white hover:bg-surface-overlay/80 hover:shadow-md'
           }
           ${isCollapsed ? 'justify-center' : hasSubMenu ? 'justify-between' : 'justify-start space-x-4'}
@@ -810,22 +812,25 @@ export const Layout = (props: Props) => {
                         ${isSidebarCollapsed ? 'w-20' : 'w-72'}`}
           >
             {/* Logo and collapse button */}
-            <div className="flex items-center justify-between py-5 px-4 border-b border-divider/20 bg-surface-base">
-              <img
-                alt="KaleidoSwap"
-                className={`cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95
-                          ${isSidebarCollapsed ? 'w-10 h-10' : 'h-10 w-auto'}`}
-                onClick={() => {
-                  navigate(WALLET_SETUP_PATH)
-                }}
-                src={isSidebarCollapsed ? logo : logoFull}
-              />
+            <div
+              className={`flex items-center bg-surface-base py-5 px-4 ${isSidebarCollapsed ? 'justify-center' : 'justify-between'}`}
+            >
+              {!isSidebarCollapsed && (
+                <img
+                  alt="KaleidoSwap"
+                  className="h-10 w-auto cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95"
+                  onClick={() => {
+                    navigate(WALLET_SETUP_PATH)
+                  }}
+                  src={logoFull}
+                />
+              )}
 
               <button
-                className="p-2 rounded-lg text-content-secondary hover:text-primary
+                className="p-3 rounded-xl text-content-secondary hover:text-primary
                            hover:bg-surface-overlay/50 transition-all duration-300
                            transform hover:scale-110 active:scale-95
-                           ring-1 ring-transparent hover:ring-primary/20 flex-shrink-0"
+                           ring-1 ring-divider/10 hover:ring-primary/30 flex-shrink-0"
                 onClick={() => {
                   const next = !isSidebarCollapsed
                   setIsSidebarCollapsed(next)
@@ -855,87 +860,34 @@ export const Layout = (props: Props) => {
                   )
                 })}
               </div>
-
-              {/* Quick action buttons */}
-              {!isSidebarCollapsed && (
-                <>
-                  <div className="mb-8">
-                    <h3 className="px-4 text-xs font-bold text-content-tertiary uppercase tracking-wider mb-4">
-                      {t('actions.quickActions')}
-                    </h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        className="flex items-center justify-center space-x-2
-                                   bg-gradient-to-br from-surface-overlay to-surface-overlay/80 hover:from-cyan/20 hover:to-cyan/5
-                                   text-white rounded-xl py-3 px-3 transition-all duration-300
-                                   border border-primary/20 hover:border-primary/40 group
-                                   shadow-lg shadow-primary/5 hover:shadow-xl hover:shadow-primary/10
-                                   transform hover:scale-[1.02] active:scale-[0.98]"
-                        onClick={() => handleTransactionAction('deposit')}
-                      >
-                        <div
-                          className="p-1.5 rounded-full bg-primary/10 text-primary group-hover:bg-primary/20
-                                      transition-all duration-300 group-hover:scale-110 shadow-lg shadow-primary/20"
-                        >
-                          <ArrowDownLeft className="w-4 h-4" />
-                        </div>
-                        <span className="font-semibold text-sm group-hover:text-primary transition-colors duration-300">
-                          {t('actions.deposit')}
-                        </span>
-                      </button>
-                      <button
-                        className="flex items-center justify-center space-x-2
-                                   bg-gradient-to-br from-surface-overlay to-surface-overlay/80 hover:from-purple/20 hover:to-purple/5
-                                   text-white rounded-xl py-3 px-3 transition-all duration-300
-                                   border border-purple/20 hover:border-purple/40 group
-                                   shadow-lg shadow-purple/5 hover:shadow-xl hover:shadow-purple/10
-                                   transform hover:scale-[1.02] active:scale-[0.98]"
-                        onClick={() => handleTransactionAction('withdraw')}
-                      >
-                        <div
-                          className="p-1.5 rounded-full bg-purple/10 text-purple group-hover:bg-purple/20
-                                      transition-all duration-300 group-hover:scale-110 shadow-lg shadow-purple/20"
-                        >
-                          <ArrowUpRight className="w-4 h-4" />
-                        </div>
-                        <span className="font-semibold text-sm group-hover:text-purple transition-colors duration-300">
-                          {t('actions.withdraw')}
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Channel management section */}
-                  <div className="mb-6">
-                    <h3 className="px-4 text-xs font-bold text-content-tertiary uppercase tracking-wider mb-4">
-                      {t('navigation.channels')}
-                    </h3>
-                    <div className="space-y-1.5">
-                      {CHANNEL_MENU_ITEMS.map((item) => (
-                        <NavLink
-                          className={({ isActive }) => `
-                              flex items-center space-x-4 px-4 py-3 rounded-xl text-sm group
-                              ${
-                                isActive
-                                  ? 'bg-gradient-to-r from-primary/15 to-transparent text-primary font-semibold border-l-2 border-cyan shadow-lg shadow-primary/5'
-                                  : 'text-content-secondary hover:text-white hover:bg-surface-overlay/80 hover:translate-x-1'
-                              }
-                              transition-all duration-300 transform active:scale-[0.98]
-                            `}
-                          key={item.to}
-                          to={item.to}
-                        >
-                          <div className="transition-transform duration-300 group-hover:scale-110">
-                            {item.icon}
-                          </div>
-                          <span className="font-medium">{item.label}</span>
-                        </NavLink>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
             </div>
+
+            {/* Quick action buttons */}
+            {!isSidebarCollapsed && (
+              <div className="px-4 pb-6 bg-surface-base">
+                <div className="flex flex-col gap-2">
+                  <button
+                    className="flex items-center justify-center gap-2 w-full py-3 px-3 rounded-xl
+                               bg-[#15E99A] hover:bg-[#12C97E] text-gray-900 font-semibold text-sm
+                               transition-all duration-200 active:scale-[0.98]"
+                    onClick={() => handleTransactionAction('deposit')}
+                  >
+                    <Download className="w-4 h-4 flex-shrink-0" />
+                    {t('actions.deposit')}
+                  </button>
+                  <button
+                    className="flex items-center justify-center gap-2 w-full py-3 px-3 rounded-xl
+                               bg-transparent hover:bg-white/5 border border-white/30 hover:border-white/50
+                               text-white font-semibold text-sm
+                               transition-all duration-200 active:scale-[0.98]"
+                    onClick={() => handleTransactionAction('withdraw')}
+                  >
+                    <Upload className="w-4 h-4 flex-shrink-0" />
+                    {t('actions.withdraw')}
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* User profile section */}
             <div className="p-4 border-t border-divider/20 bg-surface-base">
