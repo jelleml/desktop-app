@@ -75,10 +75,9 @@ export function HowItWorksModal({
               </p>
             </div>
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex items-start gap-3 p-4 bg-white/5 border border-white/10 rounded-xl">
-              <CalendarClock className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div className="flex items-start gap-2.5 p-3 border border-primary/25 rounded-lg">
+              <CalendarClock className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
               <div>
                 <p className="font-semibold text-content-primary mb-1.5 text-sm">
                   {t('dca.type.scheduled', 'Scheduled')}
@@ -91,8 +90,8 @@ export function HowItWorksModal({
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-4 bg-white/5 border border-white/10 rounded-xl">
-              <Target className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+            <div className="flex items-start gap-2.5 p-3 border border-violet-500/30 rounded-lg">
+              <Target className="w-4 h-4 text-violet-400 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="font-semibold text-content-primary mb-1.5 text-sm">
                   {t('dca.type.priceTarget', 'Price Target')}
