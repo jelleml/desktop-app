@@ -19,8 +19,8 @@ import { toast, ToastContainer } from 'react-toastify'
 
 import { WALLET_SETUP_PATH } from '../../app/router/paths'
 import { useAppDispatch, useAppSelector } from '../../app/store/hooks'
-import logo from '../../assets/logo.svg'
-import logoFull from '../../assets/logo-full.svg'
+import logo from '../../assets/kaleidoswap-pictogram.svg'
+import logoFull from '../../assets/kaleidoswap-fullogo-horizontal.svg'
 import { useNodeLifecycleEvents } from '../../hooks/useNodeLifecycleEvents'
 import { useOnClickOutside } from '../../hooks/useOnClickOutside'
 import { nodeApi } from '../../slices/nodeApi/nodeApi.slice'
@@ -304,9 +304,9 @@ const UserProfile = ({
     selectBackupFolder,
   } = useBackup({
     nodeSettings: nodeSettingsData || {
-      rpc_connection_url: '',
       indexer_url: '',
       proxy_endpoint: '',
+      rpc_connection_url: '',
     },
   })
 

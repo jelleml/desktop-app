@@ -9,7 +9,7 @@ import { Spinner } from '../../components/Spinner'
 import { Button } from '../../components/ui'
 import { NETWORK_DEFAULTS } from '../../constants/networks'
 import { isValidPubkeyAndAddress } from '../../helpers/address'
-import kaleidoswapPictogram from '../../assets/logo.svg'
+import kaleidoswapPictogram from '../../assets/kaleidoswap-pictogram.svg'
 import {
   NewChannelFormSchema,
   TNewChannelForm,

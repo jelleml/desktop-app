@@ -21,7 +21,7 @@ import {
   WALLET_REMOTE_PATH,
   WALLET_RESTORE_PATH,
 } from '../../app/router/paths'
-import logoFull from '../../assets/logo-full.svg'
+import logoFull from '../../assets/kaleidoswap-fullogo-horizontal.svg'
 import { AppVersion } from '../../components/AppVersion'
 import { Layout } from '../../components/Layout'
 import { SupportModal } from '../../components/SupportModal'
